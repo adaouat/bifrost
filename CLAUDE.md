@@ -49,6 +49,8 @@ Directory layout on the target server:
 | **yaml.v3** | YAML config parsing |
 | **text/template** | Hook command templating |
 | **mholt/archives** | In-process archive extraction (tar.gz, zip) |
+| **goreleaser** | Cross-platform release builds and GitHub release automation |
+| **git-cliff** | Changelog and release notes generation from conventional commits |
 
 ## Project layout
 
@@ -84,14 +86,18 @@ internal/
 All tooling is managed by mise. Run `mise install` after cloning.
 
 ```bash
-mise run build          # Compile to ./bifrost
-mise run test           # Run tests
-mise run lint:check     # Check linting (hk check)
-mise run lint:fix       # Auto-fix linting (hk fix)
-mise run run -- <args>  # Run the CLI in dev mode
+mise run build              # Compile to ./bifrost
+mise run test               # Run tests
+mise run lint:check         # Check all linters (hk check)
+mise run lint:fix           # Auto-fix all linters (hk fix)
+mise run lint:go:check      # Check Go code (golangci-lint)
+mise run lint:go:fix        # Fix Go code (golangci-lint --fix)
+mise run run -- <args>      # Run the CLI in dev mode
 ```
 
-Go and golangci-lint are installed via mise (see `.config/mise/config.toml`).
+For targeted lint fixes use `hk fix -S <linter>` (e.g. `hk fix -S golangci-lint`, `hk fix -S yamlfmt`).
+
+Go, golangci-lint, and git-cliff are installed via mise (see `.config/mise/config.toml`).
 
 ## Conventions
 
@@ -130,6 +136,11 @@ Go `text/template` syntax (not Liquid as in v1):
 
 `--output` global flag: `human` (default, colored TUI), `json`, `plain`.
 TUI components (spinners, progress, forms) only activate in `human` mode on a real TTY.
+
+### TDD
+
+Write tests before implementation. Every code task starts with a failing test. Implementation
+is written only to make the test pass, nothing more.
 
 ### Error handling
 
