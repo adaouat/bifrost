@@ -70,11 +70,13 @@ internal/
     schema.go                 # Go structs matching the YAML schema
     loader.go                 # YAML loading + strict validation
     merge.go                  # 3-level merge (global < env < app)
-  deploy/
-    artifact.go               # Archive extraction + deploy flow
-    release.go                # Symlink management (current pointer)
-    shared.go                 # Shared dir/file linking
-    hooks.go                  # Hook execution: sh -c, sudo, templates
+  strategy/
+    artifact/                 # Capistrano-style artifact deployment (v0)
+      deploy.go               # Full deploy flow
+      release.go              # Release directory creation, current symlink, purge
+      shared.go               # Shared dir/file linking
+  hooks/                      # Hook execution — shared across all strategies
+    runner.go                 # sh -c, sudo, template rendering, priority sort
   tui/
     styles.go                 # lipgloss color scheme
     output.go                 # Step/error/table output helpers

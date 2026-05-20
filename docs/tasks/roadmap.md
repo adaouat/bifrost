@@ -72,7 +72,7 @@ YAML loading, validation, and 3-level merge. No filesystem operations yet.
 - [ ] `config` command — print full merged config as JSON
 - [ ] `config --environment --application` — validate required fields, report all errors
 
-Deliverable: `bifrost config` works on a real `.deployer.yml`.
+Deliverable: `bifrost config` works on a real `.bifrost.yml`.
 
 ---
 
@@ -80,9 +80,9 @@ Deliverable: `bifrost config` works on a real `.deployer.yml`.
 
 Artifact extraction and symlink management. No hooks yet.
 
-- [ ] `internal/deploy/artifact.go` — archive extraction (tar.gz, zip) via `mholt/archives`
-- [ ] `internal/deploy/shared.go` — shared dir/file linking algorithm (spec 04)
-- [ ] `internal/deploy/release.go` — release directory creation, `current` symlink update, purge
+- [ ] `internal/strategy/artifact/deploy.go` — archive extraction (tar.gz, zip) via `mholt/archives`
+- [ ] `internal/strategy/artifact/shared.go` — shared dir/file linking algorithm (spec 04)
+- [ ] `internal/strategy/artifact/release.go` — release directory creation, `current` symlink update, purge
 - [ ] `artifact` command — full deploy flow (steps 1–11 from spec 03), no hooks
 - [ ] `internal/tui/progress.go` — spinner + progress bar wrappers
 - [ ] Wire progress bar to extraction byte stream
@@ -95,7 +95,7 @@ Deliverable: `bifrost artifact` deploys a real archive end-to-end.
 
 Hook execution engine and `release enable`.
 
-- [ ] `internal/deploy/hooks.go` — `sh -c` execution, sudo, template rendering, priority sort
+- [ ] `internal/hooks/runner.go` — `sh -c` execution, sudo, template rendering, priority sort
 - [ ] Hook `cmd_dir` support
 - [ ] Hook `allow_fail` support
 - [ ] Hook `interactive` support (huh confirm prompt)
