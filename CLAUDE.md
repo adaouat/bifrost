@@ -53,7 +53,7 @@ Directory layout on the target server:
 ## Project layout
 
 ```
-cmd/deployer/main.go          # Entry point: fang.Execute
+cmd/bifrost/main.go           # Entry point: fang.Execute
 internal/
   cmd/                        # cobra command definitions
     root.go                   # Global flags: --config, --output, --dry-run
@@ -84,7 +84,7 @@ internal/
 All tooling is managed by mise. Run `mise install` after cloning.
 
 ```bash
-mise run build          # Compile to ./deployer
+mise run build          # Compile to ./bifrost
 mise run test           # Run tests
 mise run lint:check     # Check linting (hk check)
 mise run lint:fix       # Auto-fix linting (hk fix)
@@ -104,7 +104,7 @@ Example: `feat(artifact): add --release-name flag`
 
 ### Config file
 
-Default config path: `./.deployer.yml`. Always overridable with `--config <path>`.
+Default config path: `./.bifrost.yml`. Always overridable with `--config <path>`.
 
 ### Hook execution
 

@@ -2,7 +2,7 @@
 
 ## File location
 
-Default: `./.deployer.yml` in the working directory.
+Default: `./.bifrost.yml` in the working directory.
 Override with the global `--config <path>` flag.
 
 ## Hierarchy and merge rules

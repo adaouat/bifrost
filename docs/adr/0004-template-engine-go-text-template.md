@@ -36,7 +36,7 @@ The syntax change from v1 Liquid to Go templates is minor:
 | `{{ envVars.DB_HOST }}` | `{{ .Env.DB_HOST }}` |
 
 The leading dot and capitalized field names are the only differences. This is a **breaking
-change** for existing `.deployer.yml` config files from v1.
+change** for existing `.bifrost.yml` config files from v1.
 
 ### Why not keep Liquid
 

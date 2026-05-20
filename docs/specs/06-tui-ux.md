@@ -59,7 +59,7 @@ When the selected release is already current:
 ## Human mode — dry run
 
 ```
-  $ deployer artifact --environment prod --application web \
+  $ bifrost artifact --environment prod --application web \
       --artifact ./release.tar.gz --dry-run
 
   DRY RUN — no changes will be made
@@ -81,7 +81,7 @@ When the selected release is already current:
   Error  configuration error
 
   paths.roots.releases is required but not set for prod › web.
-  Check your .deployer.yml and ensure the application or its
+  Check your .bifrost.yml and ensure the application or its
   environment defines paths.roots.releases.
 ```
 
