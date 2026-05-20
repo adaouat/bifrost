@@ -1,6 +1,7 @@
-# CLAUDE.md — Deployer v2
+# CLAUDE.md — Bifrost
 
 Capistrano-style deployment CLI, rewritten in Go from the Dart v1 (`../deployer`).
+Named after the Norse/Marvel bridge that connects worlds — see [ADR-0005](docs/adr/0005-tool-name-bifrost.md).
 
 ## What this tool does
 

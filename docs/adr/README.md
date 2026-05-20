@@ -8,3 +8,4 @@ ADRs document significant architectural choices: what was decided, why, and what
 | [0002](0002-cli-framework-fang-cobra.md) | Use fang + cobra as CLI framework | Accepted |
 | [0003](0003-tui-charmbracelet.md) | Use Charmbracelet suite for TUI | Accepted |
 | [0004](0004-template-engine-go-text-template.md) | Use Go text/template for hook commands | Accepted |
+| [0005](0005-tool-name-bifrost.md) | Name the tool "Bifrost" | Accepted |
