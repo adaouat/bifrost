@@ -12,13 +12,13 @@ Project skeleton and tooling. No deployment logic yet.
 - [ ] Add golangci-lint to mise config
 - [ ] Add Go lint steps to hk config (`.config/hk/config.pkl`)
 - [ ] Add mise tasks: `build`, `test`, `run`, `lint:go:check`, `lint:go:fix`
-- [ ] `go mod init` — module path TBD
-- [ ] `cmd/deployer/main.go` — `fang.Execute` entry point
+- [ ] `go mod init` — module path `github.com/bchatard/bifrost`
+- [ ] `cmd/bifrost/main.go` — `fang.Execute` entry point
 - [ ] `internal/cmd/root.go` — root command, global flags (`--config`, `--output`, `--dry-run`)
 - [ ] Stub commands: `config`, `artifact`, `release list`, `release enable`, `release rollback`
 - [ ] `internal/tui/styles.go` — lipgloss color scheme
 
-Deliverable: `deployer --help` renders styled help, `deployer --version` works.
+Deliverable: `bifrost --help` renders styled help, `bifrost --version` works.
 
 ---
 
@@ -32,7 +32,7 @@ YAML loading, validation, and 3-level merge. No filesystem operations yet.
 - [ ] `config` command — print full merged config as JSON
 - [ ] `config --environment --application` — validate required fields, report all errors
 
-Deliverable: `deployer config` works on a real `.deployer.yml`.
+Deliverable: `bifrost config` works on a real `.deployer.yml`.
 
 ---
 
@@ -47,7 +47,7 @@ Artifact extraction and symlink management. No hooks yet.
 - [ ] `internal/tui/progress.go` — spinner + progress bar wrappers
 - [ ] Wire progress bar to extraction byte stream
 
-Deliverable: `deployer artifact` deploys a real archive end-to-end.
+Deliverable: `bifrost artifact` deploys a real archive end-to-end.
 
 ---
 
@@ -63,7 +63,7 @@ Hook execution engine and `release enable`.
 - [ ] `release enable` command — full flow with hooks
 - [ ] `release list` command
 
-Deliverable: full deploy with hooks, `release enable` and `release list` work.
+Deliverable: full deploy with hooks, `bifrost release enable` and `bifrost release list` work.
 
 ---
 

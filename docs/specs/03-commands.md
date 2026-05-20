@@ -6,7 +6,7 @@ Available on all commands:
 
 | Flag | Default | Description |
 |---|---|---|
-| `--config` | `./.deployer.yml` | Path to configuration file |
+| `--config` | `./.bifrost.yml` | Path to configuration file |
 | `--output` | `human` | Output mode: `human`, `json`, `plain` |
 | `--dry-run` | `false` | Show what would happen without making changes |
 
@@ -17,7 +17,7 @@ Available on all commands:
 Display and validate the effective configuration after merging.
 
 ```
-deployer config [--environment <env>] [--application <app>]
+bifrost config [--environment <env>] [--application <app>]
 ```
 
 | Behavior | Condition |
@@ -36,7 +36,7 @@ in a single pass and reports all errors before exiting.
 Deploy an application from a compiled artifact archive.
 
 ```
-deployer artifact \
+bifrost artifact \
   --environment <env> \
   --application <app> \
   --artifact <path> \
@@ -73,7 +73,7 @@ deployer artifact \
 List all available releases for an application.
 
 ```
-deployer release list --environment <env> --application <app>
+bifrost release list --environment <env> --application <app>
 ```
 
 Output: list of release directory names sorted newest-first, with the active release
@@ -88,7 +88,7 @@ In `--output json` mode: JSON array of objects with `name` and `active` fields.
 Activate a previously deployed release.
 
 ```
-deployer release enable \
+bifrost release enable \
   --environment <env> \
   --application <app> \
   [--release <name>]
@@ -121,7 +121,7 @@ and an error asking for `--release`.
 Activate the release immediately preceding the current one.
 
 ```
-deployer release rollback --environment <env> --application <app>
+bifrost release rollback --environment <env> --application <app>
 ```
 
 Equivalent to `release enable` with the second-most-recent release. Exits with code 3
@@ -134,7 +134,7 @@ if there is no previous release to roll back to.
 First-time setup of a deployment target.
 
 ```
-deployer init --environment <env> --application <app>
+bifrost init --environment <env> --application <app>
 ```
 
 Creates `releases_root` and `shared_root` directories. Validates config. Does not deploy.
