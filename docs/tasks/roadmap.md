@@ -2,6 +2,24 @@
 
 Milestones in implementation order. Each builds on the previous.
 
+## Working process
+
+Each task follows a three-step commit flow:
+
+1. **Start** — mark the task `[~]` in the roadmap, commit the roadmap alone.
+2. **Implement** — do the work.
+3. **Done** — mark the task `[x]` in the roadmap, commit implementation + roadmap update together.
+
+Task status markers:
+
+| Marker | Meaning |
+|---|---|
+| `[ ]` | Not started |
+| `[~]` | In progress |
+| `[x]` | Done |
+
+One task at a time. The roadmap always reflects the current state of the branch.
+
 ---
 
 ## M0 — Foundation
