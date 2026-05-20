@@ -81,6 +81,8 @@ internal/
     styles.go                 # lipgloss color scheme
     output.go                 # Step/error/table output helpers
     progress.go               # Spinner + progress bar wrappers
+  testutil/                   # Shared test helpers (container setup, binary builder)
+testdata/                     # Read-only test fixtures (YAML configs, small archives)
 ```
 
 ## Tooling (mise)
@@ -143,6 +145,29 @@ TUI components (spinners, progress, forms) only activate in `human` mode on a re
 
 Write tests before implementation. Every code task starts with a failing test. Implementation
 is written only to make the test pass, nothing more.
+
+### Testing constraints
+
+Two hard rules — never break them:
+
+1. **No filesystem writes on the local host.** No `os.MkdirAll`, `os.Create`,
+   `os.Symlink`, `os.Remove`, no `t.TempDir()`. Writing a compiled binary to `/tmp` is
+   the only exception.
+2. **No shell execution on the local host.** `sh -c` from hook execution must never run
+   on the local machine.
+
+**Two test categories** (see ADR-0007):
+
+| Category | Command | Docker | Scope |
+|---|---|---|---|
+| Unit | `go test ./...` | No | Pure logic only — config, merge, template rendering |
+| Integration | `go test -tags integration ./...` | Yes | Filesystem + shell — runs inside Linux containers via testcontainers-go |
+
+All container test helpers live in `internal/testutil/`. Fixture files (YAML configs,
+small archives) live in `testdata/` — read-only, never written during test runs.
+
+`TestMain` cross-compiles the binary once (`GOOS=linux GOARCH=amd64`) to `/tmp` and
+shares it across all container tests.
 
 ### Error handling
 

@@ -10,3 +10,4 @@ ADRs document significant architectural choices: what was decided, why, and what
 | [0004](0004-template-engine-go-text-template.md) | Use Go text/template for hook commands | Accepted |
 | [0005](0005-tool-name-bifrost.md) | Name the tool "Bifrost" | Accepted |
 | [0006](0006-strategy-architecture.md) | Strategy-based deployment architecture | Accepted |
+| [0007](0007-testing-strategy.md) | Testing strategy | Accepted |
