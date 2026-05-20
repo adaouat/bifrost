@@ -20,23 +20,45 @@ Task status markers:
 
 One task at a time. The roadmap always reflects the current state of the branch.
 
+### TDD
+
+Write tests before implementation. Every code task starts with a failing test that defines
+the expected behavior. Implementation is done only to make the test pass.
+
+### Lint and formatting
+
+Run `hk check` before committing. Fix all issues before the commit lands.
+Use `hk fix -S <linter>` for targeted auto-fixes (e.g. `hk fix -S golangci-lint`,
+`hk fix -S yamlfmt`). Use `hk fix` to fix everything at once.
+
 ---
 
 ## M0 — Foundation
 
-Project skeleton and tooling. No deployment logic yet.
+Project skeleton, tooling, and release pipeline. No deployment logic yet.
 
-- [ ] Add Go to mise config (`.config/mise/config.toml`)
-- [ ] Add golangci-lint to mise config
-- [ ] Add Go lint steps to hk config (`.config/hk/config.pkl`)
+### Tooling
+
+- [ ] Add Go, golangci-lint, git-cliff to mise config (`.config/mise/config.toml`)
+- [ ] Add Go lint step to hk config (`.config/hk/config.pkl`)
 - [ ] Add mise tasks: `build`, `test`, `run`, `lint:go:check`, `lint:go:fix`
+
+### Go skeleton
+
 - [ ] `go mod init` — module path `github.com/bchatard/bifrost`
 - [ ] `cmd/bifrost/main.go` — `fang.Execute` entry point
 - [ ] `internal/cmd/root.go` — root command, global flags (`--config`, `--output`, `--dry-run`)
-- [ ] Stub commands: `config`, `artifact`, `release list`, `release enable`, `release rollback`
 - [ ] `internal/tui/styles.go` — lipgloss color scheme
+- [ ] Stub commands: `config`, `artifact`, `release list`, `release enable`, `release rollback`
 
-Deliverable: `bifrost --help` renders styled help, `bifrost --version` works.
+### CI/CD
+
+- [ ] `cliff.toml` — git-cliff config (conventional commits grouping, matches cocogitto types)
+- [ ] `.goreleaser.yml` — linux amd64/arm64, macOS amd64/arm64, windows amd64/arm64 (best effort); checksums; git-cliff changelog
+- [ ] `.github/workflows/ci.yml` — on push/PR: hk check → test → build
+- [ ] `.github/workflows/release.yml` — on tag: goreleaser full release
+
+Deliverable: `bifrost --help` renders styled help, `bifrost --version` works, CI passes on push, release pipeline produces artifacts.
 
 ---
 
@@ -114,15 +136,14 @@ Deliverable: all output modes and interactive flows work.
 
 ## M6 — Quality
 
-Tests and CI.
+Test coverage and hardening. CI/CD is already live from M0; this milestone
+fills in the test gaps that weren't covered incrementally.
 
 - [ ] Unit tests for config merge logic
 - [ ] Unit tests for shared resource linking algorithm
 - [ ] Unit tests for hook template rendering
 - [ ] Integration tests for `artifact` command (real filesystem, temp dir)
 - [ ] Integration tests for `release enable` / `release rollback`
-- [ ] CI pipeline (lint, test, build for linux-amd64 and linux-arm64)
-- [ ] Release pipeline (goreleaser or cog bump + manual artifacts)
 
 ---
 

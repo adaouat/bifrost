@@ -7,7 +7,9 @@
 Deployer v1 was written in Dart. The v2 rewrite has these hard requirements:
 
 - Single native binary, no runtime on the target server or CI host
-- Cross-compilation to Linux amd64/arm64 from a macOS dev machine
+- Cross-compilation to Linux amd64/arm64 and macOS amd64/arm64 from a macOS dev machine
+- Windows amd64/arm64 on a best-effort basis (known limitations: symlinks require Developer
+  Mode or elevated privileges; hook execution via `sh -c` requires Git Bash or WSL in PATH)
 - A rich TUI: spinners, progress bars, interactive forms
 - Accessible to contributors who are learning systems programming
 
@@ -46,5 +48,6 @@ Dart was kept for v1 because the team was familiar with it. For v2:
 - Contributors need Go installed (managed via mise, see tasks roadmap).
 - Error handling is explicit (`if err != nil`) — verbose but clear.
 - The Charmbracelet TUI ecosystem becomes available (see ADR-0003).
-- Cross-compilation is a one-liner: `GOOS=linux GOARCH=amd64 go build`.
+- Cross-compilation is trivial: `GOOS=linux GOARCH=amd64 go build`, `GOOS=darwin GOARCH=arm64 go build`, etc.
+- goreleaser handles all target matrix builds in CI (see M0 roadmap).
 - Hook template syntax changes from Liquid to Go `text/template` (see ADR-0004).
