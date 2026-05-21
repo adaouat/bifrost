@@ -36,7 +36,12 @@
 
 - All hook commands run via `sh -c "<cmd>"` — never direct `exec` with split arguments.
 - This supports `&&`, `|`, redirects, and arguments with spaces.
-- `exec.Command` in the hook runner must be injectable for unit testing (mockable).
+- `exec.Command` in the hook runner must be injectable for unit testing. Use a **function
+  variable**, not an interface and not a mock generator (mockery, moq):
+
+```go
+var execCommand = exec.Command  // replaced in tests: execCommand = fakeExec
+```
 
 ## Output modes
 

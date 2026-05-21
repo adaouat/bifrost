@@ -45,7 +45,8 @@ inside containers.
 ## Test helpers
 
 Shared container setup, binary building, and assertion helpers live in `internal/testutil/`.
-Never duplicate container boilerplate across test files.
+**Never duplicate container boilerplate across test files.** If a second test needs the
+same setup, it goes into `internal/testutil/` first, then both tests call it. No exceptions.
 
 ## Fixtures
 
