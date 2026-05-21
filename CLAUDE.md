@@ -1,3 +1,8 @@
+@.claude/rules/workflow.md
+@.claude/rules/testing.md
+@.claude/rules/coding.md
+@.claude/rules/claude.md
+
 # CLAUDE.md — Bifrost
 
 Atomic deployment CLI, rewritten in Go from the Dart v1 (`../deployer`).
@@ -9,7 +14,7 @@ Manages versioned application deployments on a remote server:
 
 1. Extracts an artifact (`.tar.gz`, `.zip`) into a timestamped release directory
 2. Links shared directories and files via symlinks (persisted across deployments)
-3. Switches the active release via a `current` symlink
+3. Switches the active release via a `current` symlink (atomic OS operation)
 4. Runs ordered lifecycle hooks (pre/post enable) with template variable support
 5. Purges stale releases, keeping the N most recent
 
@@ -31,8 +36,8 @@ Directory layout on the target server:
 ## Docs
 
 - [`docs/specs/`](docs/specs/) — full technical specifications (commands, config schema, hooks)
-- [`docs/adr/`](docs/adr/) — architecture decision records (language, framework, TUI, templates)
-- [`docs/tasks/`](docs/tasks/) — development roadmap
+- [`docs/adr/`](docs/adr/) — architecture decision records
+- [`docs/tasks/`](docs/tasks/) — version roadmap (v0–v5) and implementation milestones (M0–M6)
 
 ## Tech stack
 
@@ -49,6 +54,7 @@ Directory layout on the target server:
 | **yaml.v3** | YAML config parsing |
 | **text/template** | Hook command templating |
 | **mholt/archives** | In-process archive extraction (tar.gz, zip) |
+| **testcontainers-go** | Linux containers for integration tests |
 | **goreleaser** | Cross-platform release builds and GitHub release automation |
 | **git-cliff** | Changelog and release notes generation from conventional commits |
 
@@ -99,78 +105,6 @@ mise run lint:go:fix        # Fix Go code (golangci-lint --fix)
 mise run run -- <args>      # Run the CLI in dev mode
 ```
 
-For targeted lint fixes use `hk fix -S <linter>` (e.g. `hk fix -S golangci-lint`, `hk fix -S yamlfmt`).
+For targeted lint fixes: `hk fix -S <linter>` (e.g. `hk fix -S golangci-lint`, `hk fix -S yamlfmt`).
 
 Go, golangci-lint, and git-cliff are installed via mise (see `.config/mise/config.toml`).
-
-## Conventions
-
-### Commits
-
-Conventional commits are enforced by `hk` + `cocogitto`. Valid types:
-`feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `style`, `perf`, `ci`, `build`
-
-Example: `feat(artifact): add --release-name flag`
-
-### Config file
-
-Default config path: `./.bifrost.yml`. Always overridable with `--config <path>`.
-
-### Hook execution
-
-All hook commands run via `sh -c "<cmd>"` (with or without `sudo`), not via direct
-`exec`. This supports shell operators (`&&`, `|`, redirects) and arguments with spaces.
-This is a deliberate fix over v1's `.split(' ')` approach.
-
-### Template variables in hooks
-
-Go `text/template` syntax (not Liquid as in v1):
-
-```
-{{ .Directories.Working }}   # Current release directory
-{{ .Directories.Current }}   # Path to `current` symlink
-{{ .Directories.Releases }}  # Releases root
-{{ .Directories.Shared }}    # Shared root
-{{ .Variables.key }}         # User-defined variables
-{{ .Settings.ReleasesToKeep }}
-{{ .Env.DB_HOST }}           # OS environment variables
-```
-
-### Output modes
-
-`--output` global flag: `human` (default, colored TUI), `json`, `plain`.
-TUI components (spinners, progress, forms) only activate in `human` mode on a real TTY.
-
-### TDD
-
-Write tests before implementation. Every code task starts with a failing test. Implementation
-is written only to make the test pass, nothing more.
-
-### Testing constraints
-
-Two hard rules — never break them:
-
-1. **No filesystem writes on the local host.** No `os.MkdirAll`, `os.Create`,
-   `os.Symlink`, `os.Remove`, no `t.TempDir()`. Writing a compiled binary to `/tmp` is
-   the only exception.
-2. **No shell execution on the local host.** `sh -c` from hook execution must never run
-   on the local machine.
-
-**Two test categories** (see ADR-0007):
-
-| Category | Command | Docker | Scope |
-|---|---|---|---|
-| Unit | `go test ./...` | No | Pure logic only — config, merge, template rendering |
-| Integration | `go test -tags integration ./...` | Yes | Filesystem + shell — runs inside Linux containers via testcontainers-go |
-
-All container test helpers live in `internal/testutil/`. Fixture files (YAML configs,
-small archives) live in `testdata/` — read-only, never written during test runs.
-
-`TestMain` cross-compiles the binary once (`GOOS=linux GOARCH=amd64`) to `/tmp` and
-shares it across all container tests.
-
-### Error handling
-
-Return errors up the call stack using `fmt.Errorf("context: %w", err)`.
-Commands use `RunE` and return errors to fang's styled error handler.
-Never call `os.Exit` below the command layer.

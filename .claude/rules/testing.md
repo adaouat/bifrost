@@ -1,0 +1,53 @@
+# Testing rules
+
+## Hard constraints — never break these
+
+1. **No filesystem writes on the local host.** The following are forbidden in test code:
+   `os.MkdirAll`, `os.Mkdir`, `os.Create`, `os.WriteFile`, `os.Symlink`, `os.Remove`,
+   `os.RemoveAll`, `t.TempDir()`. Writing a compiled binary to `/tmp` is the only exception.
+
+2. **No shell execution on the local host.** `sh -c` and any `exec.Command` that runs
+   real commands must never execute on the local machine during tests. All shell execution
+   happens inside containers.
+
+## Two test categories
+
+### Unit tests — `go test ./...`
+
+- No Docker required.
+- Pure logic only: config parsing, merge, validation, template rendering.
+- `exec.Command` is mocked — never real.
+- Fixtures are read from `testdata/` (read-only, committed to repo).
+- No filesystem writes of any kind.
+
+### Integration tests — `go test -tags integration ./...`
+
+- Requires Docker (Docker Desktop / Colima on macOS, pre-installed on GitHub Actions).
+- All filesystem operations and shell execution happen inside Linux containers.
+- Uses **testcontainers-go** for container lifecycle management.
+- Every integration test file carries `//go:build integration` at the top.
+- `TestMain` cross-compiles the `bifrost` binary once (`GOOS=linux GOARCH=amd64`) to `/tmp`
+  and shares it across all tests in the package.
+- Container is started fresh per test (or per suite) and destroyed after.
+- Assertions inspect the container filesystem state via container exec or file copy.
+
+## TDD
+
+Write the failing test before writing implementation code. No exceptions.
+The test defines the expected behaviour. Implementation makes it pass, nothing more.
+
+## No afero
+
+Do not use `spf13/afero` or any in-memory filesystem abstraction. Bifrost's core relies on
+symlinks; `MemMapFs` does not support them. Integration tests use a real Linux filesystem
+inside containers.
+
+## Test helpers
+
+Shared container setup, binary building, and assertion helpers live in `internal/testutil/`.
+Never duplicate container boilerplate across test files.
+
+## Fixtures
+
+`testdata/` holds read-only input fixtures: YAML config files, small `.tar.gz` archives.
+Nothing is written to `testdata/` during test runs.
