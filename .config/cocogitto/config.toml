@@ -16,16 +16,6 @@ post_package_bump_hooks = []
 
 [commit_types]
 
-[changelog]
-path = "CHANGELOG.md"
-template = "remote"
-remote = "git.cross-systems.ch"
-owner = "internal-tools/ci-cd/catalog"
-repository = "<my_component>"
-authors = [
-  { username = "bchatard", signature = "bchatard" },
-]
-
 [bump_profiles]
 
 [packages]
