@@ -1,3 +1,15 @@
 [tasks.setup]
 description = "Setup project"
 run = ["hk install"]
+
+[tasks.build]
+description = "Build bifrost binary"
+run = "go build -o ./bifrost ./cmd/bifrost/"
+
+[tasks.test]
+description = "Run unit tests"
+run = "go test ./..."
+
+[tasks.run]
+description = "Run bifrost CLI (dev mode)"
+run = "go run ./cmd/bifrost/ $@"
