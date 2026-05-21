@@ -26,8 +26,8 @@ is missing the command fails with exit code 2 and a specific error message.
 
 ```yaml
 # ── Strategy ───────────────────────────────────────────────────────────────────
-strategy: artifact               # Deployment strategy. Default: artifact. See ADR-0006.
-                                 # v0 valid values: artifact
+strategy: atomic                 # Deployment strategy. Default: atomic. See ADR-0006.
+                                 # v0 valid values: atomic
                                  # v4/v5: docker, k8s
 
 # ── Global defaults ────────────────────────────────────────────────────────────

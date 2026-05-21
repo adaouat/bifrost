@@ -1,9 +1,9 @@
 # Spec 01 — Overview
 
-## What Deployer does
+## What Bifrost does
 
-Deployer is a CLI tool for managing application deployments on a server. It implements a
-**Capistrano-style release model**:
+Bifrost is a CLI tool for managing application deployments on a server. It implements
+**atomic deployment**:
 
 - Every deployment creates a new timestamped directory.
 - A `current` symlink always points to the active release.
@@ -11,8 +11,9 @@ Deployer is a CLI tool for managing application deployments on a server. It impl
   symlinked into each release on deploy.
 - Old releases are automatically pruned.
 
-This model enables instant rollback (re-point `current`) and zero-downtime deploys (the
-symlink switch is atomic).
+The activation step (flipping the `current` symlink) is an atomic OS operation — users
+never see a partially deployed version. Rollback is instant: re-point `current` to any
+previous release.
 
 ## Directory layout
 
