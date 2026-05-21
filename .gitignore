@@ -3,3 +3,6 @@
 
 # Mise
 /.config/mise/config.local.toml
+
+# Claude
+/.claude/settings.local.json

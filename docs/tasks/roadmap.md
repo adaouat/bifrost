@@ -40,7 +40,7 @@ Project skeleton, tooling, and release pipeline. No deployment logic yet.
 ### Tooling
 
 - [ ] Add Go, golangci-lint, git-cliff to mise config (`.config/mise/config.toml`)
-- [ ] Add Go lint step to hk config (`.config/hk/config.pkl`)
+- [ ] Add Go lint and `go mod tidy` steps to hk config (`.config/hk/config.pkl`)
 - [ ] Add mise tasks: `build`, `test`, `run`, `lint:go:check`, `lint:go:fix`
 
 ### Go skeleton
