@@ -1,0 +1,38 @@
+strategy: atomic
+
+paths:
+  roots:
+    releases: /var/www/webroot/ROOT
+    shared: /var/nas/shared
+
+settings:
+  releases_to_keep: 30
+
+variables:
+  app_env: production
+
+environments:
+  prod:
+    name: Production
+    applications:
+      web:
+        name: Web Application
+        paths:
+          shared:
+            directories:
+              - var/log
+              - var/cache
+            files:
+              - .env
+              - config/secrets.yml
+        hooks:
+          pre_artifact:
+            - cmd: "composer install --no-dev --optimize-autoloader"
+              cmd_dir: "{{ .Directories.Working }}"
+          post_enable_release:
+            - cmd: "systemctl reload php-fpm"
+              sudo: true
+              priority: 10
+            - cmd: "systemctl reload nginx"
+              sudo: true
+              priority: 20

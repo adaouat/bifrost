@@ -1,0 +1,9 @@
+paths:
+  roots:
+    releases: /var/www/releases
+    shared: /var/www/shared
+environments:
+  prod:
+    applications:
+      web:
+        name: Web
