@@ -1,3 +1,7 @@
+# Build outputs
+/bifrost
+*.test
+
 # IDE
 /.idea
 
