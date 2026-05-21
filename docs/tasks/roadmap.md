@@ -48,7 +48,7 @@ Project skeleton, tooling, and release pipeline. No deployment logic yet.
 - [x] `go mod init` — module path `github.com/bchatard/bifrost`
 - [x] `internal/testutil/` — container test helpers (testcontainers-go, `TestMain` binary builder)
 - [x] `testdata/` — read-only fixture files (YAML configs, small `.tar.gz` archives)
-- [ ] `cmd/bifrost/main.go` — `fang.Execute` entry point
+- [x] `cmd/bifrost/main.go` — `fang.Execute` entry point
 - [ ] `internal/cmd/root.go` — root command, global flags (`--config`, `--output`, `--dry-run`)
 - [ ] `internal/tui/styles.go` — lipgloss color scheme
 - [ ] Stub commands: `config`, `artifact`, `release list`, `release enable`, `release rollback`
