@@ -16,16 +16,6 @@ post_package_bump_hooks = []
 
 [commit_types]
 
-[changelog]
-path = "CHANGELOG.md"
-template = "remote"
-remote = "github.com"
-owner = "bchatard"
-repository = "bifrost"
-authors = [
-  { username = "bchatard", signature = "bchatard" },
-]
-
 [bump_profiles]
 
 [packages]
