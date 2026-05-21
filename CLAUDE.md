@@ -1,6 +1,6 @@
 # CLAUDE.md — Bifrost
 
-Capistrano-style deployment CLI, rewritten in Go from the Dart v1 (`../deployer`).
+Atomic deployment CLI, rewritten in Go from the Dart v1 (`../deployer`).
 Named after the Norse/Marvel bridge that connects worlds — see [ADR-0005](docs/adr/0005-tool-name-bifrost.md).
 
 ## What this tool does
@@ -71,7 +71,7 @@ internal/
     loader.go                 # YAML loading + strict validation
     merge.go                  # 3-level merge (global < env < app)
   strategy/
-    artifact/                 # Capistrano-style artifact deployment (v0)
+    atomic/                   # Atomic deployment strategy (v0)
       deploy.go               # Full deploy flow
       release.go              # Release directory creation, current symlink, purge
       shared.go               # Shared dir/file linking

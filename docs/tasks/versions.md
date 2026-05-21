@@ -5,14 +5,14 @@ are tracked separately (see `roadmap.md` for v0).
 
 ---
 
-## v0 — Capistrano-style artifact deployment (current)
+## v0 — Atomic deployment (current)
 
 Like the current deployer, with fixes and enhancements. Runs **on the server** — CI/CD
 handles the SSH transport (copy artifact, copy binary, call binary remotely).
 
 **Deployment model:**
 - Single binary, no SSH management
-- Artifact strategy only: extract archive → link shared dirs/files → flip `current` symlink → run hooks
+- Atomic strategy only: extract archive → link shared dirs/files → flip `current` symlink atomically → run hooks
 - Single server per invocation
 
 **Fixes over v1 deployer:**
@@ -55,7 +55,7 @@ Bifrost manages SSH itself. CI/CD no longer needs to handle transport.
 **New features:**
 - SSH connection config in `.bifrost.yml` (host, port, user, key, known_hosts)
 - Multi-server deployment (parallel or sequential, configurable)
-- `strategy.go` interface formalized — the artifact strategy becomes the first
+- `strategy.go` interface formalized — the atomic strategy becomes the first
   implementation of a typed interface
 - Deployment result aggregation across servers
 
@@ -108,7 +108,7 @@ binary is cleaner.
 
 ## v4/v5 — Additional strategies
 
-New deployment strategies alongside the existing artifact strategy. Selected via the
+New deployment strategies alongside the existing atomic strategy. Selected via the
 `strategy:` config field.
 
 **docker strategy:**
