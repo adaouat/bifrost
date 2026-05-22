@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	clog "charm.land/log/v2"
+	"github.com/adaouat/bifrost/internal/cmd/release"
 	"github.com/adaouat/bifrost/internal/tui"
 	"github.com/spf13/cobra"
 )
@@ -39,6 +40,10 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	root.SetVersionTemplate(tui.VersionTemplate())
+
+	root.AddCommand(newConfigCmd())
+	root.AddCommand(newDeployCmd())
+	root.AddCommand(release.NewReleaseCmd())
 
 	f := root.PersistentFlags()
 	f.StringVar(&cfgFile, "config", ".bifrost.yml", "config file path")

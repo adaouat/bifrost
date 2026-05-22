@@ -51,7 +51,7 @@ Project skeleton, tooling, and release pipeline. No deployment logic yet.
 - [x] `cmd/bifrost/main.go` — `fang.Execute` entry point
 - [x] `internal/cmd/root.go` — root command, global flags (`--config`, `--output`, `--dry-run`)
 - [x] `internal/tui/styles.go` — lipgloss color scheme
-- [ ] Stub commands: `config`, `artifact`, `release list`, `release enable`, `release rollback`
+- [x] Stub commands: `config`, `deploy`, `release list`, `release activate`, `release rollback`
 
 ### CI/CD
 

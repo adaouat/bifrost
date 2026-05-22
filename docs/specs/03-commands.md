@@ -9,6 +9,7 @@ Available on all commands:
 | `--config` | `./.bifrost.yml` | Path to configuration file |
 | `--output` | `human` | Output mode: `human`, `json`, `plain` |
 | `--dry-run` | `false` | Show what would happen without making changes |
+| `--verbose` | `false` | Enable verbose logging |
 
 ---
 
@@ -17,40 +18,45 @@ Available on all commands:
 Display and validate the effective configuration after merging.
 
 ```
-bifrost config [--environment <env>] [--application <app>]
+bifrost config [--environment/--env <env>] [--application/--app <app>]
 ```
+
+| Flag | Aliases | Required | Description |
+|---|---|---|---|
+| `--environment` | `--env` | No | Target environment key |
+| `--application` | `--app` | No | Target application key |
 
 | Behavior | Condition |
 |---|---|
-| Print full merged config as JSON | No `--environment` or `--application` |
+| Print full merged config as JSON | No `--env` or `--app` |
 | Print merged app config + validate required fields | Both flags provided |
 
 Exits non-zero (code 2) with a specific message for each missing required field.
-With `--environment` + `--application`, validates all environments/applications
+With `--env` + `--app`, validates all environments/applications
 in a single pass and reports all errors before exiting.
 
 ---
 
-## `artifact`
+## `deploy`
 
 Deploy an application from a compiled artifact archive.
 
 ```
-bifrost artifact \
-  --environment <env> \
-  --application <app> \
+bifrost deploy \
+  --environment/--env <env> \
+  --application/--app <app> \
   --artifact <path> \
   [--release-name <name>] \
   [--init]
 ```
 
-| Flag | Required | Description |
-|---|---|---|
-| `--environment` | Yes | Target environment key |
-| `--application` | Yes | Target application key |
-| `--artifact` | Yes | Path to artifact file (`.tar.gz`, `.zip`, etc.) |
-| `--release-name` | No | Override auto-generated timestamp name (e.g. `v2.1.3`) |
-| `--init` | No (flag) | Create `releases_root` and `shared_root` if they do not exist |
+| Flag | Aliases | Required | Description |
+|---|---|---|---|
+| `--environment` | `--env` | Yes | Target environment key |
+| `--application` | `--app` | Yes | Target application key |
+| `--artifact` | | Yes | Path to artifact file (`.tar.gz`, `.zip`, etc.) |
+| `--release-name` | | No | Override auto-generated timestamp name (e.g. `v2.1.3`) |
+| `--init` | | No | Create `releases_root` and `shared_root` if they do not exist |
 
 **Deployment flow:**
 
@@ -73,8 +79,13 @@ bifrost artifact \
 List all available releases for an application.
 
 ```
-bifrost release list --environment <env> --application <app>
+bifrost release list --environment/--env <env> --application/--app <app>
 ```
+
+| Flag | Aliases | Required | Description |
+|---|---|---|---|
+| `--environment` | `--env` | Yes | Target environment key |
+| `--application` | `--app` | Yes | Target application key |
 
 Output: list of release directory names sorted newest-first, with the active release
 marked. Excludes the `current` symlink itself.
@@ -83,22 +94,22 @@ In `--output json` mode: JSON array of objects with `name` and `active` fields.
 
 ---
 
-## `release enable`
+## `release activate`
 
 Activate a previously deployed release.
 
 ```
-bifrost release enable \
-  --environment <env> \
-  --application <app> \
+bifrost release activate \
+  --environment/--env <env> \
+  --application/--app <app> \
   [--release <name>]
 ```
 
-| Flag | Required | Description |
-|---|---|---|
-| `--environment` | Yes | Target environment key |
-| `--application` | Yes | Target application key |
-| `--release` | No | Release name to activate. If omitted, shows interactive selector. |
+| Flag | Aliases | Required | Description |
+|---|---|---|---|
+| `--environment` | `--env` | Yes | Target environment key |
+| `--application` | `--app` | Yes | Target application key |
+| `--release` | | No | Release name to activate. If omitted, shows interactive selector. |
 
 If `--release` is omitted and stdout is a TTY, presents an interactive list (huh select)
 showing all releases with the current one highlighted. If not a TTY, exits with code 1
@@ -121,21 +132,31 @@ and an error asking for `--release`.
 Activate the release immediately preceding the current one.
 
 ```
-bifrost release rollback --environment <env> --application <app>
+bifrost release rollback --environment/--env <env> --application/--app <app>
 ```
 
-Equivalent to `release enable` with the second-most-recent release. Exits with code 3
+| Flag | Aliases | Required | Description |
+|---|---|---|---|
+| `--environment` | `--env` | Yes | Target environment key |
+| `--application` | `--app` | Yes | Target application key |
+
+Equivalent to `release activate` with the second-most-recent release. Exits with code 3
 if there is no previous release to roll back to.
 
 ---
 
-## `init` (planned)
+## `init` (planned — M4)
 
 First-time setup of a deployment target.
 
 ```
-bifrost init --environment <env> --application <app>
+bifrost init --environment/--env <env> --application/--app <app>
 ```
 
+| Flag | Aliases | Required | Description |
+|---|---|---|---|
+| `--environment` | `--env` | Yes | Target environment key |
+| `--application` | `--app` | Yes | Target application key |
+
 Creates `releases_root` and `shared_root` directories. Validates config. Does not deploy.
-Equivalent to `artifact --init` without the artifact.
+Equivalent to `deploy --init` without the artifact.
