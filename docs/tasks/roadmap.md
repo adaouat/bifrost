@@ -56,9 +56,9 @@ Project skeleton, tooling, and release pipeline. No deployment logic yet.
 ### CI/CD
 
 - [x] `cliff.toml` — git-cliff config at `.config/cliff.toml` (conventional commits, emoji groups, GitHub remote)
-- [ ] `.goreleaser.yml` — linux amd64/arm64, macOS amd64/arm64, windows amd64/arm64 (best effort); checksums; git-cliff changelog via `--config .config/cliff.toml`
-- [ ] `.github/workflows/ci.yml` — on push/PR: hk check → test → build
-- [ ] `.github/workflows/release.yml` — on tag: goreleaser full release
+- [x] `.goreleaser.yml` — linux amd64/arm64, macOS amd64/arm64, windows amd64/arm64 (best effort); checksums; git-cliff changelog via `--config .config/cliff.toml`
+- [x] `.github/workflows/ci.yml` — on push/PR: lint → test → build
+- [x] `.github/workflows/release.yml` — on tag: goreleaser full release
 
 Deliverable: `bifrost --help` renders styled help, `bifrost --version` works, CI passes on push, release pipeline produces artifacts.
 
