@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	clog "charm.land/log/v2"
+	"github.com/bchatard/bifrost/internal/tui"
 	"github.com/spf13/cobra"
 )
 
@@ -28,6 +29,7 @@ func NewRootCmd() *cobra.Command {
 	root := &cobra.Command{
 		Use:   "bifrost",
 		Short: "Atomic deployment CLI",
+		Long:  tui.HelpLong(),
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 			if verbose {
 				clog.SetLevel(clog.DebugLevel)
@@ -35,6 +37,8 @@ func NewRootCmd() *cobra.Command {
 			return ValidateOutputMode(output)
 		},
 	}
+
+	root.SetVersionTemplate(tui.VersionTemplate())
 
 	f := root.PersistentFlags()
 	f.StringVar(&cfgFile, "config", ".bifrost.yml", "config file path")
