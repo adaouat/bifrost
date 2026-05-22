@@ -8,7 +8,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/bchatard/bifrost/internal/testutil"
+	"github.com/adaouat/bifrost/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

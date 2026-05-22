@@ -45,7 +45,7 @@ Project skeleton, tooling, and release pipeline. No deployment logic yet.
 
 ### Go skeleton
 
-- [x] `go mod init` — module path `github.com/bchatard/bifrost`
+- [x] `go mod init` — module path `github.com/adaouat/bifrost`
 - [x] `internal/testutil/` — container test helpers (testcontainers-go, `TestMain` binary builder)
 - [x] `testdata/` — read-only fixture files (YAML configs, small `.tar.gz` archives)
 - [x] `cmd/bifrost/main.go` — `fang.Execute` entry point

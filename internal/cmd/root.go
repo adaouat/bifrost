@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	clog "charm.land/log/v2"
-	"github.com/bchatard/bifrost/internal/tui"
+	"github.com/adaouat/bifrost/internal/tui"
 	"github.com/spf13/cobra"
 )
 
