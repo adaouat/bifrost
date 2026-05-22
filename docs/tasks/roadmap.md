@@ -50,7 +50,7 @@ Project skeleton, tooling, and release pipeline. No deployment logic yet.
 - [x] `testdata/` — read-only fixture files (YAML configs, small `.tar.gz` archives)
 - [x] `cmd/bifrost/main.go` — `fang.Execute` entry point
 - [x] `internal/cmd/root.go` — root command, global flags (`--config`, `--output`, `--dry-run`)
-- [ ] `internal/tui/styles.go` — lipgloss color scheme
+- [x] `internal/tui/styles.go` — lipgloss color scheme
 - [ ] Stub commands: `config`, `artifact`, `release list`, `release enable`, `release rollback`
 
 ### CI/CD

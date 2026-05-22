@@ -4,6 +4,7 @@ go 1.26.3
 
 require (
 	charm.land/fang/v2 v2.0.1
+	charm.land/lipgloss/v2 v2.0.1
 	charm.land/log/v2 v2.0.0
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.11.1
@@ -11,7 +12,6 @@ require (
 )
 
 require (
-	charm.land/lipgloss/v2 v2.0.1 // indirect
 	dario.cat/mergo v1.0.2 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
