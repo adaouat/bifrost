@@ -3,7 +3,7 @@ package cmd_test
 import (
 	"testing"
 
-	"github.com/bchatard/bifrost/internal/cmd"
+	"github.com/adaouat/bifrost/internal/cmd"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

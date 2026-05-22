@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"charm.land/fang/v2"
-	"github.com/bchatard/bifrost/internal/cmd"
+	"github.com/adaouat/bifrost/internal/cmd"
 )
 
 func main() {

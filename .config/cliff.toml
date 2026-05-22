@@ -96,6 +96,6 @@ recurse_submodules = false
 
 # For GitHub:
 [remote.github]
-owner = "bchatard"
+owner = "adaouat"
 repo = "bifrost"
 # token read from GITHUB_TOKEN env var
