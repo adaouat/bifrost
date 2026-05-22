@@ -64,13 +64,13 @@ Directory layout on the target server:
 cmd/bifrost/main.go           # Entry point: fang.Execute
 internal/
   cmd/                        # cobra command definitions
-    root.go                   # Global flags: --config, --output, --dry-run
+    root.go                   # Global flags: --config, --output, --dry-run, --verbose
     config.go                 # `config` command
-    artifact.go               # `artifact` command
+    deploy.go                 # `deploy` command
     release/
       release.go              # `release` parent
       list.go                 # `release list`
-      enable.go               # `release enable`
+      activate.go             # `release activate`
       rollback.go             # `release rollback`
   config/
     schema.go                 # Go structs matching the YAML schema
