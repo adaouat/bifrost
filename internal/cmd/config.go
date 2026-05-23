@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/adaouat/bifrost/internal/config"
 	"github.com/spf13/cobra"
@@ -29,7 +30,17 @@ func newConfigCmd() *cobra.Command {
 				return printJSON(cmd, cfg)
 			}
 
-			return fmt.Errorf("not yet implemented: use --env and --app together")
+			merged, err := config.Merge(cfg, env, app)
+			if err != nil {
+				return err
+			}
+			if errs := config.Validate(merged); len(errs) > 0 {
+				return &ExitError{
+					Code:    2,
+					Message: strings.Join(errs, "\n"),
+				}
+			}
+			return printJSON(cmd, merged)
 		},
 	}
 

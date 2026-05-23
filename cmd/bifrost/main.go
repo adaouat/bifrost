@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"os"
 
 	"charm.land/fang/v2"
@@ -9,7 +10,13 @@ import (
 )
 
 func main() {
-	if err := fang.Execute(context.Background(), cmd.NewRootCmd()); err != nil {
-		os.Exit(1)
+	err := fang.Execute(context.Background(), cmd.NewRootCmd())
+	if err == nil {
+		return
 	}
+	var exitErr *cmd.ExitError
+	if errors.As(err, &exitErr) {
+		os.Exit(exitErr.Code)
+	}
+	os.Exit(1)
 }

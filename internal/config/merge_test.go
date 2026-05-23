@@ -223,21 +223,27 @@ func TestMerge_MissingApplication(t *testing.T) {
 	}
 }
 
-func TestMerge_MissingReleasesRoot(t *testing.T) {
+func TestMerge_MissingReleasesRoot_NoError(t *testing.T) {
 	cfg := base()
 	cfg.Paths.ReleasesRoot = ""
-	_, err := config.Merge(cfg, "prod", "web")
-	if err == nil {
-		t.Fatal("expected error for missing releases_root")
+	m, err := config.Merge(cfg, "prod", "web")
+	if err != nil {
+		t.Fatalf("Merge must not validate required fields: %v", err)
+	}
+	if m.ReleasesRoot != "" {
+		t.Error("expected empty ReleasesRoot to propagate")
 	}
 }
 
-func TestMerge_MissingSharedRoot(t *testing.T) {
+func TestMerge_MissingSharedRoot_NoError(t *testing.T) {
 	cfg := base()
 	cfg.Paths.SharedRoot = ""
-	_, err := config.Merge(cfg, "prod", "web")
-	if err == nil {
-		t.Fatal("expected error for missing shared_root")
+	m, err := config.Merge(cfg, "prod", "web")
+	if err != nil {
+		t.Fatalf("Merge must not validate required fields: %v", err)
+	}
+	if m.SharedRoot != "" {
+		t.Error("expected empty SharedRoot to propagate")
 	}
 }
 

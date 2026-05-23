@@ -7,14 +7,14 @@ import (
 
 // MergedConfig is the fully resolved configuration for a single env+app deployment.
 type MergedConfig struct {
-	Strategy     string
-	ReleasesRoot string
-	SharedRoot   string
-	SharedDirs   []string
-	SharedFiles  []string
-	Settings     Settings
-	Variables    map[string]string
-	Hooks        Hooks
+	Strategy     string            `json:"strategy"`
+	ReleasesRoot string            `json:"releases_root"`
+	SharedRoot   string            `json:"shared_root"`
+	SharedDirs   []string          `json:"shared_dirs,omitempty"`
+	SharedFiles  []string          `json:"shared_files,omitempty"`
+	Settings     Settings          `json:"settings"`
+	Variables    map[string]string `json:"variables,omitempty"`
+	Hooks        Hooks             `json:"hooks,omitempty"`
 }
 
 // Merge resolves the three-level hierarchy (global < env < app) for the given
@@ -47,14 +47,19 @@ func Merge(cfg *Config, envName, appName string) (*MergedConfig, error) {
 		},
 	}
 
+	return m, nil
+}
+
+// Validate returns a message for each required field missing from a MergedConfig.
+func Validate(m *MergedConfig) []string {
+	var errs []string
 	if m.ReleasesRoot == "" {
-		return nil, fmt.Errorf("paths.releases_root is required but not set for %q/%q", envName, appName)
+		errs = append(errs, "paths.releases_root: required but not set")
 	}
 	if m.SharedRoot == "" {
-		return nil, fmt.Errorf("paths.shared_root is required but not set for %q/%q", envName, appName)
+		errs = append(errs, "paths.shared_root: required but not set")
 	}
-
-	return m, nil
+	return errs
 }
 
 func firstNonEmpty(vals ...string) string {

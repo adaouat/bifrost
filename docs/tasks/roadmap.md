@@ -72,7 +72,7 @@ YAML loading, validation, and 3-level merge. No filesystem operations yet.
 - [x] `internal/config/loader.go` — strict YAML parsing with clear error messages
 - [x] `internal/config/merge.go` — global < env < app merge (maps deep, lists concat+sort, scalars override)
 - [x] `config` command — print full merged config as JSON
-- [ ] `config --environment --application` — validate required fields, report all errors
+- [x] `config --environment --application` — validate required fields, report all errors
 
 Deliverable: `bifrost config` works on a real `.bifrost.yml`.
 
