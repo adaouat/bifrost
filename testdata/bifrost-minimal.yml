@@ -1,7 +1,6 @@
 paths:
-  roots:
-    releases: /var/www/releases
-    shared: /var/www/shared
+  releases_root: /var/www/releases
+  shared_root: /var/www/shared
 environments:
   prod:
     applications:

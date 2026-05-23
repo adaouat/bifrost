@@ -68,7 +68,7 @@ Deliverable: `bifrost --help` renders styled help, `bifrost --version` works, CI
 
 YAML loading, validation, and 3-level merge. No filesystem operations yet.
 
-- [ ] `internal/config/schema.go` — Go structs for the full YAML schema
+- [x] `internal/config/schema.go` — Go structs for the full YAML schema
 - [ ] `internal/config/loader.go` — strict YAML parsing with clear error messages
 - [ ] `internal/config/merge.go` — global < env < app merge (maps deep, lists concat+sort, scalars override)
 - [ ] `config` command — print full merged config as JSON

@@ -6,7 +6,8 @@ Hooks are shell commands that run at defined points in the deployment lifecycle.
 
 | Hook list | When |
 |---|---|
-| `pre_artifact` | After extraction, before shared resource linking |
+| `post_extract` | After extraction, before `pre_link` — raw release dir available |
+| `pre_link` | After `post_extract` hooks, before shared resource linking |
 | `pre_enable_release` | After shared linking, before `current` symlink update |
 | `post_enable_release` | After `current` symlink update |
 
@@ -84,7 +85,7 @@ offending template and error displayed.
 | `sudo` | bool | false | Wrap with `sudo sh -c`. |
 | `cmd_dir` | string | release dir | Working directory for the command. |
 | `allow_fail` | bool | false | Continue deployment on non-zero exit. |
-| `interactive` | bool | false | Prompt user for confirmation before running. |
+| `interactive` | bool | false | Prompt user for confirmation before running. Not supported in v0 — deployment errors if set to `true`. |
 
 ## Error handling
 

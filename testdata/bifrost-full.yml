@@ -1,9 +1,8 @@
 strategy: atomic
 
 paths:
-  roots:
-    releases: /var/www/webroot/ROOT
-    shared: /var/nas/shared
+  releases_root: /var/www/webroot/ROOT
+  shared_root: /var/nas/shared
 
 settings:
   releases_to_keep: 30
@@ -26,7 +25,7 @@ environments:
               - .env
               - config/secrets.yml
         hooks:
-          pre_artifact:
+          post_extract:
             - cmd: "composer install --no-dev --optimize-autoloader"
               cmd_dir: "{{ .Directories.Working }}"
           post_enable_release:

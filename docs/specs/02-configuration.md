@@ -19,7 +19,7 @@ Global (root of YAML) < Environment < Application
 | Lists (hooks) | Concatenated across all levels, then sorted by `priority` ascending |
 | Scalars | Child overrides parent |
 
-After merging, `paths.roots.releases` and `paths.roots.shared` are required. If either
+After merging, `paths.releases_root` and `paths.shared_root` are required. If either
 is missing the command fails with exit code 2 and a specific error message.
 
 ## Full schema
@@ -32,23 +32,23 @@ strategy: atomic                 # Deployment strategy. Default: atomic. See ADR
 
 # ── Global defaults ────────────────────────────────────────────────────────────
 paths:
-  roots:
-    releases: /var/www/releases    # REQUIRED after merge
-    shared: /var/www/shared        # REQUIRED after merge
+  releases_root: /var/www/releases  # REQUIRED after merge
+  shared_root: /var/www/shared      # REQUIRED after merge
   shared:
-    directories: []                # Relative paths symlinked into each release
-    files: []                      # Relative paths symlinked into each release
+    directories: []                 # Relative paths symlinked into each release
+    files: []                       # Relative paths symlinked into each release
 
 settings:
   releases_to_keep: 10             # Number of old releases to retain (default: 10)
 
-variables:                         # Arbitrary key-value pairs available in hook templates
-  key: value
+variables:                         # String key-value pairs available in hook templates
+  key: value                       # Values must be strings (quote non-string YAML scalars)
 
 hooks:
-  pre_artifact: []                 # Runs after extraction, before shared linking
-  pre_enable_release: []           # Runs before current symlink is updated
-  post_enable_release: []          # Runs after current symlink is updated
+  post_extract: []        # Runs after extraction, before pre_link — raw release dir available
+  pre_link: []            # Runs before shared resource linking
+  pre_enable_release: []  # Runs before current symlink is updated
+  post_enable_release: [] # Runs after current symlink is updated
 
 # ── Environments ───────────────────────────────────────────────────────────────
 environments:
@@ -90,9 +90,8 @@ interactive: false               # Prompt user for confirmation before running.
 
 ```yaml
 paths:
-  roots:
-    releases: /var/www/webroot/ROOT
-    shared: /var/nas/shared
+  releases_root: /var/www/webroot/ROOT
+  shared_root: /var/nas/shared
 
 settings:
   releases_to_keep: 30
@@ -115,7 +114,7 @@ environments:
               - .env
               - config/secrets.yml
         hooks:
-          pre_artifact:
+          post_extract:
             - cmd: "composer install --no-dev --optimize-autoloader"
               cmd_dir: "{{ .Directories.Working }}"
           post_enable_release:
