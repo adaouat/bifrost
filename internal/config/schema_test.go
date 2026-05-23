@@ -7,9 +7,10 @@ import (
 )
 
 func TestHookEntry_Fields(t *testing.T) {
+	p := 10
 	h := config.HookEntry{
 		Cmd:         "echo hello",
-		Priority:    10,
+		Priority:    &p,
 		Sudo:        true,
 		CmdDir:      "/tmp",
 		AllowFail:   true,
@@ -18,8 +19,8 @@ func TestHookEntry_Fields(t *testing.T) {
 	if h.Cmd != "echo hello" {
 		t.Errorf("cmd: got %q", h.Cmd)
 	}
-	if h.Priority != 10 {
-		t.Errorf("priority: got %d, want 10", h.Priority)
+	if h.Priority == nil || *h.Priority != 10 {
+		t.Errorf("priority: got %v, want 10", h.Priority)
 	}
 	if !h.Sudo {
 		t.Error("sudo: got false, want true")

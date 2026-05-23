@@ -3,7 +3,7 @@ package config
 // HookEntry is a single shell command executed at a lifecycle point.
 type HookEntry struct {
 	Cmd         string `yaml:"cmd"`
-	Priority    int    `yaml:"priority"`
+	Priority    *int   `yaml:"priority"`
 	Sudo        bool   `yaml:"sudo"`
 	CmdDir      string `yaml:"cmd_dir"`
 	AllowFail   bool   `yaml:"allow_fail"`
