@@ -14,7 +14,7 @@ func TestRootFlagsDefaults(t *testing.T) {
 
 	config, err := flags.GetString("config")
 	require.NoError(t, err)
-	assert.Equal(t, ".bifrost.yml", config)
+	assert.Equal(t, "", config)
 
 	output, err := flags.GetString("output")
 	require.NoError(t, err)

@@ -2,8 +2,13 @@
 
 ## File location
 
-Default: `./.bifrost.yml` in the working directory.
-Override with the global `--config <path>` flag.
+When `--config` is not provided, bifrost searches the working directory in order:
+
+1. `.config/bifrost.yml`
+2. `.bifrost.yml`
+
+The first file that exists is used. If neither exists, loading fails with an error.
+Override the search entirely with `--config <path>`.
 
 ## Hierarchy and merge rules
 

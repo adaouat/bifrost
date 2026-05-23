@@ -16,12 +16,7 @@ func newConfigCmd() *cobra.Command {
 		Use:   "config",
 		Short: "Display and validate the effective configuration",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			cfgPath, err := cmd.Root().PersistentFlags().GetString("config")
-			if err != nil {
-				return fmt.Errorf("reading --config flag: %w", err)
-			}
-
-			cfg, err := config.Load(cfgPath)
+			cfg, err := config.Load(resolveConfigPath(cmd.Root()))
 			if err != nil {
 				return err
 			}

@@ -46,7 +46,7 @@ func NewRootCmd() *cobra.Command {
 	root.AddCommand(release.NewReleaseCmd())
 
 	f := root.PersistentFlags()
-	f.StringVar(&cfgFile, "config", ".bifrost.yml", "config file path")
+	f.StringVar(&cfgFile, "config", "", "config file (default: .config/bifrost.yml, then .bifrost.yml)")
 	f.StringVar(&output, "output", "human", "output mode (human, json, plain)")
 	f.BoolVar(&dryRun, "dry-run", false, "simulate actions without applying them")
 	f.BoolVar(&verbose, "verbose", false, "enable verbose logging")
