@@ -4,12 +4,17 @@ Hooks are shell commands that run at defined points in the deployment lifecycle.
 
 ## Lifecycle points
 
-| Hook list | When |
-|---|---|
-| `post_extract` | After extraction, before `pre_link` — raw release dir available |
-| `pre_link` | After `post_extract` hooks, before shared resource linking |
-| `pre_enable_release` | After shared linking, before `current` symlink update |
-| `post_enable_release` | After `current` symlink update |
+| Hook list | Shared symlinks present? | `current` updated? | Typical use |
+|---|---|---|---|
+| `post_extract` | No | No | Compile assets, modify extracted files |
+| `pre_link` | No | No | Remove dirs that will be replaced by symlinks, create placeholder subdirs |
+| `pre_enable_release` | **Yes** | No | DB migrations, config cache — needs shared files, must run before traffic hits release |
+| `post_enable_release` | Yes | **Yes** | Reload services, notify monitoring |
+
+`pre_link` and `pre_enable_release` differ in one critical way: shared dirs/files
+(`var/log`, `.env`, etc.) are **not yet symlinked** at `pre_link` time, but are
+**fully in place** by `pre_enable_release`. Run anything that requires shared config
+files (migrations, cache warming) in `pre_enable_release`, not `pre_link`.
 
 ## Execution
 
