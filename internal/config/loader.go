@@ -39,14 +39,8 @@ func applyDefaults(cfg *Config) {
 	}
 	applyHookDefaults(&cfg.Hooks)
 	for envName, env := range cfg.Environments {
-		if env.Settings.ReleasesToKeep == 0 {
-			env.Settings.ReleasesToKeep = 10
-		}
 		applyHookDefaults(&env.Hooks)
 		for appName, app := range env.Applications {
-			if app.Settings.ReleasesToKeep == 0 {
-				app.Settings.ReleasesToKeep = 10
-			}
 			applyHookDefaults(&app.Hooks)
 			env.Applications[appName] = app
 		}

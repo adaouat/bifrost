@@ -70,7 +70,7 @@ YAML loading, validation, and 3-level merge. No filesystem operations yet.
 
 - [x] `internal/config/schema.go` — Go structs for the full YAML schema
 - [x] `internal/config/loader.go` — strict YAML parsing with clear error messages
-- [ ] `internal/config/merge.go` — global < env < app merge (maps deep, lists concat+sort, scalars override)
+- [x] `internal/config/merge.go` — global < env < app merge (maps deep, lists concat+sort, scalars override)
 - [ ] `config` command — print full merged config as JSON
 - [ ] `config --environment --application` — validate required fields, report all errors
 
