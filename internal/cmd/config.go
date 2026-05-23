@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 
+	"github.com/adaouat/bifrost/internal/config"
 	"github.com/spf13/cobra"
 )
 
@@ -13,7 +15,21 @@ func newConfigCmd() *cobra.Command {
 		Use:   "config",
 		Short: "Display and validate the effective configuration",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return fmt.Errorf("not yet implemented")
+			cfgPath, err := cmd.Root().PersistentFlags().GetString("config")
+			if err != nil {
+				return fmt.Errorf("reading --config flag: %w", err)
+			}
+
+			cfg, err := config.Load(cfgPath)
+			if err != nil {
+				return err
+			}
+
+			if env == "" && app == "" {
+				return printJSON(cmd, cfg)
+			}
+
+			return fmt.Errorf("not yet implemented: use --env and --app together")
 		},
 	}
 
@@ -24,4 +40,13 @@ func newConfigCmd() *cobra.Command {
 	f.StringVar(&app, "app", "", "alias for --application")
 
 	return cmd
+}
+
+func printJSON(cmd *cobra.Command, v any) error {
+	out, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		return fmt.Errorf("serializing to JSON: %w", err)
+	}
+	_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
+	return err
 }

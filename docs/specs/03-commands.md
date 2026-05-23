@@ -65,12 +65,13 @@ bifrost deploy \
 3. Verify artifact file exists and is readable → exit 3
 4. Create release directory: `{releases_root}/{YYYYMMDD-HHMMSS}` (or `--release-name`)
 5. Extract artifact into release directory (spinner + progress bar)
-6. Run `pre_artifact` hooks
-7. Link shared directories and files (see spec 04)
-8. Run `pre_enable_release` hooks
-9. Update `{releases_root}/current` symlink → new release directory
-10. Run `post_enable_release` hooks
-11. Purge old releases, keeping `settings.releases_to_keep` most recent
+6. Run `post_extract` hooks
+7. Run `pre_link` hooks
+8. Link shared directories and files (see spec 04)
+9. Run `pre_enable_release` hooks
+10. Update `{releases_root}/current` symlink → new release directory
+11. Run `post_enable_release` hooks
+12. Purge old releases, keeping `settings.releases_to_keep` most recent
 
 ---
 
