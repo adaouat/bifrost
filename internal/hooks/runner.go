@@ -56,7 +56,11 @@ func runOne(h config.HookEntry, data HookData, workingDir string, out io.Writer)
 		cmd = execCommand("sh", "-c", rendered)
 	}
 
-	cmd.Dir = workingDir
+	dir := workingDir
+	if h.CmdDir != "" {
+		dir = h.CmdDir
+	}
+	cmd.Dir = dir
 
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout

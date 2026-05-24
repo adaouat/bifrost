@@ -111,6 +111,28 @@ func TestRun_NonZeroExitReturnsError(t *testing.T) {
 	require.Error(t, Run(hooks, HookData{}, "/tmp", &out))
 }
 
+func TestRun_CmdDirOverridesWorkingDir(t *testing.T) {
+	var captured *exec.Cmd
+	execCommand = func(name string, args ...string) *exec.Cmd {
+		cmd := exec.Command(os.Args[0], "-test.run=^TestHelperProcess$")
+		cmd.Env = append(os.Environ(), "BIFROST_TEST_HELPER=1")
+		captured = cmd
+		return cmd
+	}
+	t.Cleanup(func() { execCommand = exec.Command })
+
+	// workingDir is "/" and CmdDir is "/tmp" — both exist, verifies CmdDir wins
+	hooks := []config.HookEntry{{
+		Cmd:      "echo dir",
+		CmdDir:   "/tmp",
+		Priority: prio(99999),
+	}}
+	var out bytes.Buffer
+	require.NoError(t, Run(hooks, HookData{}, "/", &out))
+	require.NotNil(t, captured)
+	assert.Equal(t, "/tmp", captured.Dir)
+}
+
 func TestRun_ExecutesInOrder(t *testing.T) {
 	var calls []cmdCall
 	execCommand = captureExec(&calls, 0)
