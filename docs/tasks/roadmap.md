@@ -83,7 +83,7 @@ Artifact extraction and symlink management. No hooks yet.
 - [x] `internal/strategy/atomic/deploy.go` — archive extraction (tar.gz, zip) via `mholt/archives`
 - [x] `internal/strategy/atomic/shared.go` — shared dir/file linking algorithm (spec 04)
 - [x] `internal/strategy/atomic/release.go` — release directory creation, `current` symlink update, purge
-- [ ] `deploy` command — full deploy flow (steps 1–11 from spec 03), no hooks
+- [x] `deploy` command — full deploy flow (steps 1–11 from spec 03), no hooks
 - [ ] `internal/tui/progress.go` — spinner + progress bar wrappers
 - [ ] Wire progress bar to extraction byte stream
 

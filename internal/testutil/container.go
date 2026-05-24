@@ -3,11 +3,12 @@
 package testutil
 
 import (
+	"bytes"
 	"context"
-	"io"
 	"strings"
 	"testing"
 
+	"github.com/moby/moby/api/pkg/stdcopy"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
@@ -59,24 +60,30 @@ type ExecResult struct {
 }
 
 // Exec runs a command inside the container and returns the result.
+// stdout and stderr are demultiplexed; Output contains only stdout.
 func (c *Container) Exec(ctx context.Context, cmd []string) (ExecResult, error) {
 	code, reader, err := c.inner.Exec(ctx, cmd)
 	if err != nil {
 		return ExecResult{}, err
 	}
 
-	out, err := io.ReadAll(reader)
-	if err != nil {
+	var stdout, stderr bytes.Buffer
+	if _, err := stdcopy.StdCopy(&stdout, &stderr, reader); err != nil {
 		return ExecResult{}, err
 	}
 
 	return ExecResult{
 		ExitCode: code,
-		Output:   strings.TrimRight(string(out), "\n"),
+		Output:   strings.TrimRight(stdout.String(), "\n"),
 	}, nil
 }
 
 // RunBifrost runs the bifrost binary with the given arguments.
 func (c *Container) RunBifrost(ctx context.Context, args ...string) (ExecResult, error) {
 	return c.Exec(ctx, append([]string{"/usr/local/bin/bifrost"}, args...))
+}
+
+// CopyFile copies content into the container at containerPath with the given file mode.
+func (c *Container) CopyFile(ctx context.Context, content []byte, containerPath string, mode int64) error {
+	return c.inner.CopyToContainer(ctx, content, containerPath, mode)
 }

@@ -1,0 +1,70 @@
+//go:build integration
+
+package cmd_test
+
+import (
+	"context"
+	"os"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/adaouat/bifrost/internal/testutil"
+)
+
+var bifrostBin string
+
+func TestMain(m *testing.M) {
+	path, err := testutil.BuildBifrostBinary()
+	if err != nil {
+		panic("BuildBifrostBinary: " + err.Error())
+	}
+	bifrostBin = path
+	os.Exit(m.Run())
+}
+
+func TestDeployCmd_E2E(t *testing.T) {
+	ctx := context.Background()
+	c := testutil.NewContainer(ctx, t, bifrostBin)
+
+	cfg, err := os.ReadFile("../../testdata/bifrost-deploy-int-test.yml")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, cfg, "/tmp/bifrost.yml", 0o644))
+
+	artifact, err := os.ReadFile("../../testdata/release.tar.gz")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, artifact, "/tmp/release.tar.gz", 0o644))
+
+	result, err := c.RunBifrost(ctx,
+		"deploy",
+		"--config", "/tmp/bifrost.yml",
+		"--env", "test",
+		"--app", "app",
+		"--artifact", "/tmp/release.tar.gz",
+		"--release-name", "test-r1",
+		"--init",
+	)
+	require.NoError(t, err)
+	assert.Equal(t, 0, result.ExitCode, "deploy output:\n%s", result.Output)
+
+	// Extracted file is present in the release directory.
+	res, err := c.Exec(ctx, []string{"test", "-f", "/var/releases/test-r1/public/index.html"})
+	require.NoError(t, err)
+	assert.Equal(t, 0, res.ExitCode, "public/index.html should exist in release")
+
+	// current symlink points to the new release.
+	res, err = c.Exec(ctx, []string{"readlink", "/var/releases/current"})
+	require.NoError(t, err)
+	assert.Equal(t, "/var/releases/test-r1", res.Output)
+
+	// Shared directory is symlinked.
+	res, err = c.Exec(ctx, []string{"readlink", "/var/releases/test-r1/var/log"})
+	require.NoError(t, err)
+	assert.Equal(t, "/var/shared/var/log", res.Output)
+
+	// Shared file is symlinked.
+	res, err = c.Exec(ctx, []string{"readlink", "/var/releases/test-r1/.env"})
+	require.NoError(t, err)
+	assert.Equal(t, "/var/shared/.env", res.Output)
+}
