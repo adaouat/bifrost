@@ -7,6 +7,7 @@ import (
 
 	"charm.land/fang/v2"
 	"github.com/adaouat/bifrost/internal/cmd"
+	"github.com/adaouat/bifrost/internal/cmderr"
 )
 
 func main() {
@@ -14,7 +15,7 @@ func main() {
 	if err == nil {
 		return
 	}
-	var exitErr *cmd.ExitError
+	var exitErr *cmderr.ExitError
 	if errors.As(err, &exitErr) {
 		os.Exit(exitErr.Code)
 	}
