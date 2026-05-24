@@ -76,6 +76,10 @@ func runOne(h config.HookEntry, data HookData, workingDir string, out io.Writer)
 		if stderr.Len() > 0 {
 			_, _ = fmt.Fprint(out, stderr.String())
 		}
+		if h.AllowFail {
+			_, _ = fmt.Fprintf(out, "warning: hook %q failed (allow_fail): %v\n", h.Cmd, runErr)
+			return nil
+		}
 		return fmt.Errorf("hook %q: %w", h.Cmd, runErr)
 	}
 

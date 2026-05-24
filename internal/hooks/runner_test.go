@@ -133,6 +133,41 @@ func TestRun_CmdDirOverridesWorkingDir(t *testing.T) {
 	assert.Equal(t, "/tmp", captured.Dir)
 }
 
+func TestRun_AllowFailContinuesOnNonZeroExit(t *testing.T) {
+	var calls []cmdCall
+	callNum := 0
+	execCommand = func(name string, args ...string) *exec.Cmd {
+		calls = append(calls, cmdCall{name, args})
+		callNum++
+		cmd := exec.Command(os.Args[0], "-test.run=^TestHelperProcess$")
+		env := append(os.Environ(), "BIFROST_TEST_HELPER=1")
+		if callNum == 1 {
+			env = append(env, "BIFROST_TEST_EXIT=1")
+		}
+		cmd.Env = env
+		return cmd
+	}
+	t.Cleanup(func() { execCommand = exec.Command })
+
+	hooks := []config.HookEntry{
+		{Cmd: "fail", AllowFail: true, Priority: prio(10)},
+		{Cmd: "succeed", Priority: prio(20)},
+	}
+	var out bytes.Buffer
+	require.NoError(t, Run(hooks, HookData{}, "/tmp", &out))
+	assert.Len(t, calls, 2)
+}
+
+func TestRun_AllowFailWritesWarning(t *testing.T) {
+	execCommand = captureExec(new([]cmdCall), 1)
+	t.Cleanup(func() { execCommand = exec.Command })
+
+	hooks := []config.HookEntry{{Cmd: "fail", AllowFail: true, Priority: prio(99999)}}
+	var out bytes.Buffer
+	require.NoError(t, Run(hooks, HookData{}, "/tmp", &out))
+	assert.Contains(t, out.String(), "warning")
+}
+
 func TestRun_ExecutesInOrder(t *testing.T) {
 	var calls []cmdCall
 	execCommand = captureExec(&calls, 0)
