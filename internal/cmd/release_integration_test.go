@@ -5,12 +5,53 @@ package cmd_test
 import (
 	"context"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/adaouat/bifrost/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestReleaseListCmd(t *testing.T) {
+	ctx := context.Background()
+	c := testutil.NewContainer(ctx, t, bifrostBin)
+
+	cfg, err := os.ReadFile("../../testdata/bifrost-deploy-int-test.yml")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, cfg, "/tmp/bifrost.yml", 0o644))
+
+	artifact, err := os.ReadFile("../../testdata/release.tar.gz")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, artifact, "/tmp/release.tar.gz", 0o644))
+
+	for _, name := range []string{"r1", "r2"} {
+		result, err := c.RunBifrost(ctx,
+			"deploy",
+			"--config", "/tmp/bifrost.yml",
+			"--env", "test",
+			"--app", "app",
+			"--artifact", "/tmp/release.tar.gz",
+			"--release-name", name,
+			"--init",
+		)
+		require.NoError(t, err)
+		assert.Equal(t, 0, result.ExitCode, "deploy %s:\n%s", name, result.Output)
+	}
+
+	result, err := c.RunBifrost(ctx,
+		"release", "list",
+		"--config", "/tmp/bifrost.yml",
+		"--env", "test",
+		"--app", "app",
+	)
+	require.NoError(t, err)
+	assert.Equal(t, 0, result.ExitCode, "release list output:\n%s", result.Output)
+	assert.Contains(t, result.Output, "r1")
+	assert.Contains(t, result.Output, "r2")
+	// r2 is the most recently deployed — should appear first (newest-first order)
+	assert.Less(t, strings.Index(result.Output, "r2"), strings.Index(result.Output, "r1"))
+}
 
 func TestReleaseActivateCmd_SwitchesCurrent(t *testing.T) {
 	ctx := context.Background()

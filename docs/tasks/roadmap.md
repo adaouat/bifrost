@@ -101,7 +101,7 @@ Hook execution engine and `release enable`.
 - [x] Hook `interactive` support (huh confirm prompt)
 - [x] Wire hooks into `artifact` command
 - [x] `release enable` command — full flow with hooks
-- [ ] `release list` command
+- [x] `release list` command
 
 Deliverable: full deploy with hooks, `bifrost release enable` and `bifrost release list` work.
 
