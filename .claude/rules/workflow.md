@@ -36,3 +36,13 @@ Pin exact versions everywhere — no `latest` string in mise config, go.mod, or 
 **Exceptions** — these tools use `latest` intentionally (they are format/lint utilities
 with no API surface that could break the build):
 `pkl`, `tombi`, `typos`, `yamlfmt`
+
+## Charmbracelet dependencies
+
+All charmbracelet packages use the `charm.land` module registry, not `github.com/charmbracelet`.
+
+```
+go get charm.land/<module>/v2   # e.g. charm.land/huh/v2, charm.land/bubbles/v2
+```
+
+Never add `github.com/charmbracelet/<module>` as a direct dependency.
