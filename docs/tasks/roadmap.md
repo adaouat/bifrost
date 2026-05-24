@@ -95,7 +95,7 @@ Deliverable: `bifrost deploy` deploys a real archive end-to-end.
 
 Hook execution engine and `release enable`.
 
-- [ ] `internal/hooks/runner.go` — `sh -c` execution, sudo, template rendering, priority sort
+- [x] `internal/hooks/runner.go` — `sh -c` execution, sudo, template rendering, priority sort
 - [ ] Hook `cmd_dir` support
 - [ ] Hook `allow_fail` support
 - [ ] Hook `interactive` support (huh confirm prompt)
