@@ -24,9 +24,11 @@ require (
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/STARRY-S/zip v0.2.3 // indirect
 	github.com/andybalholm/brotli v1.2.0 // indirect
+	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/bodgit/plumbing v1.3.0 // indirect
 	github.com/bodgit/sevenzip v1.6.1 // indirect
 	github.com/bodgit/windows v1.0.1 // indirect
+	github.com/catppuccin/go v0.2.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/charmbracelet/colorprofile v0.4.2 // indirect
@@ -34,6 +36,8 @@ require (
 	github.com/charmbracelet/ultraviolet v0.0.0-20260205113103-524a6607adb8 // indirect
 	github.com/charmbracelet/x/ansi v0.11.6 // indirect
 	github.com/charmbracelet/x/exp/charmtone v0.0.0-20250603201427-c31516f43444 // indirect
+	github.com/charmbracelet/x/exp/ordered v0.1.0 // indirect
+	github.com/charmbracelet/x/exp/strings v0.0.0-20240722160745-212f7b056ed0 // indirect
 	github.com/charmbracelet/x/termios v0.1.1 // indirect
 	github.com/charmbracelet/x/windows v0.2.2 // indirect
 	github.com/clipperhouse/displaywidth v0.11.0 // indirect
@@ -48,6 +52,7 @@ require (
 	github.com/docker/go-connections v0.6.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/dsnet/compress v0.0.2-0.20230904184137-39efe44ab707 // indirect
+	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/ebitengine/purego v0.10.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
@@ -65,6 +70,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.21 // indirect
 	github.com/mikelolasagasti/xz v1.0.1 // indirect
 	github.com/minio/minlz v1.0.1 // indirect
+	github.com/mitchellh/hashstructure/v2 v2.0.2 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/go-archive v0.2.0 // indirect
 	github.com/moby/moby/client v0.4.0 // indirect

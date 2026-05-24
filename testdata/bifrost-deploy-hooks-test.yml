@@ -1,0 +1,25 @@
+strategy: atomic
+paths:
+  releases_root: /var/releases
+  shared_root: /var/shared
+settings:
+  releases_to_keep: 5
+hooks:
+  post_extract:
+    - cmd: "touch /tmp/post_extract_ran"
+  pre_link:
+    - cmd: "touch /tmp/pre_link_ran"
+  pre_enable_release:
+    - cmd: "touch /tmp/pre_enable_ran"
+  post_enable_release:
+    - cmd: "touch /tmp/post_enable_ran"
+environments:
+  test:
+    applications:
+      app:
+        paths:
+          shared:
+            directories:
+              - var/log
+            files:
+              - .env

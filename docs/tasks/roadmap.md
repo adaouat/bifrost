@@ -99,7 +99,7 @@ Hook execution engine and `release enable`.
 - [x] Hook `cmd_dir` support
 - [x] Hook `allow_fail` support
 - [x] Hook `interactive` support (huh confirm prompt)
-- [ ] Wire hooks into `artifact` command
+- [x] Wire hooks into `artifact` command
 - [ ] `release enable` command — full flow with hooks
 - [ ] `release list` command
 
