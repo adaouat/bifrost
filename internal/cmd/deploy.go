@@ -10,6 +10,7 @@ import (
 
 	"github.com/adaouat/bifrost/internal/config"
 	"github.com/adaouat/bifrost/internal/strategy/atomic"
+	"github.com/adaouat/bifrost/internal/tui"
 )
 
 func newDeployCmd() *cobra.Command {
@@ -47,7 +48,8 @@ func newDeployCmd() *cobra.Command {
 				return err
 			}
 
-			if _, err := os.Stat(artifact); err != nil {
+			info, err := os.Stat(artifact)
+			if err != nil {
 				return &ExitError{Code: 3, Message: fmt.Sprintf("artifact not found: %s", artifact)}
 			}
 
@@ -56,9 +58,11 @@ func newDeployCmd() *cobra.Command {
 				return err
 			}
 
-			if err := atomic.Extract(context.Background(), artifact, releaseDir, nil); err != nil {
+			updateProgress, doneProgress := tui.NewProgressBar(info.Size(), cmd.OutOrStdout())
+			if err := atomic.Extract(context.Background(), artifact, releaseDir, updateProgress); err != nil {
 				return fmt.Errorf("extracting artifact: %w", err)
 			}
+			doneProgress()
 
 			if err := atomic.LinkShared(merged.SharedDirs, merged.SharedFiles, releaseDir, merged.SharedRoot); err != nil {
 				return fmt.Errorf("linking shared resources: %w", err)
