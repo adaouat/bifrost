@@ -168,6 +168,44 @@ func TestRun_AllowFailWritesWarning(t *testing.T) {
 	assert.Contains(t, out.String(), "warning")
 }
 
+func TestRun_InteractiveSkippedWhenNotEnabled(t *testing.T) {
+	var calls []cmdCall
+	execCommand = captureExec(&calls, 0)
+	t.Cleanup(func() { execCommand = exec.Command })
+
+	hooks := []config.HookEntry{{Cmd: "echo hi", Interactive: true, Priority: prio(99999)}}
+	var out bytes.Buffer
+	// interactive=false means prompts are disabled — hook is skipped with a warning
+	require.NoError(t, Run(hooks, HookData{}, "/tmp", &out))
+	assert.Empty(t, calls, "interactive hook must not execute when prompts disabled")
+	assert.Contains(t, out.String(), "warning")
+}
+
+func TestRun_InteractiveExecutesWhenConfirmed(t *testing.T) {
+	var calls []cmdCall
+	execCommand = captureExec(&calls, 0)
+	t.Cleanup(func() { execCommand = exec.Command })
+
+	hooks := []config.HookEntry{{Cmd: "echo hi", Interactive: true, Priority: prio(99999)}}
+	var out bytes.Buffer
+	// confirmFn returns true — hook proceeds
+	require.NoError(t, RunInteractive(hooks, HookData{}, "/tmp", &out, func(cmd string) bool { return true }))
+	assert.Len(t, calls, 1)
+}
+
+func TestRun_InteractiveSkippedWhenDeclined(t *testing.T) {
+	var calls []cmdCall
+	execCommand = captureExec(&calls, 0)
+	t.Cleanup(func() { execCommand = exec.Command })
+
+	hooks := []config.HookEntry{{Cmd: "echo hi", Interactive: true, Priority: prio(99999)}}
+	var out bytes.Buffer
+	// confirmFn returns false — hook is skipped with a warning
+	require.NoError(t, RunInteractive(hooks, HookData{}, "/tmp", &out, func(cmd string) bool { return false }))
+	assert.Empty(t, calls)
+	assert.Contains(t, out.String(), "warning")
+}
+
 func TestRun_ExecutesInOrder(t *testing.T) {
 	var calls []cmdCall
 	execCommand = captureExec(&calls, 0)

@@ -31,19 +31,32 @@ type Directories struct {
 	Shared   string // Shared root directory
 }
 
-// Run executes hooks in order. Hooks must already be sorted by priority
-// (config.Merge guarantees this). workingDir is the default working directory
-// for each hook. Hook stdout and stderr are written to out.
+// Run executes hooks in order, skipping interactive hooks with a warning.
+// Hooks must already be sorted by priority (config.Merge guarantees this).
+// workingDir is the default working directory. Hook output is written to out.
 func Run(hooks []config.HookEntry, data HookData, workingDir string, out io.Writer) error {
+	return RunInteractive(hooks, data, workingDir, out, nil)
+}
+
+// RunInteractive is like Run but calls confirmFn before each interactive hook.
+// If confirmFn is nil or returns false, the hook is skipped with a warning.
+func RunInteractive(hooks []config.HookEntry, data HookData, workingDir string, out io.Writer, confirmFn func(cmd string) bool) error {
 	for _, h := range hooks {
-		if err := runOne(h, data, workingDir, out); err != nil {
+		if err := runOne(h, data, workingDir, out, confirmFn); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func runOne(h config.HookEntry, data HookData, workingDir string, out io.Writer) error {
+func runOne(h config.HookEntry, data HookData, workingDir string, out io.Writer, confirmFn func(cmd string) bool) error {
+	if h.Interactive {
+		if confirmFn == nil || !confirmFn(h.Cmd) {
+			_, _ = fmt.Fprintf(out, "warning: skipping interactive hook %q\n", h.Cmd)
+			return nil
+		}
+	}
+
 	rendered, err := renderCmd(h.Cmd, data)
 	if err != nil {
 		return fmt.Errorf("hook template: %w", err)
