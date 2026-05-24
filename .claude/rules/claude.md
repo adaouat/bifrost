@@ -14,7 +14,7 @@
 - Never implement anything not on the current roadmap without asking first.
 - If a task feels too large to implement safely in one step, break it down and propose
   the breakdown before starting.
-- Always follow the three-step commit flow (see workflow rules). No shortcuts.
+- Always follow the two-step commit flow (see workflow rules). No shortcuts.
 
 ## TDD discipline
 
@@ -32,8 +32,7 @@
 
 ## Roadmap discipline
 
-- Before starting a task: read the current roadmap, confirm the task is `[ ]`, mark it
-  `[~]`, commit.
+- Before starting a task: read the current roadmap, confirm the task is `[ ]`.
 - After completing a task: mark it `[x]`, commit implementation and roadmap together.
 - If a new task is discovered mid-implementation, add it to the roadmap — do not silently
   implement it.

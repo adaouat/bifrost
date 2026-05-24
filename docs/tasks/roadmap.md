@@ -4,18 +4,16 @@ Milestones in implementation order. Each builds on the previous.
 
 ## Working process
 
-Each task follows a three-step commit flow:
+Each task follows a two-step commit flow:
 
-1. **Start** — mark the task `[~]` in the roadmap, commit the roadmap alone.
-2. **Implement** — do the work.
-3. **Done** — mark the task `[x]` in the roadmap, commit implementation + roadmap update together.
+1. **Implement** — do the work (TDD: failing test first, then implementation).
+2. **Done** — mark the task `[x]` in the roadmap, commit implementation + roadmap update together.
 
 Task status markers:
 
 | Marker | Meaning |
 |---|---|
 | `[ ]` | Not started |
-| `[~]` | In progress |
 | `[x]` | Done |
 
 One task at a time. The roadmap always reflects the current state of the branch.
@@ -83,7 +81,7 @@ Deliverable: `bifrost config` works on a real `.bifrost.yml`.
 Artifact extraction and symlink management. No hooks yet.
 
 - [x] `internal/strategy/atomic/deploy.go` — archive extraction (tar.gz, zip) via `mholt/archives`
-- [ ] `internal/strategy/atomic/shared.go` — shared dir/file linking algorithm (spec 04)
+- [x] `internal/strategy/atomic/shared.go` — shared dir/file linking algorithm (spec 04)
 - [ ] `internal/strategy/atomic/release.go` — release directory creation, `current` symlink update, purge
 - [ ] `deploy` command — full deploy flow (steps 1–11 from spec 03), no hooks
 - [ ] `internal/tui/progress.go` — spinner + progress bar wrappers

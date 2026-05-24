@@ -2,11 +2,10 @@
 
 ## Roadmap process
 
-Every code task follows a strict three-step commit flow. Never deviate from it.
+Every code task follows a strict two-step commit flow. Never deviate from it.
 
-1. **Start** — mark the task `[~]` in `docs/tasks/roadmap.md`, commit the roadmap change alone.
-2. **Implement** — do the work (TDD: failing test first, then implementation).
-3. **Done** — mark the task `[x]` in `docs/tasks/roadmap.md`, commit implementation + roadmap update together.
+1. **Implement** — do the work (TDD: failing test first, then implementation).
+2. **Done** — mark the task `[x]` in `docs/tasks/roadmap.md`, commit implementation + roadmap update together.
 
 One task at a time. Never start a second task before the first is committed as `[x]`.
 Never implement anything that is not a current roadmap task without explicit user approval.
