@@ -111,7 +111,7 @@ Deliverable: full deploy with hooks, `bifrost release enable` and `bifrost relea
 
 Rollback, release naming, init command.
 
-- [ ] `release rollback` command
+- [x] `release rollback` command
 - [ ] `--release-name` flag on `artifact`
 - [ ] `init` command (create roots, validate config)
 

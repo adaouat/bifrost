@@ -53,6 +53,84 @@ func TestReleaseListCmd(t *testing.T) {
 	assert.Less(t, strings.Index(result.Output, "r2"), strings.Index(result.Output, "r1"))
 }
 
+func TestReleaseRollbackCmd_SwitchesToPrevious(t *testing.T) {
+	ctx := context.Background()
+	c := testutil.NewContainer(ctx, t, bifrostBin)
+
+	cfg, err := os.ReadFile("../../testdata/bifrost-deploy-int-test.yml")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, cfg, "/tmp/bifrost.yml", 0o644))
+
+	artifact, err := os.ReadFile("../../testdata/release.tar.gz")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, artifact, "/tmp/release.tar.gz", 0o644))
+
+	for _, name := range []string{"r1", "r2"} {
+		result, err := c.RunBifrost(ctx,
+			"deploy",
+			"--config", "/tmp/bifrost.yml",
+			"--env", "test",
+			"--app", "app",
+			"--artifact", "/tmp/release.tar.gz",
+			"--release-name", name,
+			"--init",
+		)
+		require.NoError(t, err)
+		assert.Equal(t, 0, result.ExitCode, "deploy %s:\n%s", name, result.Output)
+	}
+
+	res, err := c.Exec(ctx, []string{"readlink", "/var/releases/current"})
+	require.NoError(t, err)
+	assert.Equal(t, "/var/releases/r2", res.Output, "current should point to r2 after two deploys")
+
+	result, err := c.RunBifrost(ctx,
+		"release", "rollback",
+		"--config", "/tmp/bifrost.yml",
+		"--env", "test",
+		"--app", "app",
+	)
+	require.NoError(t, err)
+	assert.Equal(t, 0, result.ExitCode, "release rollback output:\n%s", result.Output)
+
+	res, err = c.Exec(ctx, []string{"readlink", "/var/releases/current"})
+	require.NoError(t, err)
+	assert.Equal(t, "/var/releases/r1", res.Output, "current should point to r1 after rollback")
+}
+
+func TestReleaseRollbackCmd_NoPreviousRelease(t *testing.T) {
+	ctx := context.Background()
+	c := testutil.NewContainer(ctx, t, bifrostBin)
+
+	cfg, err := os.ReadFile("../../testdata/bifrost-deploy-int-test.yml")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, cfg, "/tmp/bifrost.yml", 0o644))
+
+	artifact, err := os.ReadFile("../../testdata/release.tar.gz")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, artifact, "/tmp/release.tar.gz", 0o644))
+
+	result, err := c.RunBifrost(ctx,
+		"deploy",
+		"--config", "/tmp/bifrost.yml",
+		"--env", "test",
+		"--app", "app",
+		"--artifact", "/tmp/release.tar.gz",
+		"--release-name", "only-release",
+		"--init",
+	)
+	require.NoError(t, err)
+	assert.Equal(t, 0, result.ExitCode, "deploy output:\n%s", result.Output)
+
+	result, err = c.RunBifrost(ctx,
+		"release", "rollback",
+		"--config", "/tmp/bifrost.yml",
+		"--env", "test",
+		"--app", "app",
+	)
+	require.NoError(t, err)
+	assert.Equal(t, 3, result.ExitCode, "rollback with single release should exit 3:\n%s", result.Output)
+}
+
 func TestReleaseActivateCmd_SwitchesCurrent(t *testing.T) {
 	ctx := context.Background()
 	c := testutil.NewContainer(ctx, t, bifrostBin)
