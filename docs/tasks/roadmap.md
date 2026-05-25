@@ -113,7 +113,7 @@ Rollback, release naming, init command.
 
 - [x] `release rollback` command
 - [x] `--release-name` flag on `artifact`
-- [ ] `init` command (create roots, validate config)
+- [x] `init` command (create roots, validate config)
 
 Deliverable: full release management workflow complete.
 
