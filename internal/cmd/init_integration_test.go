@@ -21,7 +21,7 @@ func TestInitCmd_CreatesRoots(t *testing.T) {
 	require.NoError(t, c.CopyFile(ctx, cfg, "/tmp/bifrost.yml", 0o644))
 
 	result, err := c.RunBifrost(ctx,
-		"init",
+		"release", "init",
 		"--config", "/tmp/bifrost.yml",
 		"--env", "test",
 		"--app", "app",
@@ -48,7 +48,7 @@ func TestInitCmd_Idempotent(t *testing.T) {
 
 	for i := range 2 {
 		result, err := c.RunBifrost(ctx,
-			"init",
+			"release", "init",
 			"--config", "/tmp/bifrost.yml",
 			"--env", "test",
 			"--app", "app",

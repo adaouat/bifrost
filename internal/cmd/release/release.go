@@ -8,6 +8,7 @@ func NewReleaseCmd() *cobra.Command {
 		Short: "Manage releases for a deployed application",
 	}
 
+	cmd.AddCommand(newInitCmd())
 	cmd.AddCommand(newListCmd())
 	cmd.AddCommand(newActivateCmd())
 	cmd.AddCommand(newRollbackCmd())

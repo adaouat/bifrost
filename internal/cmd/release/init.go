@@ -1,11 +1,13 @@
-package cmd
+package release
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
 
+	"github.com/adaouat/bifrost/internal/cmderr"
 	"github.com/adaouat/bifrost/internal/config"
 )
 
@@ -23,7 +25,7 @@ func newInitCmd() *cobra.Command {
 				return fmt.Errorf("--app (or --application) is required")
 			}
 
-			cfg, err := config.Load(resolveConfigPath(cmd.Root()))
+			cfg, err := config.Load(releaseConfigPath(cmd))
 			if err != nil {
 				return err
 			}
@@ -32,10 +34,10 @@ func newInitCmd() *cobra.Command {
 				return err
 			}
 			if errs := config.Validate(merged); len(errs) > 0 {
-				return &ExitError{Code: 2, Message: strings.Join(errs, "\n")}
+				return &cmderr.ExitError{Code: 2, Message: strings.Join(errs, "\n")}
 			}
 
-			return ensureRoots(merged.ReleasesRoot, merged.SharedRoot, true)
+			return ensureRoots(merged.ReleasesRoot, merged.SharedRoot)
 		},
 	}
 
@@ -46,4 +48,13 @@ func newInitCmd() *cobra.Command {
 	f.StringVar(&app, "app", "", "alias for --application")
 
 	return cmd
+}
+
+func ensureRoots(releasesRoot, sharedRoot string) error {
+	for _, dir := range []string{releasesRoot, sharedRoot} {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			return fmt.Errorf("creating directory %s: %w", dir, err)
+		}
+	}
+	return nil
 }
