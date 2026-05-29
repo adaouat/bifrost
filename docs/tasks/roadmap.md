@@ -119,7 +119,24 @@ Deliverable: full release management workflow complete.
 
 ---
 
-## M5 — TUI Polish
+## M5 — Config Command Restructure
+
+Promote `config` from a single command into a subcommand group. Remove the
+top-level `init` command (no replacement at root level).
+
+- [ ] `config show [--env --app]` — replaces current `config`; prints full merged
+  config, or app-scoped config when `--env`/`--app` are given
+- [ ] `config check --env --app` — replaces `config --env --app` validation path;
+  validates required fields, reports all errors, exits 2 on failure
+- [ ] `config init` — scaffolds a default `.bifrost.yml` with inline comments
+  covering every field; overwrites only with explicit `--force`
+
+Deliverable: `bifrost config` shows a help screen with three subcommands;
+`bifrost config init` produces a ready-to-edit config file.
+
+---
+
+## M6 — TUI Polish
 
 Interactive flows, output modes, dry run.
 
@@ -134,7 +151,7 @@ Deliverable: all output modes and interactive flows work.
 
 ---
 
-## M6 — Quality
+## M7 — Quality
 
 Test coverage and hardening. CI/CD is already live from M0; this milestone
 fills in the test gaps that weren't covered incrementally.
@@ -142,8 +159,8 @@ fills in the test gaps that weren't covered incrementally.
 - [ ] Unit tests for config merge logic
 - [ ] Unit tests for shared resource linking algorithm
 - [ ] Unit tests for hook template rendering
-- [ ] Integration tests for `artifact` command (real filesystem, temp dir)
-- [ ] Integration tests for `release enable` / `release rollback`
+- [ ] Integration tests for `deploy` command (real filesystem, temp dir)
+- [ ] Integration tests for `release activate` / `release rollback`
 
 ---
 
