@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/adaouat/heraut/v0.13.4/schema.json
+
+version: "1"
+versioning:
+  strategy: semver
+  tag_prefix: v
+changelog:
+  generator: git-cliff
+  output: CHANGELOG.md
