@@ -55,6 +55,36 @@ func TestConfigShowCmd_WithEnvApp_OutputsMergedJSON(t *testing.T) {
 	assert.Equal(t, "production", vars["app_env"])
 }
 
+func TestConfigShowCmd_EnvWithoutApp_Errors(t *testing.T) {
+	root := cmd.NewRootCmd()
+	root.SetOut(&bytes.Buffer{})
+	root.SetErr(&bytes.Buffer{})
+	root.SetArgs([]string{
+		"config", "show",
+		"--config", "../../testdata/bifrost-full.yml",
+		"--env", "prod",
+	})
+
+	err := root.Execute()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "--env and --app")
+}
+
+func TestConfigShowCmd_AppWithoutEnv_Errors(t *testing.T) {
+	root := cmd.NewRootCmd()
+	root.SetOut(&bytes.Buffer{})
+	root.SetErr(&bytes.Buffer{})
+	root.SetArgs([]string{
+		"config", "show",
+		"--config", "../../testdata/bifrost-full.yml",
+		"--app", "web",
+	})
+
+	err := root.Execute()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "--env and --app")
+}
+
 func TestConfigShowCmd_MissingConfigFile(t *testing.T) {
 	root := cmd.NewRootCmd()
 	root.SetOut(&bytes.Buffer{})

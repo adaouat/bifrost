@@ -15,12 +15,16 @@ func newShowCmd() *cobra.Command {
 		Use:   "show",
 		Short: "Display the effective configuration as JSON",
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			if (env == "") != (app == "") {
+				return fmt.Errorf("--env and --app must be used together")
+			}
+
 			cfg, err := config.Load(configPath(cmd))
 			if err != nil {
 				return err
 			}
 
-			if env == "" && app == "" {
+			if env == "" {
 				return printJSON(cmd, cfg)
 			}
 
