@@ -1,0 +1,5 @@
+environments:
+  prod:
+    applications:
+      web:
+        name: Web
