@@ -128,7 +128,7 @@ top-level `init` command (no replacement at root level).
   config, or app-scoped config when `--env`/`--app` are given
 - [x] `config check --env --app` — replaces `config --env --app` validation path;
   validates required fields, reports all errors, exits 2 on failure
-- [ ] `config init` — scaffolds a default `.bifrost.yml` with inline comments
+- [x] `config init` — scaffolds a default `.bifrost.yml` with inline comments
   covering every field; overwrites only with explicit `--force`
 
 Deliverable: `bifrost config` shows a help screen with three subcommands;
