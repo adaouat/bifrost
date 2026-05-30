@@ -17,9 +17,9 @@ func IsTTY() bool {
 	return term.IsTerminal(os.Stdout.Fd())
 }
 
-// RunWithSpinner runs fn inside a spinner when stdout is a TTY; otherwise calls fn directly.
+// RunWithSpinner runs fn inside a spinner when in human mode on a real TTY; otherwise calls fn directly.
 func RunWithSpinner(ctx context.Context, title string, fn func(context.Context) error) error {
-	if !IsTTY() {
+	if !IsHumanMode() || !IsTTY() {
 		return fn(ctx)
 	}
 	return spinner.New().
@@ -31,15 +31,15 @@ func RunWithSpinner(ctx context.Context, title string, fn func(context.Context) 
 
 // NewProgressBar returns an update func and a done func for rendering a terminal progress bar.
 // total is the expected byte count used to compute fill percentage.
-// Only renders when stdout is a real TTY.
+// Only renders in human mode when stdout is a real TTY.
 func NewProgressBar(total int64, out io.Writer) (update func(n int64), done func()) {
 	model := progress.New(progress.WithDefaultBlend(), progress.WithWidth(60))
 	var written atomic.Int64
-	tty := IsTTY()
+	active := IsHumanMode() && IsTTY()
 
 	update = func(n int64) {
 		written.Add(n)
-		if !tty || total <= 0 {
+		if !active || total <= 0 {
 			return
 		}
 		pct := float64(written.Load()) / float64(total)
@@ -50,7 +50,7 @@ func NewProgressBar(total int64, out io.Writer) (update func(n int64), done func
 	}
 
 	done = func() {
-		if tty {
+		if active {
 			_, _ = fmt.Fprintf(out, "\r%s\n", model.ViewAs(1.0))
 		}
 	}

@@ -36,7 +36,11 @@ func NewRootCmd() *cobra.Command {
 			if verbose {
 				clog.SetLevel(clog.DebugLevel)
 			}
-			return ValidateOutputMode(output)
+			if err := ValidateOutputMode(output); err != nil {
+				return err
+			}
+			tui.SetOutputMode(output)
+			return nil
 		},
 	}
 
