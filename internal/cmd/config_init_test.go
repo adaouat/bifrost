@@ -3,7 +3,6 @@ package cmd_test
 import (
 	"bytes"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/adaouat/bifrost/internal/cmd"
@@ -34,8 +33,8 @@ func TestConfigInitCmd_WritesDefaultConfig(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.NotEmpty(t, written, "should have written config content")
-	assert.True(t, strings.Contains(string(written), "releases_root"), "scaffold should contain releases_root")
-	assert.True(t, strings.Contains(string(written), "shared_root"), "scaffold should contain shared_root")
+	assert.Contains(t, string(written), "releases_root")
+	assert.Contains(t, string(written), "shared_root")
 }
 
 func TestConfigInitCmd_RefusesOverwriteWithoutForce(t *testing.T) {
