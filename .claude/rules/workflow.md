@@ -34,8 +34,8 @@ Never commit code that does not pass `hk check`.
 Pin exact versions everywhere — no `latest` string in mise config, go.mod, or CI workflows.
 
 **Exceptions** — these tools use `latest` intentionally (they are format/lint utilities
-with no API surface that could break the build):
-`pkl`, `tombi`, `typos`, `yamlfmt`
+or dev/editor tooling with no API surface that could break the build):
+`pkl`, `tombi`, `typos`, `yamlfmt`, `gopls` (and similar LSP/editor tools)
 
 ## Charmbracelet dependencies
 

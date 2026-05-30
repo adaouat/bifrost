@@ -37,7 +37,7 @@ Directory layout on the target server:
 
 - [`docs/specs/`](docs/specs/) — full technical specifications (commands, config schema, hooks)
 - [`docs/adr/`](docs/adr/) — architecture decision records
-- [`docs/tasks/`](docs/tasks/) — version roadmap (v0–v5) and implementation milestones (M0–M6)
+- [`docs/tasks/`](docs/tasks/) — version roadmap (v0–v5) and implementation milestones (M0–M7)
 
 ## Tech stack
 
@@ -65,13 +65,18 @@ cmd/bifrost/main.go           # Entry point: fang.Execute
 internal/
   cmd/                        # cobra command definitions
     root.go                   # Global flags: --config, --output, --dry-run, --verbose
-    config.go                 # `config` command
+    config/
+      config.go               # `config` parent command
+      show.go                 # `config show`
+      check.go                # `config check`
+      init.go                 # `config init`
     deploy.go                 # `deploy` command
     release/
       release.go              # `release` parent
       list.go                 # `release list`
       activate.go             # `release activate`
       rollback.go             # `release rollback`
+      init.go                 # `release init`
   config/
     schema.go                 # Go structs matching the YAML schema
     loader.go                 # YAML loading + strict validation
@@ -103,6 +108,12 @@ mise run lint:fix           # Auto-fix all linters (hk fix)
 mise run lint:go:check      # Check Go code (golangci-lint)
 mise run lint:go:fix        # Fix Go code (golangci-lint --fix)
 mise run run -- <args>      # Run the CLI in dev mode
+```
+
+Integration tests (requires Docker):
+
+```bash
+go test -tags integration ./...
 ```
 
 For targeted lint fixes: `hk fix -S <linter>` (e.g. `hk fix -S golangci-lint`, `hk fix -S yamlfmt`).
