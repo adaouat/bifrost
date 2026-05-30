@@ -37,6 +37,19 @@ Pin exact versions everywhere — no `latest` string in mise config, go.mod, or 
 or dev/editor tooling with no API surface that could break the build):
 `pkl`, `tombi`, `typos`, `yamlfmt`, `gopls` (and similar LSP/editor tools)
 
+## GitHub Actions
+
+Pin every action to a full commit SHA, never to a mutable tag. Add the semantic
+version as a comment so the intent is still readable:
+
+```yaml
+uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+```
+
+To update an action, find the new SHA for the desired tag on GitHub
+(`github.com/<owner>/<action>/tags`) and replace both the SHA and the comment.
+Never use `@v4`, `@main`, or `@latest` — these are mutable and can be hijacked.
+
 ## Charmbracelet dependencies
 
 All charmbracelet packages use the `charm.land` module registry, not `github.com/charmbracelet`.

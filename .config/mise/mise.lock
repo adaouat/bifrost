@@ -100,6 +100,10 @@ url = "https://dl.google.com/go/go1.26.3.windows-amd64.zip"
 version = "0.22.0"
 backend = "go:golang.org/x/tools/gopls"
 
+[[tools."go:golang.org/x/vuln/cmd/govulncheck"]]
+version = "1.3.0"
+backend = "go:golang.org/x/vuln/cmd/govulncheck"
+
 [[tools.golangci-lint]]
 version = "2.12.2"
 backend = "aqua:golangci/golangci-lint"
