@@ -13,26 +13,26 @@ const scaffold = `# bifrost configuration
 # Reference: https://github.com/adaouat/bifrost/blob/main/docs/specs/02-configuration.md
 
 # ── Strategy ───────────────────────────────────────────────────────────────────
-strategy: atomic  # v0 valid values: atomic
+strategy: atomic # v0 valid values: atomic
 
 # ── Global defaults ────────────────────────────────────────────────────────────
 paths:
-  releases_root: /var/www/releases  # REQUIRED after merge
-  shared_root: /var/www/shared      # REQUIRED after merge
+  releases_root: /var/www/releases # REQUIRED after merge
+  shared_root: /var/www/shared # REQUIRED after merge
   shared:
-    directories: []  # Relative paths symlinked into each release
-    files: []        # Relative paths symlinked into each release
+    directories: [] # Relative paths symlinked into each release
+    files: [] # Relative paths symlinked into each release
 
 settings:
-  releases_to_keep: 10  # Number of old releases to retain
+  releases_to_keep: 10 # Number of old releases to retain
 
-variables: {}  # String key-value pairs for hook templates: {{ .Variables.key }}
+variables: {} # String key-value pairs for hook templates: {{ .Variables.key }}
 
 hooks:
-  post_extract: []         # After extraction, before shared linking
-  pre_link: []             # Before shared resource linking
-  pre_enable_release: []   # Before current symlink update
-  post_enable_release: []  # After current symlink update
+  post_extract: [] # After extraction, before shared linking
+  pre_link: [] # Before shared resource linking
+  pre_enable_release: [] # Before current symlink update
+  post_enable_release: [] # After current symlink update
 
 # ── Environments ───────────────────────────────────────────────────────────────
 environments:
