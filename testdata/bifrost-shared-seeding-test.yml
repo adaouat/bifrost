@@ -1,0 +1,14 @@
+strategy: atomic
+paths:
+  releases_root: /var/releases
+  shared_root: /var/shared
+settings:
+  releases_to_keep: 5
+environments:
+  test:
+    applications:
+      app:
+        paths:
+          shared:
+            directories:
+              - config
