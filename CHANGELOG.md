@@ -1,31 +1,76 @@
 # Changelog
 
-## [0.5.0](//compare/v0.4.0..v0.5.0) - 2026-05-30
+## [0.6.0](//compare/v0.5.0..v0.6.0) - 2026-05-30
 
 ### 🚀 Features
 
-- *(cmd)* Implement init command — create releases_root and shared_root - ([211201e](//commit/211201ef4721d9b55a339da2d60e054dc97d61d4))
+- *(cmdutil)* Centralise config-path resolution with BIFROST_FILE env var - ([bcb16c1](//commit/bcb16c14c7a9f372f836bc233d865caf2654771f))
 
-- *(cmd/release)* Implement release rollback — activate the preceding release - ([e6affcc](//commit/e6affcc7d9ca8514af62c01dc3f859d40296e9cd))
+- *(config)* Promote config to subcommand group — add config show - ([e52001a](//commit/e52001a2defbee45ba447e233a7f73fbd59536b5))
+
+- *(config)* Add config check subcommand - ([6994b39](//commit/6994b39f73a4ccd2e9cb63be49a6abde2ee3cc5c))
+
+- *(config)* Add config init subcommand - ([45c59da](//commit/45c59da5596179bee67a7b26534c7b91be038f24))
+
+
+### 🐛 Bug Fixes
+
+- *(config)* Config check exits 0 silently on valid config - ([d03bfc3](//commit/d03bfc35976324e6880a2d9dd6046d4d9828b496))
+
+- *(config)* Document that init test globals are not parallel-safe - ([913d891](//commit/913d8915998d73d8364d63b47c540f67d581c0e5))
+
+- *(config)* Require --env and --app together in config show - ([0bf33d3](//commit/0bf33d31a534936f82af98bbdba66eb8709fbba9))
+
+- *(config)* Pre-format scaffold to match yamlfmt output - ([76e9504](//commit/76e950441229b9ea27f3803d814c523f171cab9f))
 
 
 ### 🚜 Refactor
 
-- *(cmd)* Move init under release — bifrost release init - ([7692ba8](//commit/7692ba896e8beb7f51d784764d0df97483d98b01))
+- *(config)* Rename statFile to pathStat for consistency - ([438dbc1](//commit/438dbc1f5ea5501d215a8e3f13a66aec6174f72c))
 
 
 ### 📚 Documentation
 
-- *(roadmap)* Mark --release-name as done — already implemented on deploy cmd - ([54c213a](//commit/54c213af55a0e4a425fcf85f7b84550decbd28c4))
+- Update CLAUDE.md and workflow rules after M5 - ([29db012](//commit/29db0127f03df48d1aa2839f4e6f43c70ae2f158))
 
-- *(roadmap)* Add M5 config restructure, renumber M5→M6 and M6→M7 - ([e9937a6](//commit/e9937a6481c4dc00fa8620c45090ffaa2cc5c4d0))
+
+### 🧪 Testing
+
+- *(config)* Use assert.Contains over assert.True(strings.Contains) - ([9769d60](//commit/9769d600c74a96d4564f0d2b2b9a50841527c9bf))
 
 
 ### ⚙️ Miscellaneous Tasks
 
-- Init Héraut config - ([6056d21](//commit/6056d211a598a1e96c1958de7878ea9ce01e779a))
+- Add gopls and Claude Code plugins for LSP and dev tooling - ([4e97c89](//commit/4e97c8993d29729a5efff3f42e4565bc5af47e42))
 
-- Exclude CHANGELOG.md from typos — commit SHAs trigger false positives - ([7dcc188](//commit/7dcc1884a971cf23678668e0b8001c34feac6915))
+- Fix workflow errors and pin actions to SHA - ([cdc1bf4](//commit/cdc1bf48426ed422156fadcda1cf640bee09644d))
+
+## [0.5.0](//compare/v0.4.0..v0.5.0) - 2026-05-30
+
+### 🚀 Features
+
+- *(cmd)* Implement init command — create releases_root and shared_root - ([211201e](//commit/211201ef4721d9b55a339da2d60e054dc97d61d4)) by @bchatard
+
+- *(cmd/release)* Implement release rollback — activate the preceding release - ([e6affcc](//commit/e6affcc7d9ca8514af62c01dc3f859d40296e9cd)) by @bchatard
+
+
+### 🚜 Refactor
+
+- *(cmd)* Move init under release — bifrost release init - ([7692ba8](//commit/7692ba896e8beb7f51d784764d0df97483d98b01)) by @bchatard
+
+
+### 📚 Documentation
+
+- *(roadmap)* Mark --release-name as done — already implemented on deploy cmd - ([54c213a](//commit/54c213af55a0e4a425fcf85f7b84550decbd28c4)) by @bchatard
+
+- *(roadmap)* Add M5 config restructure, renumber M5→M6 and M6→M7 - ([e9937a6](//commit/e9937a6481c4dc00fa8620c45090ffaa2cc5c4d0)) by @bchatard
+
+
+### ⚙️ Miscellaneous Tasks
+
+- Init Héraut config - ([6056d21](//commit/6056d211a598a1e96c1958de7878ea9ce01e779a)) by @bchatard
+
+- Exclude CHANGELOG.md from typos — commit SHAs trigger false positives - ([7dcc188](//commit/7dcc1884a971cf23678668e0b8001c34feac6915)) by @bchatard
 
 ## [0.4.0](//compare/v0.3.0..v0.4.0) - 2026-05-24
 
