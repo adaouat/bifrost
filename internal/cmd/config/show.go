@@ -1,22 +1,21 @@
-package cmd
+package config
 
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/adaouat/bifrost/internal/config"
 	"github.com/spf13/cobra"
 )
 
-func newConfigCmd() *cobra.Command {
+func newShowCmd() *cobra.Command {
 	var env, app string
 
 	cmd := &cobra.Command{
-		Use:   "config",
-		Short: "Display and validate the effective configuration",
+		Use:   "show",
+		Short: "Display the effective configuration as JSON",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			cfg, err := config.Load(resolveConfigPath(cmd.Root()))
+			cfg, err := config.Load(configPath(cmd))
 			if err != nil {
 				return err
 			}
@@ -28,12 +27,6 @@ func newConfigCmd() *cobra.Command {
 			merged, err := config.Merge(cfg, env, app)
 			if err != nil {
 				return err
-			}
-			if errs := config.Validate(merged); len(errs) > 0 {
-				return &ExitError{
-					Code:    2,
-					Message: strings.Join(errs, "\n"),
-				}
 			}
 			return printJSON(cmd, merged)
 		},

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	clog "charm.land/log/v2"
+	"github.com/adaouat/bifrost/internal/cmd/config"
 	"github.com/adaouat/bifrost/internal/cmd/release"
 	"github.com/adaouat/bifrost/internal/tui"
 	"github.com/spf13/cobra"
@@ -41,7 +42,7 @@ func NewRootCmd() *cobra.Command {
 
 	root.SetVersionTemplate(tui.VersionTemplate())
 
-	root.AddCommand(newConfigCmd())
+	root.AddCommand(config.NewConfigCmd())
 	root.AddCommand(newDeployCmd())
 	root.AddCommand(release.NewReleaseCmd())
 

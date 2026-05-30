@@ -124,7 +124,7 @@ Deliverable: full release management workflow complete.
 Promote `config` from a single command into a subcommand group. Remove the
 top-level `init` command (no replacement at root level).
 
-- [ ] `config show [--env --app]` — replaces current `config`; prints full merged
+- [x] `config show [--env --app]` — replaces current `config`; prints full merged
   config, or app-scoped config when `--env`/`--app` are given
 - [ ] `config check --env --app` — replaces `config --env --app` validation path;
   validates required fields, reports all errors, exits 2 on failure
