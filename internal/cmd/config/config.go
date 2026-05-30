@@ -20,7 +20,7 @@ func NewConfigCmd() *cobra.Command {
 	return cmd
 }
 
-var statFile = os.Stat
+var pathStat = os.Stat
 
 // configPath resolves the config file path from the root command's --config flag,
 // falling back to .config/bifrost.yml then .bifrost.yml.
@@ -30,7 +30,7 @@ func configPath(cmd *cobra.Command) string {
 		path, _ := root.PersistentFlags().GetString("config")
 		return path
 	}
-	if _, err := statFile(".config/bifrost.yml"); err == nil {
+	if _, err := pathStat(".config/bifrost.yml"); err == nil {
 		return ".config/bifrost.yml"
 	}
 	return ".bifrost.yml"
