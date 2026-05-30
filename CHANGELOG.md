@@ -1,49 +1,75 @@
 # Changelog
 
-## [0.6.0](//compare/v0.5.0..v0.6.0) - 2026-05-30
+## [0.7.0](//compare/v0.6.0..v0.7.0) - 2026-05-30
 
 ### 🚀 Features
 
-- *(cmdutil)* Centralise config-path resolution with BIFROST_FILE env var - ([bcb16c1](//commit/bcb16c14c7a9f372f836bc233d865caf2654771f))
+- *(deploy,release)* Dry-run mode prints planned actions without executing - ([31f2b13](//commit/31f2b13090feadef53186a904e13ea5756e3619f))
 
-- *(config)* Promote config to subcommand group — add config show - ([e52001a](//commit/e52001a2defbee45ba447e233a7f73fbd59536b5))
+- *(release)* Interactive release selector when --release is omitted - ([51499b5](//commit/51499b5e16a6ad899e1977b4df4a11603e1533b0))
 
-- *(config)* Add config check subcommand - ([6994b39](//commit/6994b39f73a4ccd2e9cb63be49a6abde2ee3cc5c))
+- *(tui)* JSON event stream for deploy and release list - ([d489806](//commit/d489806ccf0f808742b050facf71b7518f3100cc))
 
-- *(config)* Add config init subcommand - ([45c59da](//commit/45c59da5596179bee67a7b26534c7b91be038f24))
+- *(tui)* Add plain output mode — no colors, no spinners - ([c1a89d3](//commit/c1a89d3dbd59920bd8ecec0e89f37d8b84b7ba62))
 
-
-### 🐛 Bug Fixes
-
-- *(config)* Config check exits 0 silently on valid config - ([d03bfc3](//commit/d03bfc35976324e6880a2d9dd6046d4d9828b496))
-
-- *(config)* Document that init test globals are not parallel-safe - ([913d891](//commit/913d8915998d73d8364d63b47c540f67d581c0e5))
-
-- *(config)* Require --env and --app together in config show - ([0bf33d3](//commit/0bf33d31a534936f82af98bbdba66eb8709fbba9))
-
-- *(config)* Pre-format scaffold to match yamlfmt output - ([76e9504](//commit/76e950441229b9ea27f3803d814c523f171cab9f))
-
-
-### 🚜 Refactor
-
-- *(config)* Rename statFile to pathStat for consistency - ([438dbc1](//commit/438dbc1f5ea5501d215a8e3f13a66aec6174f72c))
+- *(tui)* NO_COLOR support and plain-mode color suppression - ([111c7ad](//commit/111c7ade8f282c36bcb077d32a6f0c01ed7b7c7b))
 
 
 ### 📚 Documentation
 
-- Update CLAUDE.md and workflow rules after M5 - ([29db012](//commit/29db0127f03df48d1aa2839f4e6f43c70ae2f158))
+- *(roadmap)* Add human mode step output task to M6 - ([253668c](//commit/253668c34fa9a72f9b02112053db75519af32ff3))
+
+- *(roadmap)* Replace M6 stub with M8 spec-06 completion tasks - ([541d096](//commit/541d0964b128281778fc29e603f29bd10be84bb9))
 
 
 ### 🧪 Testing
 
-- *(config)* Use assert.Contains over assert.True(strings.Contains) - ([9769d60](//commit/9769d600c74a96d4564f0d2b2b9a50841527c9bf))
+- *(tui)* Verify non-TTY detection for interactive hooks and prompts - ([6f86806](//commit/6f868060459c4dfb54ab9efe756b247b7475ad79))
+
+## [0.6.0](//compare/v0.5.0..v0.6.0) - 2026-05-30
+
+### 🚀 Features
+
+- *(cmdutil)* Centralise config-path resolution with BIFROST_FILE env var - ([bcb16c1](//commit/bcb16c14c7a9f372f836bc233d865caf2654771f)) by @bchatard
+
+- *(config)* Promote config to subcommand group — add config show - ([e52001a](//commit/e52001a2defbee45ba447e233a7f73fbd59536b5)) by @bchatard
+
+- *(config)* Add config check subcommand - ([6994b39](//commit/6994b39f73a4ccd2e9cb63be49a6abde2ee3cc5c)) by @bchatard
+
+- *(config)* Add config init subcommand - ([45c59da](//commit/45c59da5596179bee67a7b26534c7b91be038f24)) by @bchatard
+
+
+### 🐛 Bug Fixes
+
+- *(config)* Config check exits 0 silently on valid config - ([d03bfc3](//commit/d03bfc35976324e6880a2d9dd6046d4d9828b496)) by @bchatard
+
+- *(config)* Document that init test globals are not parallel-safe - ([913d891](//commit/913d8915998d73d8364d63b47c540f67d581c0e5)) by @bchatard
+
+- *(config)* Require --env and --app together in config show - ([0bf33d3](//commit/0bf33d31a534936f82af98bbdba66eb8709fbba9)) by @bchatard
+
+- *(config)* Pre-format scaffold to match yamlfmt output - ([76e9504](//commit/76e950441229b9ea27f3803d814c523f171cab9f)) by @bchatard
+
+
+### 🚜 Refactor
+
+- *(config)* Rename statFile to pathStat for consistency - ([438dbc1](//commit/438dbc1f5ea5501d215a8e3f13a66aec6174f72c)) by @bchatard
+
+
+### 📚 Documentation
+
+- Update CLAUDE.md and workflow rules after M5 - ([29db012](//commit/29db0127f03df48d1aa2839f4e6f43c70ae2f158)) by @bchatard
+
+
+### 🧪 Testing
+
+- *(config)* Use assert.Contains over assert.True(strings.Contains) - ([9769d60](//commit/9769d600c74a96d4564f0d2b2b9a50841527c9bf)) by @bchatard
 
 
 ### ⚙️ Miscellaneous Tasks
 
-- Add gopls and Claude Code plugins for LSP and dev tooling - ([4e97c89](//commit/4e97c8993d29729a5efff3f42e4565bc5af47e42))
+- Add gopls and Claude Code plugins for LSP and dev tooling - ([4e97c89](//commit/4e97c8993d29729a5efff3f42e4565bc5af47e42)) by @bchatard
 
-- Fix workflow errors and pin actions to SHA - ([cdc1bf4](//commit/cdc1bf48426ed422156fadcda1cf640bee09644d))
+- Fix workflow errors and pin actions to SHA - ([cdc1bf4](//commit/cdc1bf48426ed422156fadcda1cf640bee09644d)) by @bchatard
 
 ## [0.5.0](//compare/v0.4.0..v0.5.0) - 2026-05-30
 
