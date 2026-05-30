@@ -2,7 +2,6 @@ package cmd_test
 
 import (
 	"bytes"
-	"encoding/json"
 	"testing"
 
 	"github.com/adaouat/bifrost/internal/cmd"
@@ -11,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestConfigCheckCmd_ValidConfig_OutputsMergedJSON(t *testing.T) {
+func TestConfigCheckCmd_ValidConfig_SilentSuccess(t *testing.T) {
 	root := cmd.NewRootCmd()
 	buf := &bytes.Buffer{}
 	root.SetOut(buf)
@@ -25,12 +24,7 @@ func TestConfigCheckCmd_ValidConfig_OutputsMergedJSON(t *testing.T) {
 
 	err := root.Execute()
 	require.NoError(t, err)
-
-	var result map[string]any
-	require.NoError(t, json.Unmarshal(buf.Bytes(), &result), "output must be valid JSON:\n%s", buf.String())
-
-	assert.Equal(t, "/var/www/webroot/ROOT", result["releases_root"])
-	assert.Equal(t, "/var/nas/shared", result["shared_root"])
+	assert.Empty(t, buf.String(), "check should produce no output on success")
 }
 
 func TestConfigCheckCmd_MissingEnv_Errors(t *testing.T) {

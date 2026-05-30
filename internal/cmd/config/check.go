@@ -34,7 +34,7 @@ func newCheckCmd() *cobra.Command {
 			if errs := config.Validate(merged); len(errs) > 0 {
 				return &cmderr.ExitError{Code: 2, Message: strings.Join(errs, "\n")}
 			}
-			return printJSON(cmd, merged)
+			return nil
 		},
 	}
 
