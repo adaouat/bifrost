@@ -163,6 +163,8 @@ Interactive flows, output modes, dry run.
 - [x] `--dry-run` mode for `artifact` and `release enable`
 - [x] Non-TTY detection — disable TUI components automatically
 - [x] `NO_COLOR` support
+- [ ] Human mode step output for `deploy` — header panel (env › app, release name),
+  per-step `✔` lines with timing and counts, final summary line (spec 06)
 
 Deliverable: all output modes and interactive flows work.
 
