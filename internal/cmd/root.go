@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	clog "charm.land/log/v2"
 	"github.com/adaouat/bifrost/internal/cmd/config"
@@ -40,6 +41,11 @@ func NewRootCmd() *cobra.Command {
 				return err
 			}
 			tui.SetOutputMode(output)
+			// plain and json modes have no colored output; set NO_COLOR so charm
+			// libraries (fang, huh, bubbles) also suppress ANSI color sequences.
+			if output == "plain" || output == "json" {
+				_ = os.Setenv("NO_COLOR", "1")
+			}
 			return nil
 		},
 	}

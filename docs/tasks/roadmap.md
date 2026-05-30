@@ -162,7 +162,7 @@ Interactive flows, output modes, dry run.
 - [x] `--output plain` (no colors/spinners)
 - [x] `--dry-run` mode for `artifact` and `release enable`
 - [x] Non-TTY detection — disable TUI components automatically
-- [ ] `NO_COLOR` support
+- [x] `NO_COLOR` support
 
 Deliverable: all output modes and interactive flows work.
 
