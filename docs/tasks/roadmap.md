@@ -173,7 +173,7 @@ Deliverable: all output modes and interactive flows work.
 Test coverage and hardening. CI/CD is already live from M0; this milestone
 fills in the test gaps that weren't covered incrementally.
 
-- [ ] Unit tests for config merge logic
+- [x] Unit tests for config merge logic
 - [ ] Unit tests for shared resource linking algorithm
 - [ ] Unit tests for hook template rendering
 - [ ] Integration tests for `deploy` command (real filesystem, temp dir)

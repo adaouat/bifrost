@@ -247,6 +247,44 @@ func TestMerge_MissingSharedRoot_NoError(t *testing.T) {
 	}
 }
 
+func TestMerge_StrategyPassthrough(t *testing.T) {
+	cfg := base()
+	cfg.Strategy = "atomic"
+	m, err := config.Merge(cfg, "prod", "web")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if m.Strategy != "atomic" {
+		t.Errorf("strategy: got %q, want \"atomic\"", m.Strategy)
+	}
+}
+
+func TestMerge_AllHookTypesPopulated(t *testing.T) {
+	p := func(n int) *int { return &n }
+	cfg := base()
+	cfg.Hooks.PostExtract = []config.HookEntry{{Cmd: "post-extract", Priority: p(10)}}
+	cfg.Hooks.PreLink = []config.HookEntry{{Cmd: "pre-link", Priority: p(10)}}
+	cfg.Hooks.PreEnableRelease = []config.HookEntry{{Cmd: "pre-enable", Priority: p(10)}}
+	cfg.Hooks.PostEnableRelease = []config.HookEntry{{Cmd: "post-enable", Priority: p(10)}}
+
+	m, err := config.Merge(cfg, "prod", "web")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(m.Hooks.PostExtract) != 1 || m.Hooks.PostExtract[0].Cmd != "post-extract" {
+		t.Error("PostExtract not populated correctly")
+	}
+	if len(m.Hooks.PreLink) != 1 || m.Hooks.PreLink[0].Cmd != "pre-link" {
+		t.Error("PreLink not populated correctly")
+	}
+	if len(m.Hooks.PreEnableRelease) != 1 || m.Hooks.PreEnableRelease[0].Cmd != "pre-enable" {
+		t.Error("PreEnableRelease not populated correctly")
+	}
+	if len(m.Hooks.PostEnableRelease) != 1 || m.Hooks.PostEnableRelease[0].Cmd != "post-enable" {
+		t.Error("PostEnableRelease not populated correctly")
+	}
+}
+
 func TestMerge_GlobalFallback(t *testing.T) {
 	// env and app don't set releases_to_keep — should fall back to global
 	m, err := config.Merge(base(), "prod", "web")
