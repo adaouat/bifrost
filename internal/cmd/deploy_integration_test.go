@@ -111,6 +111,46 @@ func TestDeployCmd_JSONOutput(t *testing.T) {
 	assert.Contains(t, result.Output, `"release":"json-r1"`)
 }
 
+func TestDeployCmd_DryRun(t *testing.T) {
+	ctx := context.Background()
+	c := testutil.NewContainer(ctx, t, bifrostBin)
+
+	cfg, err := os.ReadFile("../../testdata/bifrost-deploy-int-test.yml")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, cfg, "/tmp/bifrost.yml", 0o644))
+
+	artifact, err := os.ReadFile("../../testdata/release.tar.gz")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, artifact, "/tmp/release.tar.gz", 0o644))
+
+	// Create the release roots manually (--init would normally create them, but we
+	// also need them for dry-run to be able to read config correctly without creating
+	// the release dir).
+	for _, dir := range []string{"/var/releases", "/var/shared"} {
+		res, err := c.Exec(ctx, []string{"mkdir", "-p", dir})
+		require.NoError(t, err)
+		require.Equal(t, 0, res.ExitCode)
+	}
+
+	result, err := c.RunBifrost(ctx,
+		"deploy",
+		"--dry-run",
+		"--config", "/tmp/bifrost.yml",
+		"--env", "test",
+		"--app", "app",
+		"--artifact", "/tmp/release.tar.gz",
+		"--release-name", "dry-r1",
+	)
+	require.NoError(t, err)
+	assert.Equal(t, 0, result.ExitCode, "dry-run deploy output:\n%s\nstderr:\n%s", result.Output, result.Stderr)
+	assert.Contains(t, result.Output, "DRY RUN")
+
+	// Release directory must NOT have been created.
+	res, err := c.Exec(ctx, []string{"test", "-d", "/var/releases/dry-r1"})
+	require.NoError(t, err)
+	assert.NotEqual(t, 0, res.ExitCode, "release directory should not exist after dry run")
+}
+
 func TestDeployCmd_Hooks(t *testing.T) {
 	ctx := context.Background()
 	c := testutil.NewContainer(ctx, t, bifrostBin)

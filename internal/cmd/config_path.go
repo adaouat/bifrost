@@ -15,3 +15,9 @@ func outputMode(cmd *cobra.Command) string {
 	mode, _ := cmd.Root().PersistentFlags().GetString("output")
 	return mode
 }
+
+// isDryRun returns true if the --dry-run flag is set on the root command.
+func isDryRun(cmd *cobra.Command) bool {
+	v, _ := cmd.Root().PersistentFlags().GetBool("dry-run")
+	return v
+}

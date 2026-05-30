@@ -55,6 +55,16 @@ func newActivateCmd() *cobra.Command {
 				releaseName = selected
 			}
 
+			dryRun, _ := cmd.Root().PersistentFlags().GetBool("dry-run")
+			if dryRun {
+				out := cmd.OutOrStdout()
+				currentLink := filepath.Join(merged.ReleasesRoot, "current")
+				_, _ = fmt.Fprintln(out, "DRY RUN — no changes will be made")
+				_, _ = fmt.Fprintln(out)
+				_, _ = fmt.Fprintf(out, "  Would update   %s  →  %s\n", currentLink, releaseName)
+				return nil
+			}
+
 			releaseDir := filepath.Join(merged.ReleasesRoot, releaseName)
 			if _, err := os.Stat(releaseDir); err != nil {
 				return &cmderr.ExitError{Code: 3, Message: fmt.Sprintf("release not found: %s", releaseName)}

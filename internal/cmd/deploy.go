@@ -57,6 +57,10 @@ func newDeployCmd() *cobra.Command {
 				return &ExitError{Code: 3, Message: fmt.Sprintf("artifact not found: %s", artifact)}
 			}
 
+			if isDryRun(cmd) {
+				return deployDryRun(cmd, merged, artifact, releaseName)
+			}
+
 			releaseDir, err := atomic.CreateReleaseDir(merged.ReleasesRoot, releaseName)
 			if err != nil {
 				return err
@@ -165,6 +169,41 @@ func newDeployCmd() *cobra.Command {
 	f.BoolVar(&init_, "init", false, "create releases_root and shared_root if missing")
 
 	return cmd
+}
+
+// deployDryRun prints what a real deploy would do without executing any actions.
+func deployDryRun(cmd *cobra.Command, merged *config.MergedConfig, artifact, releaseName string) error {
+	releaseDir := atomic.PlanReleaseName(merged.ReleasesRoot, releaseName)
+	relBase := filepath.Base(releaseDir)
+	currentLink := filepath.Join(merged.ReleasesRoot, "current")
+	out := cmd.OutOrStdout()
+
+	_, _ = fmt.Fprintln(out, "DRY RUN — no changes will be made")
+	_, _ = fmt.Fprintln(out)
+	_, _ = fmt.Fprintf(out, "  Would create   %s\n", releaseDir)
+	_, _ = fmt.Fprintf(out, "  Would extract  %s  →  %s\n", artifact, releaseDir)
+	for _, h := range merged.Hooks.PostExtract {
+		_, _ = fmt.Fprintf(out, "  Would run      [post_extract]  %s\n", h.Cmd)
+	}
+	for _, h := range merged.Hooks.PreLink {
+		_, _ = fmt.Fprintf(out, "  Would run      [pre_link]  %s\n", h.Cmd)
+	}
+	for _, rel := range merged.SharedDirs {
+		_, _ = fmt.Fprintf(out, "  Would link     %s  →  %s\n",
+			filepath.Join(releaseDir, rel), filepath.Join(merged.SharedRoot, rel))
+	}
+	for _, rel := range merged.SharedFiles {
+		_, _ = fmt.Fprintf(out, "  Would link     %s  →  %s\n",
+			filepath.Join(releaseDir, rel), filepath.Join(merged.SharedRoot, rel))
+	}
+	for _, h := range merged.Hooks.PreEnableRelease {
+		_, _ = fmt.Fprintf(out, "  Would run      [pre_enable_release]  %s\n", h.Cmd)
+	}
+	_, _ = fmt.Fprintf(out, "  Would update   %s  →  %s\n", currentLink, relBase)
+	for _, h := range merged.Hooks.PostEnableRelease {
+		_, _ = fmt.Fprintf(out, "  Would run      [post_enable_release]  %s\n", h.Cmd)
+	}
+	return nil
 }
 
 // deployHookEventFn returns a hook event callback that emits JSON events via emit.

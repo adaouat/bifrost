@@ -8,6 +8,15 @@ import (
 	"time"
 )
 
+// PlanReleaseName returns the path that CreateReleaseDir would use for the given
+// name (or a timestamp if name is empty), without creating anything on disk.
+func PlanReleaseName(releasesRoot, name string) string {
+	if name == "" {
+		name = time.Now().UTC().Format("20060102-150405")
+	}
+	return filepath.Join(releasesRoot, name)
+}
+
 // CreateReleaseDir creates a new release directory under releasesRoot.
 // If name is empty a UTC timestamp is used (YYYYMMDD-HHMMSS).
 // Returns the absolute path to the new directory.
