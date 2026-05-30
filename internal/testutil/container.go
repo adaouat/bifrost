@@ -57,10 +57,11 @@ func NewContainer(ctx context.Context, t testing.TB, binaryPath string) *Contain
 type ExecResult struct {
 	ExitCode int
 	Output   string
+	Stderr   string
 }
 
 // Exec runs a command inside the container and returns the result.
-// stdout and stderr are demultiplexed; Output contains only stdout.
+// stdout and stderr are demultiplexed; Output contains stdout, Stderr contains stderr.
 func (c *Container) Exec(ctx context.Context, cmd []string) (ExecResult, error) {
 	code, reader, err := c.inner.Exec(ctx, cmd)
 	if err != nil {
@@ -75,6 +76,7 @@ func (c *Container) Exec(ctx context.Context, cmd []string) (ExecResult, error) 
 	return ExecResult{
 		ExitCode: code,
 		Output:   strings.TrimRight(stdout.String(), "\n"),
+		Stderr:   strings.TrimRight(stderr.String(), "\n"),
 	}, nil
 }
 

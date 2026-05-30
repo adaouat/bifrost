@@ -131,6 +131,41 @@ func TestReleaseRollbackCmd_NoPreviousRelease(t *testing.T) {
 	assert.Equal(t, 3, result.ExitCode, "rollback with single release should exit 3:\n%s", result.Output)
 }
 
+func TestReleaseActivateCmd_NoRelease_NonInteractive(t *testing.T) {
+	ctx := context.Background()
+	c := testutil.NewContainer(ctx, t, bifrostBin)
+
+	cfg, err := os.ReadFile("../../testdata/bifrost-deploy-int-test.yml")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, cfg, "/tmp/bifrost.yml", 0o644))
+
+	artifact, err := os.ReadFile("../../testdata/release.tar.gz")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, artifact, "/tmp/release.tar.gz", 0o644))
+
+	result, err := c.RunBifrost(ctx,
+		"deploy",
+		"--config", "/tmp/bifrost.yml",
+		"--env", "test",
+		"--app", "app",
+		"--artifact", "/tmp/release.tar.gz",
+		"--release-name", "r1",
+		"--init",
+	)
+	require.NoError(t, err)
+	require.Equal(t, 0, result.ExitCode, "deploy:\n%s", result.Output)
+
+	result, err = c.RunBifrost(ctx,
+		"release", "activate",
+		"--config", "/tmp/bifrost.yml",
+		"--env", "test",
+		"--app", "app",
+	)
+	require.NoError(t, err)
+	assert.NotEqual(t, 0, result.ExitCode, "should fail without --release in non-interactive mode")
+	assert.Contains(t, result.Stderr, "non-interactive")
+}
+
 func TestReleaseActivateCmd_SwitchesCurrent(t *testing.T) {
 	ctx := context.Background()
 	c := testutil.NewContainer(ctx, t, bifrostBin)

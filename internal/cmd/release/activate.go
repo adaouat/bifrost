@@ -31,9 +31,6 @@ func newActivateCmd() *cobra.Command {
 			if app == "" {
 				return fmt.Errorf("--app (or --application) is required")
 			}
-			if releaseName == "" {
-				return fmt.Errorf("--release is required")
-			}
 
 			cfg, err := config.Load(releaseConfigPath(cmd))
 			if err != nil {
@@ -45,6 +42,17 @@ func newActivateCmd() *cobra.Command {
 			}
 			if errs := config.Validate(merged); len(errs) > 0 {
 				return &cmderr.ExitError{Code: 2, Message: strings.Join(errs, "\n")}
+			}
+
+			if releaseName == "" {
+				if !tui.IsTTY() {
+					return fmt.Errorf("--release is required in non-interactive mode")
+				}
+				selected, err := selectRelease(merged.ReleasesRoot)
+				if err != nil {
+					return err
+				}
+				releaseName = selected
 			}
 
 			releaseDir := filepath.Join(merged.ReleasesRoot, releaseName)
@@ -113,6 +121,37 @@ func newActivateCmd() *cobra.Command {
 func releaseConfigPath(cmd *cobra.Command) string {
 	explicit, _ := cmd.Root().PersistentFlags().GetString("config")
 	return cmdutil.ResolvePath(explicit)
+}
+
+// selectRelease shows a huh.Select prompt listing available releases. The current release
+// is annotated with "(current)" in the label. Returns the selected release name.
+func selectRelease(releasesRoot string) (string, error) {
+	releases, active, err := listReleases(releasesRoot)
+	if err != nil {
+		return "", err
+	}
+	if len(releases) == 0 {
+		return "", fmt.Errorf("no releases found in %s", releasesRoot)
+	}
+
+	options := make([]huh.Option[string], len(releases))
+	for i, r := range releases {
+		label := r
+		if r == active {
+			label += " (current)"
+		}
+		options[i] = huh.NewOption(label, r)
+	}
+
+	var selected string
+	if err := huh.NewSelect[string]().
+		Title("Which release would you like to activate?").
+		Options(options...).
+		Value(&selected).
+		Run(); err != nil {
+		return "", fmt.Errorf("release selection: %w", err)
+	}
+	return selected, nil
 }
 
 // releaseInteractiveConfirm returns a hook confirm function that shows a huh prompt on TTY.
