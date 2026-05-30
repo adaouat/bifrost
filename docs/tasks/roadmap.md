@@ -163,8 +163,6 @@ Interactive flows, output modes, dry run.
 - [x] `--dry-run` mode for `artifact` and `release enable`
 - [x] Non-TTY detection — disable TUI components automatically
 - [x] `NO_COLOR` support
-- [ ] Human mode step output for `deploy` — header panel (env › app, release name),
-  per-step `✔` lines with timing and counts, final summary line (spec 06)
 
 Deliverable: all output modes and interactive flows work.
 
@@ -180,6 +178,33 @@ fills in the test gaps that weren't covered incrementally.
 - [ ] Unit tests for hook template rendering
 - [ ] Integration tests for `deploy` command (real filesystem, temp dir)
 - [ ] Integration tests for `release activate` / `release rollback`
+
+---
+
+## M8 — Spec 06 Completion
+
+Close the remaining gaps between the current output and spec 06.
+
+### Human mode — `deploy`
+
+- [ ] Header panel: bordered box showing environment › application and release name
+- [ ] Per-step `✔` lines: config loaded, release dir created, artifact extracted (with duration), hooks (with count), shared dirs linked (with count), shared files linked (with count), current symlink updated, releases purged (with kept count)
+- [ ] Final summary line: `Deployed in Xs  →  <release>`
+
+### Human mode — `release list`
+
+- [ ] Header line: `Releases for <env> › <app>  (<n> total)`
+- [ ] Current release shown with `← current` suffix instead of `*` prefix
+
+### JSON mode — `deploy`
+
+- [ ] `{"event":"error","step":"...","message":"...","exit_code":3}` on failure
+- [ ] `start`/`done` events for link, current-symlink, and purge steps
+
+### Dry run — `deploy`
+
+- [ ] `Would purge` line lists the actual release names that would be removed
+- [ ] Hook lines with `sudo: true` show `(sudo)` at the end
 
 ---
 
