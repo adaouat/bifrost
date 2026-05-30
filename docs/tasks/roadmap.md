@@ -136,6 +136,23 @@ Deliverable: `bifrost config` shows a help screen with three subcommands;
 
 ---
 
+## M5.1 — Config Path Resolution
+
+Consolidate config-path logic into a shared `internal/cmd/cmdutil` package and
+extend the priority chain with a `BIFROST_FILE` environment variable.
+
+- [x] `internal/cmd/cmdutil/path.go` — `ResolvePath(explicit string) string` and
+  `InitDest() string`; priority: explicit → `BIFROST_FILE` env var → disk discovery
+- [x] Update all callers (`configPath`, `resolveConfigPath`, `releaseConfigPath`,
+  `initPath`) to delegate to `cmdutil`
+- [x] Update `config init` to honour `BIFROST_FILE` for write destination
+- [x] Update spec 02 and add ADR-0008 documenting the four-step priority chain
+
+Deliverable: `BIFROST_FILE=/etc/bifrost.yml bifrost deploy …` works; config path
+logic lives in one place.
+
+---
+
 ## M6 — TUI Polish
 
 Interactive flows, output modes, dry run.

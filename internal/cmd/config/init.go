@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os"
 
+	"github.com/adaouat/bifrost/internal/cmd/cmdutil"
 	"github.com/spf13/cobra"
 )
 
@@ -55,19 +56,13 @@ environments:
               priority: 10
 `
 
-var (
-	initWrite = func(path string, data []byte, perm uint32) error {
-		return os.WriteFile(path, data, fs.FileMode(perm))
-	}
-	initStat = func(path string) error {
-		_, err := os.Stat(path)
-		return err
-	}
-)
+var initWrite = func(path string, data []byte, perm uint32) error {
+	return os.WriteFile(path, data, fs.FileMode(perm))
+}
 
 // SetInitWrite replaces the write function used by config init (for testing).
 // Pass nil to restore the default.
-// Tests that call this must not run in parallel — these are package-level globals.
+// Tests that call this must not run in parallel — this is a package-level global.
 func SetInitWrite(fn func(string, []byte, uint32) error) {
 	if fn == nil {
 		initWrite = func(path string, data []byte, perm uint32) error {
@@ -75,20 +70,6 @@ func SetInitWrite(fn func(string, []byte, uint32) error) {
 		}
 	} else {
 		initWrite = fn
-	}
-}
-
-// SetInitStat replaces the stat function used by config init (for testing).
-// Pass nil to restore the default.
-// Tests that call this must not run in parallel — these are package-level globals.
-func SetInitStat(fn func(string) error) {
-	if fn == nil {
-		initStat = func(path string) error {
-			_, err := os.Stat(path)
-			return err
-		}
-	} else {
-		initStat = fn
 	}
 }
 
@@ -102,7 +83,7 @@ func newInitCmd() *cobra.Command {
 			path := initPath(cmd)
 
 			if !force {
-				if err := initStat(path); err == nil {
+				if _, err := cmdutil.StatFile(path); err == nil {
 					return fmt.Errorf("%s already exists — use --force to overwrite", path)
 				} else if !errors.Is(err, os.ErrNotExist) {
 					return fmt.Errorf("checking %s: %w", path, err)
@@ -123,12 +104,11 @@ func newInitCmd() *cobra.Command {
 }
 
 // initPath returns the output path for config init.
-// Uses --config if explicitly set, otherwise defaults to .bifrost.yml.
+// Priority: --config flag → BIFROST_FILE env var → InitDest (checks .config/ dir)
 func initPath(cmd *cobra.Command) string {
-	root := cmd.Root()
-	if root.PersistentFlags().Changed("config") {
-		path, _ := root.PersistentFlags().GetString("config")
-		return path
+	explicit, _ := cmd.Root().PersistentFlags().GetString("config")
+	if explicit != "" {
+		return explicit
 	}
-	return ".bifrost.yml"
+	return cmdutil.ResolveInitDest()
 }

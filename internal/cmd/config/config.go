@@ -1,8 +1,7 @@
 package config
 
 import (
-	"os"
-
+	"github.com/adaouat/bifrost/internal/cmd/cmdutil"
 	"github.com/spf13/cobra"
 )
 
@@ -20,18 +19,7 @@ func NewConfigCmd() *cobra.Command {
 	return cmd
 }
 
-var pathStat = os.Stat
-
-// configPath resolves the config file path from the root command's --config flag,
-// falling back to .config/bifrost.yml then .bifrost.yml.
 func configPath(cmd *cobra.Command) string {
-	root := cmd.Root()
-	if root.PersistentFlags().Changed("config") {
-		path, _ := root.PersistentFlags().GetString("config")
-		return path
-	}
-	if _, err := pathStat(".config/bifrost.yml"); err == nil {
-		return ".config/bifrost.yml"
-	}
-	return ".bifrost.yml"
+	explicit, _ := cmd.Root().PersistentFlags().GetString("config")
+	return cmdutil.ResolvePath(explicit)
 }

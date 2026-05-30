@@ -2,13 +2,22 @@
 
 ## File location
 
-When `--config` is not provided, bifrost searches the working directory in order:
+Bifrost resolves the config file path using the following priority chain (first match wins):
 
-1. `.config/bifrost.yml`
-2. `.bifrost.yml`
+| Priority | Source | Notes |
+|---|---|---|
+| 1 | `--config <path>` CLI flag | Always wins when set |
+| 2 | `BIFROST_FILE` environment variable | Useful in CI/CD; whitespace-only is treated as unset |
+| 3 | `.config/bifrost.yml` | Used if the file exists on disk |
+| 4 | `.bifrost.yml` | Default fallback |
 
-The first file that exists is used. If neither exists, loading fails with an error.
-Override the search entirely with `--config <path>`.
+If the resolved file does not exist, loading fails with an error.
+
+### `config init` write destination
+
+The `config init` command applies the same priority chain for the output path, except
+step 3 checks whether the `.config/` **directory** exists (not the file, since the file is
+being created). See [ADR-0008](../adr/0008-config-path-resolution.md) for rationale.
 
 ## Hierarchy and merge rules
 

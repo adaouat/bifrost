@@ -6,12 +6,14 @@ import (
 	"testing"
 
 	"github.com/adaouat/bifrost/internal/cmd"
+	"github.com/adaouat/bifrost/internal/cmd/cmdutil"
 	configcmd "github.com/adaouat/bifrost/internal/cmd/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestConfigInitCmd_WritesDefaultConfig(t *testing.T) {
+	t.Setenv("BIFROST_FILE", "")
 	root := cmd.NewRootCmd()
 	buf := &bytes.Buffer{}
 	root.SetOut(buf)
@@ -23,10 +25,10 @@ func TestConfigInitCmd_WritesDefaultConfig(t *testing.T) {
 		written = data
 		return nil
 	})
-	configcmd.SetInitStat(func(_ string) error { return os.ErrNotExist })
+	cmdutil.SetStatFile(func(string) (os.FileInfo, error) { return nil, os.ErrNotExist })
 	defer func() {
 		configcmd.SetInitWrite(nil)
-		configcmd.SetInitStat(nil)
+		cmdutil.SetStatFile(nil)
 	}()
 
 	err := root.Execute()
@@ -38,16 +40,17 @@ func TestConfigInitCmd_WritesDefaultConfig(t *testing.T) {
 }
 
 func TestConfigInitCmd_RefusesOverwriteWithoutForce(t *testing.T) {
+	t.Setenv("BIFROST_FILE", "")
 	root := cmd.NewRootCmd()
 	root.SetOut(&bytes.Buffer{})
 	root.SetErr(&bytes.Buffer{})
 	root.SetArgs([]string{"config", "init", "--config", "/tmp/test-bifrost-init.yml"})
 
 	configcmd.SetInitWrite(func(_ string, _ []byte, _ uint32) error { return nil })
-	configcmd.SetInitStat(func(_ string) error { return nil }) // file exists
+	cmdutil.SetStatFile(func(string) (os.FileInfo, error) { return nil, nil }) // file exists
 	defer func() {
 		configcmd.SetInitWrite(nil)
-		configcmd.SetInitStat(nil)
+		cmdutil.SetStatFile(nil)
 	}()
 
 	err := root.Execute()
@@ -55,7 +58,82 @@ func TestConfigInitCmd_RefusesOverwriteWithoutForce(t *testing.T) {
 	assert.Contains(t, err.Error(), "already exists")
 }
 
+func TestConfigInitCmd_EnvVarDeterminesWriteDest(t *testing.T) {
+	t.Setenv("BIFROST_FILE", "/env/dest.yml")
+	root := cmd.NewRootCmd()
+	root.SetOut(&bytes.Buffer{})
+	root.SetErr(&bytes.Buffer{})
+	root.SetArgs([]string{"config", "init"})
+
+	var writtenPath string
+	configcmd.SetInitWrite(func(path string, _ []byte, _ uint32) error {
+		writtenPath = path
+		return nil
+	})
+	cmdutil.SetStatFile(func(string) (os.FileInfo, error) { return nil, os.ErrNotExist })
+	defer func() {
+		configcmd.SetInitWrite(nil)
+		cmdutil.SetStatFile(nil)
+	}()
+
+	err := root.Execute()
+	require.NoError(t, err)
+	assert.Equal(t, "/env/dest.yml", writtenPath)
+}
+
+func TestConfigInitCmd_FlagWinsOverEnvVar(t *testing.T) {
+	t.Setenv("BIFROST_FILE", "/env/dest.yml")
+	root := cmd.NewRootCmd()
+	root.SetOut(&bytes.Buffer{})
+	root.SetErr(&bytes.Buffer{})
+	root.SetArgs([]string{"config", "init", "--config", "/flag/dest.yml"})
+
+	var writtenPath string
+	configcmd.SetInitWrite(func(path string, _ []byte, _ uint32) error {
+		writtenPath = path
+		return nil
+	})
+	cmdutil.SetStatFile(func(string) (os.FileInfo, error) { return nil, os.ErrNotExist })
+	defer func() {
+		configcmd.SetInitWrite(nil)
+		cmdutil.SetStatFile(nil)
+	}()
+
+	err := root.Execute()
+	require.NoError(t, err)
+	assert.Equal(t, "/flag/dest.yml", writtenPath)
+}
+
+func TestConfigInitCmd_AutoDestUsesConfigDir(t *testing.T) {
+	t.Setenv("BIFROST_FILE", "")
+	root := cmd.NewRootCmd()
+	root.SetOut(&bytes.Buffer{})
+	root.SetErr(&bytes.Buffer{})
+	root.SetArgs([]string{"config", "init"})
+
+	var writtenPath string
+	configcmd.SetInitWrite(func(path string, _ []byte, _ uint32) error {
+		writtenPath = path
+		return nil
+	})
+	cmdutil.SetStatFile(func(name string) (os.FileInfo, error) {
+		if name == ".config" {
+			return nil, nil // directory exists
+		}
+		return nil, os.ErrNotExist
+	})
+	defer func() {
+		configcmd.SetInitWrite(nil)
+		cmdutil.SetStatFile(nil)
+	}()
+
+	err := root.Execute()
+	require.NoError(t, err)
+	assert.Equal(t, ".config/bifrost.yml", writtenPath)
+}
+
 func TestConfigInitCmd_OverwritesWithForce(t *testing.T) {
+	t.Setenv("BIFROST_FILE", "")
 	root := cmd.NewRootCmd()
 	root.SetOut(&bytes.Buffer{})
 	root.SetErr(&bytes.Buffer{})
@@ -66,10 +144,10 @@ func TestConfigInitCmd_OverwritesWithForce(t *testing.T) {
 		written = data
 		return nil
 	})
-	configcmd.SetInitStat(func(_ string) error { return nil }) // file exists, but --force is set
+	cmdutil.SetStatFile(func(string) (os.FileInfo, error) { return nil, nil }) // file exists, --force overrides
 	defer func() {
 		configcmd.SetInitWrite(nil)
-		configcmd.SetInitStat(nil)
+		cmdutil.SetStatFile(nil)
 	}()
 
 	err := root.Execute()

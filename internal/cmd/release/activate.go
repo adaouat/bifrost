@@ -9,6 +9,7 @@ import (
 	"charm.land/huh/v2"
 	"github.com/spf13/cobra"
 
+	"github.com/adaouat/bifrost/internal/cmd/cmdutil"
 	"github.com/adaouat/bifrost/internal/cmderr"
 	"github.com/adaouat/bifrost/internal/config"
 	"github.com/adaouat/bifrost/internal/hooks"
@@ -109,18 +110,9 @@ func newActivateCmd() *cobra.Command {
 	return cmd
 }
 
-// releaseConfigPath resolves the config file path from the root command's --config flag,
-// falling back to .config/bifrost.yml then .bifrost.yml.
 func releaseConfigPath(cmd *cobra.Command) string {
-	root := cmd.Root()
-	if root.PersistentFlags().Changed("config") {
-		path, _ := root.PersistentFlags().GetString("config")
-		return path
-	}
-	if _, err := os.Stat(".config/bifrost.yml"); err == nil {
-		return ".config/bifrost.yml"
-	}
-	return ".bifrost.yml"
+	explicit, _ := cmd.Root().PersistentFlags().GetString("config")
+	return cmdutil.ResolvePath(explicit)
 }
 
 // releaseInteractiveConfirm returns a hook confirm function that shows a huh prompt on TTY.
