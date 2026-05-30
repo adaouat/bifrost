@@ -1,6 +1,7 @@
 package release
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -45,6 +46,22 @@ func newListCmd() *cobra.Command {
 			}
 
 			out := cmd.OutOrStdout()
+			mode, _ := cmd.Root().PersistentFlags().GetString("output")
+
+			if mode == "json" {
+				type releaseEntry struct {
+					Name   string `json:"name"`
+					Active bool   `json:"active"`
+				}
+				entries := make([]releaseEntry, len(releases))
+				for i, r := range releases {
+					entries[i] = releaseEntry{Name: r, Active: r == active}
+				}
+				data, _ := json.Marshal(entries)
+				_, _ = fmt.Fprintf(out, "%s\n", data)
+				return nil
+			}
+
 			for _, r := range releases {
 				if r == active {
 					_, _ = fmt.Fprintf(out, "* %s\n", r)

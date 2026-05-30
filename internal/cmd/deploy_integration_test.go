@@ -4,7 +4,9 @@ package cmd_test
 
 import (
 	"context"
+	"encoding/json"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -67,6 +69,46 @@ func TestDeployCmd_E2E(t *testing.T) {
 	res, err = c.Exec(ctx, []string{"readlink", "/var/releases/test-r1/.env"})
 	require.NoError(t, err)
 	assert.Equal(t, "/var/shared/.env", res.Output)
+}
+
+func TestDeployCmd_JSONOutput(t *testing.T) {
+	ctx := context.Background()
+	c := testutil.NewContainer(ctx, t, bifrostBin)
+
+	cfg, err := os.ReadFile("../../testdata/bifrost-deploy-int-test.yml")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, cfg, "/tmp/bifrost.yml", 0o644))
+
+	artifact, err := os.ReadFile("../../testdata/release.tar.gz")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, artifact, "/tmp/release.tar.gz", 0o644))
+
+	result, err := c.RunBifrost(ctx,
+		"deploy",
+		"--output", "json",
+		"--config", "/tmp/bifrost.yml",
+		"--env", "test",
+		"--app", "app",
+		"--artifact", "/tmp/release.tar.gz",
+		"--release-name", "json-r1",
+		"--init",
+	)
+	require.NoError(t, err)
+	assert.Equal(t, 0, result.ExitCode, "deploy output:\n%s\nstderr:\n%s", result.Output, result.Stderr)
+
+	// Every line of stdout must be valid JSON.
+	for _, line := range strings.Split(strings.TrimSpace(result.Output), "\n") {
+		if line == "" {
+			continue
+		}
+		var ev map[string]any
+		require.NoError(t, json.Unmarshal([]byte(line), &ev), "invalid JSON line: %s", line)
+	}
+
+	// Must include a deploy-done event with the release name.
+	assert.Contains(t, result.Output, `"event":"done"`)
+	assert.Contains(t, result.Output, `"step":"deploy"`)
+	assert.Contains(t, result.Output, `"release":"json-r1"`)
 }
 
 func TestDeployCmd_Hooks(t *testing.T) {

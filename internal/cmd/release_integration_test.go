@@ -4,6 +4,7 @@ package cmd_test
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"strings"
 	"testing"
@@ -51,6 +52,51 @@ func TestReleaseListCmd(t *testing.T) {
 	assert.Contains(t, result.Output, "r2")
 	// r2 is the most recently deployed — should appear first (newest-first order)
 	assert.Less(t, strings.Index(result.Output, "r2"), strings.Index(result.Output, "r1"))
+}
+
+func TestReleaseListCmd_JSONOutput(t *testing.T) {
+	ctx := context.Background()
+	c := testutil.NewContainer(ctx, t, bifrostBin)
+
+	cfg, err := os.ReadFile("../../testdata/bifrost-deploy-int-test.yml")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, cfg, "/tmp/bifrost.yml", 0o644))
+
+	artifact, err := os.ReadFile("../../testdata/release.tar.gz")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, artifact, "/tmp/release.tar.gz", 0o644))
+
+	for _, name := range []string{"r1", "r2"} {
+		result, err := c.RunBifrost(ctx,
+			"deploy",
+			"--config", "/tmp/bifrost.yml",
+			"--env", "test",
+			"--app", "app",
+			"--artifact", "/tmp/release.tar.gz",
+			"--release-name", name,
+			"--init",
+		)
+		require.NoError(t, err)
+		assert.Equal(t, 0, result.ExitCode, "deploy %s:\n%s", name, result.Output)
+	}
+
+	result, err := c.RunBifrost(ctx,
+		"release", "list",
+		"--output", "json",
+		"--config", "/tmp/bifrost.yml",
+		"--env", "test",
+		"--app", "app",
+	)
+	require.NoError(t, err)
+	assert.Equal(t, 0, result.ExitCode, "release list --output json:\n%s", result.Output)
+
+	var releases []map[string]any
+	require.NoError(t, json.Unmarshal([]byte(result.Output), &releases), "output must be a JSON array")
+	require.Len(t, releases, 2)
+	assert.Equal(t, "r2", releases[0]["name"])
+	assert.Equal(t, true, releases[0]["active"])
+	assert.Equal(t, "r1", releases[1]["name"])
+	assert.Equal(t, false, releases[1]["active"])
 }
 
 func TestReleaseRollbackCmd_SwitchesToPrevious(t *testing.T) {

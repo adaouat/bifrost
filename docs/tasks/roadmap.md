@@ -158,7 +158,7 @@ logic lives in one place.
 Interactive flows, output modes, dry run.
 
 - [x] `release enable` interactive selector (huh select, no `--release` needed)
-- [ ] `--output json` event stream (spec 06)
+- [x] `--output json` event stream (spec 06)
 - [ ] `--output plain` (no colors/spinners)
 - [ ] `--dry-run` mode for `artifact` and `release enable`
 - [ ] Non-TTY detection — disable TUI components automatically

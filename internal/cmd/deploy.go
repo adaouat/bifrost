@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"charm.land/huh/v2"
 	"github.com/spf13/cobra"
@@ -61,11 +62,42 @@ func newDeployCmd() *cobra.Command {
 				return err
 			}
 
+			jsonMode := outputMode(cmd) == "json"
+			var emit *tui.JSONEmitter
+			if jsonMode {
+				emit = tui.NewJSONEmitter(cmd.OutOrStdout())
+			}
+
+			deployStart := time.Now()
+
+			// Extract artifact.
+			if jsonMode {
+				emit.Emit(map[string]any{"event": "start", "step": "extract", "artifact": artifact})
+			}
+			extractStart := time.Now()
 			updateProgress, doneProgress := tui.NewProgressBar(info.Size(), cmd.OutOrStdout())
-			if err := atomic.Extract(context.Background(), artifact, releaseDir, updateProgress); err != nil {
+			var jsonProgressFn func(n int64)
+			if jsonMode {
+				var written int64
+				total := info.Size()
+				jsonProgressFn = func(n int64) {
+					written += n
+					emit.Emit(map[string]any{"event": "progress", "step": "extract", "bytes": written, "total": total})
+				}
+			}
+			progressFn := func(n int64) {
+				updateProgress(n)
+				if jsonProgressFn != nil {
+					jsonProgressFn(n)
+				}
+			}
+			if err := atomic.Extract(context.Background(), artifact, releaseDir, progressFn); err != nil {
 				return fmt.Errorf("extracting artifact: %w", err)
 			}
 			doneProgress()
+			if jsonMode {
+				emit.Emit(map[string]any{"event": "done", "step": "extract", "duration_ms": time.Since(extractStart).Milliseconds()})
+			}
 
 			hookData := hooks.HookData{
 				Settings:  merged.Settings,
@@ -80,11 +112,13 @@ func newDeployCmd() *cobra.Command {
 			}
 			confirmFn := interactiveConfirm()
 
-			if err := hooks.RunInteractive(merged.Hooks.PostExtract, hookData, releaseDir, cmd.OutOrStdout(), confirmFn); err != nil {
+			hookEventFn := deployHookEventFn(emit)
+
+			if err := hooks.RunWithEvents(merged.Hooks.PostExtract, hookData, releaseDir, cmd.OutOrStdout(), confirmFn, "post_extract", hookEventFn); err != nil {
 				return fmt.Errorf("post_extract hooks: %w", err)
 			}
 
-			if err := hooks.RunInteractive(merged.Hooks.PreLink, hookData, releaseDir, cmd.OutOrStdout(), confirmFn); err != nil {
+			if err := hooks.RunWithEvents(merged.Hooks.PreLink, hookData, releaseDir, cmd.OutOrStdout(), confirmFn, "pre_link", hookEventFn); err != nil {
 				return fmt.Errorf("pre_link hooks: %w", err)
 			}
 
@@ -92,7 +126,7 @@ func newDeployCmd() *cobra.Command {
 				return fmt.Errorf("linking shared resources: %w", err)
 			}
 
-			if err := hooks.RunInteractive(merged.Hooks.PreEnableRelease, hookData, releaseDir, cmd.OutOrStdout(), confirmFn); err != nil {
+			if err := hooks.RunWithEvents(merged.Hooks.PreEnableRelease, hookData, releaseDir, cmd.OutOrStdout(), confirmFn, "pre_enable_release", hookEventFn); err != nil {
 				return fmt.Errorf("pre_enable_release hooks: %w", err)
 			}
 
@@ -100,12 +134,21 @@ func newDeployCmd() *cobra.Command {
 				return fmt.Errorf("updating current symlink: %w", err)
 			}
 
-			if err := hooks.RunInteractive(merged.Hooks.PostEnableRelease, hookData, releaseDir, cmd.OutOrStdout(), confirmFn); err != nil {
+			if err := hooks.RunWithEvents(merged.Hooks.PostEnableRelease, hookData, releaseDir, cmd.OutOrStdout(), confirmFn, "post_enable_release", hookEventFn); err != nil {
 				return fmt.Errorf("post_enable_release hooks: %w", err)
 			}
 
 			if err := atomic.Purge(merged.ReleasesRoot, merged.Settings.ReleasesToKeep); err != nil {
 				return fmt.Errorf("purging old releases: %w", err)
+			}
+
+			if jsonMode {
+				emit.Emit(map[string]any{
+					"event":       "done",
+					"step":        "deploy",
+					"release":     filepath.Base(releaseDir),
+					"duration_ms": time.Since(deployStart).Milliseconds(),
+				})
 			}
 
 			return nil
@@ -122,6 +165,23 @@ func newDeployCmd() *cobra.Command {
 	f.BoolVar(&init_, "init", false, "create releases_root and shared_root if missing")
 
 	return cmd
+}
+
+// deployHookEventFn returns a hook event callback that emits JSON events via emit.
+// Returns nil when emit is nil (non-JSON mode).
+func deployHookEventFn(emit *tui.JSONEmitter) hooks.HookEventFn {
+	if emit == nil {
+		return nil
+	}
+	return func(lifecycle string, index int, cmd string, exitCode int) {
+		emit.Emit(map[string]any{
+			"event":     "hook",
+			"lifecycle": lifecycle,
+			"index":     index,
+			"cmd":       cmd,
+			"exit_code": exitCode,
+		})
+	}
 }
 
 // interactiveConfirm returns a confirmFn that shows a huh prompt on TTY,
