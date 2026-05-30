@@ -177,6 +177,42 @@ func TestReleaseRollbackCmd_NoPreviousRelease(t *testing.T) {
 	assert.Equal(t, 3, result.ExitCode, "rollback with single release should exit 3:\n%s", result.Output)
 }
 
+func TestReleaseActivateCmd_AlreadyCurrent_NonInteractive(t *testing.T) {
+	ctx := context.Background()
+	c := testutil.NewContainer(ctx, t, bifrostBin)
+
+	cfg, err := os.ReadFile("../../testdata/bifrost-deploy-int-test.yml")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, cfg, "/tmp/bifrost.yml", 0o644))
+
+	artifact, err := os.ReadFile("../../testdata/release.tar.gz")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, artifact, "/tmp/release.tar.gz", 0o644))
+
+	result, err := c.RunBifrost(ctx,
+		"deploy",
+		"--config", "/tmp/bifrost.yml",
+		"--env", "test",
+		"--app", "app",
+		"--artifact", "/tmp/release.tar.gz",
+		"--release-name", "r1",
+		"--init",
+	)
+	require.NoError(t, err)
+	require.Equal(t, 0, result.ExitCode, "deploy r1:\n%s", result.Output)
+
+	// Activate r1 again — it is already current; non-TTY must not prompt.
+	result, err = c.RunBifrost(ctx,
+		"release", "activate",
+		"--config", "/tmp/bifrost.yml",
+		"--env", "test",
+		"--app", "app",
+		"--release", "r1",
+	)
+	require.NoError(t, err)
+	assert.Equal(t, 3, result.ExitCode, "should exit 3 when release is already current on non-TTY")
+}
+
 func TestReleaseActivateCmd_DryRun(t *testing.T) {
 	ctx := context.Background()
 	c := testutil.NewContainer(ctx, t, bifrostBin)

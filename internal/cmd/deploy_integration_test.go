@@ -71,6 +71,44 @@ func TestDeployCmd_E2E(t *testing.T) {
 	assert.Equal(t, "/var/shared/.env", res.Output)
 }
 
+func TestDeployCmd_InteractiveHook_SkippedOnNonTTY(t *testing.T) {
+	ctx := context.Background()
+	c := testutil.NewContainer(ctx, t, bifrostBin)
+
+	cfg, err := os.ReadFile("../../testdata/bifrost-interactive-hook-test.yml")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, cfg, "/tmp/bifrost-interactive.yml", 0o644))
+
+	artifact, err := os.ReadFile("../../testdata/release.tar.gz")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, artifact, "/tmp/release.tar.gz", 0o644))
+
+	result, err := c.RunBifrost(ctx,
+		"deploy",
+		"--config", "/tmp/bifrost-interactive.yml",
+		"--env", "test",
+		"--app", "app",
+		"--artifact", "/tmp/release.tar.gz",
+		"--release-name", "interactive-r1",
+		"--init",
+	)
+	require.NoError(t, err)
+	assert.Equal(t, 0, result.ExitCode, "deploy with interactive hook on non-TTY:\n%s\nstderr:\n%s", result.Output, result.Stderr)
+
+	// Non-interactive hook must have run.
+	res, err := c.Exec(ctx, []string{"test", "-f", "/tmp/post_extract_ran"})
+	require.NoError(t, err)
+	assert.Equal(t, 0, res.ExitCode, "post_extract non-interactive hook should have run")
+
+	// Interactive hook must NOT have run (skipped on non-TTY).
+	res, err = c.Exec(ctx, []string{"test", "-f", "/tmp/interactive_would_run"})
+	require.NoError(t, err)
+	assert.NotEqual(t, 0, res.ExitCode, "interactive hook should have been skipped on non-TTY")
+
+	// Warning about skipped interactive hook should appear in stdout.
+	assert.Contains(t, result.Output, "skipping interactive hook")
+}
+
 func TestDeployCmd_JSONOutput(t *testing.T) {
 	ctx := context.Background()
 	c := testutil.NewContainer(ctx, t, bifrostBin)

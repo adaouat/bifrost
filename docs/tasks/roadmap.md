@@ -161,7 +161,7 @@ Interactive flows, output modes, dry run.
 - [x] `--output json` event stream (spec 06)
 - [x] `--output plain` (no colors/spinners)
 - [x] `--dry-run` mode for `artifact` and `release enable`
-- [ ] Non-TTY detection — disable TUI components automatically
+- [x] Non-TTY detection — disable TUI components automatically
 - [ ] `NO_COLOR` support
 
 Deliverable: all output modes and interactive flows work.
