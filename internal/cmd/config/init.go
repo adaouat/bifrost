@@ -67,6 +67,7 @@ var (
 
 // SetInitWrite replaces the write function used by config init (for testing).
 // Pass nil to restore the default.
+// Tests that call this must not run in parallel — these are package-level globals.
 func SetInitWrite(fn func(string, []byte, uint32) error) {
 	if fn == nil {
 		initWrite = func(path string, data []byte, perm uint32) error {
@@ -79,6 +80,7 @@ func SetInitWrite(fn func(string, []byte, uint32) error) {
 
 // SetInitStat replaces the stat function used by config init (for testing).
 // Pass nil to restore the default.
+// Tests that call this must not run in parallel — these are package-level globals.
 func SetInitStat(fn func(string) error) {
 	if fn == nil {
 		initStat = func(path string) error {
