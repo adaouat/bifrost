@@ -206,6 +206,65 @@ func TestRun_InteractiveSkippedWhenDeclined(t *testing.T) {
 	assert.Contains(t, out.String(), "warning")
 }
 
+func TestRun_TemplateRendering_AllDirectories(t *testing.T) {
+	var calls []cmdCall
+	execCommand = captureExec(&calls, 0)
+	t.Cleanup(func() { execCommand = exec.Command })
+
+	hooks := []config.HookEntry{{
+		Cmd:      "echo {{ .Directories.Working }} {{ .Directories.Current }} {{ .Directories.Releases }} {{ .Directories.Shared }}",
+		Priority: prio(99999),
+	}}
+	data := HookData{
+		Directories: Directories{
+			Working:  "/releases/20260524",
+			Current:  "/releases/current",
+			Releases: "/releases",
+			Shared:   "/shared",
+		},
+	}
+	var out bytes.Buffer
+	require.NoError(t, Run(hooks, data, "/tmp", &out))
+	require.Len(t, calls, 1)
+	assert.Equal(t, []string{"-c", "echo /releases/20260524 /releases/current /releases /shared"}, calls[0].args)
+}
+
+func TestRun_TemplateRendering_Settings(t *testing.T) {
+	var calls []cmdCall
+	execCommand = captureExec(&calls, 0)
+	t.Cleanup(func() { execCommand = exec.Command })
+
+	hooks := []config.HookEntry{{
+		Cmd:      "echo keep={{ .Settings.ReleasesToKeep }}",
+		Priority: prio(99999),
+	}}
+	data := HookData{
+		Settings: config.Settings{ReleasesToKeep: 7},
+	}
+	var out bytes.Buffer
+	require.NoError(t, Run(hooks, data, "/tmp", &out))
+	require.Len(t, calls, 1)
+	assert.Equal(t, []string{"-c", "echo keep=7"}, calls[0].args)
+}
+
+func TestRun_TemplateRendering_Env(t *testing.T) {
+	var calls []cmdCall
+	execCommand = captureExec(&calls, 0)
+	t.Cleanup(func() { execCommand = exec.Command })
+
+	hooks := []config.HookEntry{{
+		Cmd:      "echo db={{ .Env.DB_HOST }}",
+		Priority: prio(99999),
+	}}
+	data := HookData{
+		Env: map[string]string{"DB_HOST": "db.prod.internal"},
+	}
+	var out bytes.Buffer
+	require.NoError(t, Run(hooks, data, "/tmp", &out))
+	require.Len(t, calls, 1)
+	assert.Equal(t, []string{"-c", "echo db=db.prod.internal"}, calls[0].args)
+}
+
 func TestRun_ExecutesInOrder(t *testing.T) {
 	var calls []cmdCall
 	execCommand = captureExec(&calls, 0)
