@@ -204,7 +204,7 @@ Close the remaining gaps between the current output and spec 06.
 ### Dry run — `deploy`
 
 - [x] `Would purge` line lists the actual release names that would be removed
-- [ ] Hook lines with `sudo: true` show `(sudo)` at the end
+- [x] Hook lines with `sudo: true` show `(sudo)` at the end
 
 ---
 

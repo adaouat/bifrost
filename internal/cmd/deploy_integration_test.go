@@ -274,6 +274,35 @@ func TestDeployCmd_DryRun_WouldPurge(t *testing.T) {
 	assert.Contains(t, result.Output, "dryp-r1")
 }
 
+func TestDeployCmd_DryRun_SudoHook(t *testing.T) {
+	ctx := context.Background()
+	c := testutil.NewContainer(ctx, t, bifrostBin)
+
+	cfg, err := os.ReadFile("../../testdata/bifrost-deploy-sudo-test.yml")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, cfg, "/tmp/bifrost-sudo.yml", 0o644))
+
+	for _, dir := range []string{"/var/releases", "/var/shared"} {
+		res, err := c.Exec(ctx, []string{"mkdir", "-p", dir})
+		require.NoError(t, err)
+		require.Equal(t, 0, res.ExitCode)
+	}
+
+	result, err := c.RunBifrost(ctx,
+		"deploy",
+		"--dry-run",
+		"--config", "/tmp/bifrost-sudo.yml",
+		"--env", "test",
+		"--app", "app",
+		"--artifact", "/tmp/release.tar.gz",
+		"--release-name", "sudo-r1",
+	)
+	require.NoError(t, err)
+	assert.Equal(t, 0, result.ExitCode, "dry-run output:\n%s\nstderr:\n%s", result.Output, result.Stderr)
+	assert.Contains(t, result.Output, "systemctl reload nginx")
+	assert.Contains(t, result.Output, "(sudo)")
+}
+
 func TestDeployCmd_Hooks(t *testing.T) {
 	ctx := context.Background()
 	c := testutil.NewContainer(ctx, t, bifrostBin)

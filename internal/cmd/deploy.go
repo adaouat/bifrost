@@ -244,15 +244,23 @@ func deployDryRun(cmd *cobra.Command, merged *config.MergedConfig, artifact, rel
 	currentLink := filepath.Join(merged.ReleasesRoot, "current")
 	out := cmd.OutOrStdout()
 
+	hookLine := func(lifecycle string, h config.HookEntry) {
+		suffix := ""
+		if h.Sudo {
+			suffix = "  (sudo)"
+		}
+		_, _ = fmt.Fprintf(out, "  Would run      [%s]  %s%s\n", lifecycle, h.Cmd, suffix)
+	}
+
 	_, _ = fmt.Fprintln(out, "DRY RUN — no changes will be made")
 	_, _ = fmt.Fprintln(out)
 	_, _ = fmt.Fprintf(out, "  Would create   %s\n", releaseDir)
 	_, _ = fmt.Fprintf(out, "  Would extract  %s  →  %s\n", artifact, releaseDir)
 	for _, h := range merged.Hooks.PostExtract {
-		_, _ = fmt.Fprintf(out, "  Would run      [post_extract]  %s\n", h.Cmd)
+		hookLine("post_extract", h)
 	}
 	for _, h := range merged.Hooks.PreLink {
-		_, _ = fmt.Fprintf(out, "  Would run      [pre_link]  %s\n", h.Cmd)
+		hookLine("pre_link", h)
 	}
 	for _, rel := range merged.SharedDirs {
 		_, _ = fmt.Fprintf(out, "  Would link     %s  →  %s\n",
@@ -263,11 +271,11 @@ func deployDryRun(cmd *cobra.Command, merged *config.MergedConfig, artifact, rel
 			filepath.Join(releaseDir, rel), filepath.Join(merged.SharedRoot, rel))
 	}
 	for _, h := range merged.Hooks.PreEnableRelease {
-		_, _ = fmt.Fprintf(out, "  Would run      [pre_enable_release]  %s\n", h.Cmd)
+		hookLine("pre_enable_release", h)
 	}
 	_, _ = fmt.Fprintf(out, "  Would update   %s  →  %s\n", currentLink, relBase)
 	for _, h := range merged.Hooks.PostEnableRelease {
-		_, _ = fmt.Fprintf(out, "  Would run      [post_enable_release]  %s\n", h.Cmd)
+		hookLine("post_enable_release", h)
 	}
 	if candidates, err := atomic.PurgePlan(merged.ReleasesRoot, relBase, merged.Settings.ReleasesToKeep); err == nil && len(candidates) > 0 {
 		_, _ = fmt.Fprintf(out, "  Would purge    %s  (keeping %d)\n", strings.Join(candidates, ", "), merged.Settings.ReleasesToKeep)
