@@ -217,7 +217,12 @@ func newDeployCmd() *cobra.Command {
 				tui.PrintStep(out, "post_enable_release hooks", fmt.Sprintf("(%d/%d)", n, n))
 			}
 
-			purgePlan, _ := atomic.PurgePlan(merged.ReleasesRoot, filepath.Base(releaseDir), merged.Settings.ReleasesToKeep)
+			// PurgePlan failure is non-fatal: Purge carries its own error path.
+			// If planning fails, purgePlan is nil and the spinner / detail lines are skipped.
+			purgePlan, purgePlanErr := atomic.PurgePlan(merged.ReleasesRoot, filepath.Base(releaseDir), merged.Settings.ReleasesToKeep)
+			if purgePlanErr != nil {
+				purgePlan = nil
+			}
 			if jsonMode {
 				emit.Emit(map[string]any{"event": "start", "step": "purge"})
 			}

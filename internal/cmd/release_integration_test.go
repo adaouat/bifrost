@@ -52,6 +52,9 @@ func TestReleaseListCmd(t *testing.T) {
 	assert.Contains(t, result.Output, "r2")
 	// r2 is the most recently deployed — should appear first (newest-first order)
 	assert.Less(t, strings.Index(result.Output, "r2"), strings.Index(result.Output, "r1"))
+	// M8 human-mode output format
+	assert.Contains(t, result.Output, "Releases for test › app")
+	assert.Contains(t, result.Output, "← current")
 }
 
 func TestReleaseListCmd_JSONOutput(t *testing.T) {
