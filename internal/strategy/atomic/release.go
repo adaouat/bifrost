@@ -48,17 +48,22 @@ func SetCurrent(releasesRoot, releaseDir string) error {
 }
 
 // Purge removes old release directories under releasesRoot, keeping the keepN
-// most recent. Directories are ranked by name — timestamp names sort correctly.
-// The "current" symlink is always skipped.
+// most recent. The active release (target of the "current" symlink) is never removed.
 func Purge(releasesRoot string, keepN int) error {
 	entries, err := os.ReadDir(releasesRoot)
 	if err != nil {
 		return fmt.Errorf("reading releases dir: %w", err)
 	}
 
+	// Protect the active release regardless of its sort order.
+	var activeRelease string
+	if target, err := os.Readlink(filepath.Join(releasesRoot, "current")); err == nil {
+		activeRelease = filepath.Base(target)
+	}
+
 	var names []string
 	for _, e := range entries {
-		if e.Name() == "current" {
+		if e.Name() == "current" || e.Name() == activeRelease {
 			continue
 		}
 		if e.IsDir() {
@@ -68,7 +73,7 @@ func Purge(releasesRoot string, keepN int) error {
 
 	sort.Strings(names)
 
-	for _, name := range purgeCandidates(names, keepN) {
+	for _, name := range purgeFromList(names, keepN) {
 		if err := os.RemoveAll(filepath.Join(releasesRoot, name)); err != nil {
 			return fmt.Errorf("purging release %s: %w", name, err)
 		}
@@ -77,7 +82,7 @@ func Purge(releasesRoot string, keepN int) error {
 }
 
 // PurgePlan returns the release names that would be removed by a purge keeping keepN releases.
-// The new release name is included in the simulation.
+// newRelease is protected (it will become the active release) and is never a candidate.
 // Returns nil if releasesRoot does not exist (no releases yet).
 func PurgePlan(releasesRoot, newRelease string, keepN int) ([]string, error) {
 	entries, err := os.ReadDir(releasesRoot)
@@ -88,18 +93,28 @@ func PurgePlan(releasesRoot, newRelease string, keepN int) ([]string, error) {
 		return nil, fmt.Errorf("reading releases dir: %w", err)
 	}
 
-	names := []string{newRelease}
+	var existing []string
 	for _, e := range entries {
 		if e.Name() == "current" || e.Name() == newRelease {
 			continue
 		}
 		if e.IsDir() {
-			names = append(names, e.Name())
+			existing = append(existing, e.Name())
 		}
 	}
 
-	sort.Strings(names)
-	return purgeCandidates(names, keepN), nil
+	sort.Strings(existing)
+	return purgeFromList(existing, keepN), nil
+}
+
+// purgeFromList returns the existing releases to remove when keepN total slots are available
+// and one slot is already reserved for the active/new release.
+func purgeFromList(existing []string, keepN int) []string {
+	keepOld := keepN - 1
+	if keepOld < 0 {
+		keepOld = 0
+	}
+	return purgeCandidates(existing, keepOld)
 }
 
 // purgeCandidates returns the entries from an ascending-sorted names slice that
