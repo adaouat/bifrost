@@ -176,7 +176,7 @@ fills in the test gaps that weren't covered incrementally.
 - [x] Unit tests for config merge logic
 - [x] Unit tests for shared resource linking algorithm
 - [x] Unit tests for hook template rendering
-- [ ] Integration tests for `deploy` command (real filesystem, temp dir)
+- [x] Integration tests for `deploy` command (real filesystem, temp dir)
 - [ ] Integration tests for `release activate` / `release rollback`
 
 ---

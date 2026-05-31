@@ -224,3 +224,52 @@ func TestDeployCmd_Hooks(t *testing.T) {
 		assert.Equal(t, 0, res.ExitCode, "hook marker should exist: %s", marker)
 	}
 }
+
+func TestDeployCmd_Purge(t *testing.T) {
+	ctx := context.Background()
+	c := testutil.NewContainer(ctx, t, bifrostBin)
+
+	cfg, err := os.ReadFile("../../testdata/bifrost-deploy-purge-test.yml")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, cfg, "/tmp/bifrost-purge.yml", 0o644))
+
+	artifact, err := os.ReadFile("../../testdata/release.tar.gz")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, artifact, "/tmp/release.tar.gz", 0o644))
+
+	// releases_to_keep=2; deploy 3 releases — purge-r1 must be removed after purge-r3.
+	for i, name := range []string{"purge-r1", "purge-r2", "purge-r3"} {
+		initFlag := "--init"
+		args := []string{
+			"deploy",
+			"--config", "/tmp/bifrost-purge.yml",
+			"--env", "test",
+			"--app", "app",
+			"--artifact", "/tmp/release.tar.gz",
+			"--release-name", name,
+		}
+		if i == 0 {
+			args = append(args, initFlag)
+		}
+		result, err := c.RunBifrost(ctx, args...)
+		require.NoError(t, err)
+		assert.Equal(t, 0, result.ExitCode, "deploy %s:\n%s", name, result.Output)
+	}
+
+	// purge-r1 must have been removed (oldest, beyond the keep=2 window).
+	res, err := c.Exec(ctx, []string{"test", "-d", "/var/releases/purge-r1"})
+	require.NoError(t, err)
+	assert.NotEqual(t, 0, res.ExitCode, "purge-r1 should have been purged")
+
+	// purge-r2 and purge-r3 must still exist.
+	for _, name := range []string{"purge-r2", "purge-r3"} {
+		res, err = c.Exec(ctx, []string{"test", "-d", "/var/releases/" + name})
+		require.NoError(t, err)
+		assert.Equal(t, 0, res.ExitCode, "%s should still exist", name)
+	}
+
+	// current must point to the latest release.
+	res, err = c.Exec(ctx, []string{"readlink", "/var/releases/current"})
+	require.NoError(t, err)
+	assert.Equal(t, "/var/releases/purge-r3", res.Output)
+}
