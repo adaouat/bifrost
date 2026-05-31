@@ -230,6 +230,12 @@ checking config files separately.
 
 ---
 
+## M10 — Spinner for purge step
+
+- [x] Show a spinner "Purging N old releases..." while `atomic.Purge` runs (human mode only, only when N > 0)
+
+---
+
 ## Bugs fixed vs v1
 
 | Bug | Status | Fixed in |

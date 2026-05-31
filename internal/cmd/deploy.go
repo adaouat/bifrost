@@ -222,8 +222,21 @@ func newDeployCmd() *cobra.Command {
 				emit.Emit(map[string]any{"event": "start", "step": "purge"})
 			}
 			purgeStart := time.Now()
-			if err := atomic.Purge(merged.ReleasesRoot, merged.Settings.ReleasesToKeep); err != nil {
-				return emitError("purge", fmt.Errorf("purging old releases: %w", err))
+			var purgeErr error
+			if !jsonMode && len(purgePlan) > 0 {
+				noun := "releases"
+				if len(purgePlan) == 1 {
+					noun = "release"
+				}
+				label := fmt.Sprintf("Purging %d old %s...", len(purgePlan), noun)
+				purgeErr = tui.RunWithSpinner(context.Background(), label, func(ctx context.Context) error {
+					return atomic.Purge(merged.ReleasesRoot, merged.Settings.ReleasesToKeep)
+				})
+			} else {
+				purgeErr = atomic.Purge(merged.ReleasesRoot, merged.Settings.ReleasesToKeep)
+			}
+			if purgeErr != nil {
+				return emitError("purge", fmt.Errorf("purging old releases: %w", purgeErr))
 			}
 			if jsonMode {
 				emit.Emit(map[string]any{
