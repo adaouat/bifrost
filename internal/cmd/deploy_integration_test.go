@@ -149,6 +149,41 @@ func TestDeployCmd_JSONOutput(t *testing.T) {
 	assert.Contains(t, result.Output, `"release":"json-r1"`)
 }
 
+func TestDeployCmd_JSONOutput_ErrorEvent(t *testing.T) {
+	ctx := context.Background()
+	c := testutil.NewContainer(ctx, t, bifrostBin)
+
+	cfg, err := os.ReadFile("../../testdata/bifrost-deploy-int-test.yml")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, cfg, "/tmp/bifrost.yml", 0o644))
+
+	// Copy garbage bytes as the artifact to trigger an extraction failure.
+	require.NoError(t, c.CopyFile(ctx, []byte("not a real archive"), "/tmp/bad.tar.gz", 0o644))
+
+	// Create the release roots so the deploy gets past the roots check.
+	for _, dir := range []string{"/var/releases", "/var/shared"} {
+		res, err := c.Exec(ctx, []string{"mkdir", "-p", dir})
+		require.NoError(t, err)
+		require.Equal(t, 0, res.ExitCode)
+	}
+
+	result, err := c.RunBifrost(ctx,
+		"deploy",
+		"--output", "json",
+		"--config", "/tmp/bifrost.yml",
+		"--env", "test",
+		"--app", "app",
+		"--artifact", "/tmp/bad.tar.gz",
+		"--release-name", "json-err-r1",
+	)
+	require.NoError(t, err)
+	assert.NotEqual(t, 0, result.ExitCode, "deploy with bad artifact should fail")
+
+	// stdout must contain a JSON error event for the extract step.
+	assert.Contains(t, result.Output, `"event":"error"`)
+	assert.Contains(t, result.Output, `"step":"extract"`)
+}
+
 func TestDeployCmd_DryRun(t *testing.T) {
 	ctx := context.Background()
 	c := testutil.NewContainer(ctx, t, bifrostBin)
