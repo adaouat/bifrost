@@ -31,6 +31,11 @@ func PrintStep(out io.Writer, label, detail string) {
 	}
 }
 
+// PrintDetail writes an indented sub-detail line under a step.
+func PrintDetail(out io.Writer, label string) {
+	_, _ = fmt.Fprintf(out, "      %s %s\n", MutedStyle.Render("-"), label)
+}
+
 // PrintSummary writes the final deploy summary line to out.
 func PrintSummary(out io.Writer, elapsed time.Duration, release string) {
 	secs := elapsed.Seconds()

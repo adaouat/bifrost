@@ -45,3 +45,13 @@ func TestPrintSummary(t *testing.T) {
 	assert.Contains(t, out, "20260520-141500")
 	assert.Contains(t, out, "→")
 }
+
+func TestPrintDetail(t *testing.T) {
+	var buf bytes.Buffer
+	tui.PrintDetail(&buf, "Root path: /var/releases")
+	out := buf.String()
+	assert.Contains(t, out, "Root path: /var/releases")
+	assert.Contains(t, out, "-")
+	// Must be indented more than a step line.
+	assert.True(t, len(out) > 0 && out[0] == ' ', "detail line should be indented")
+}

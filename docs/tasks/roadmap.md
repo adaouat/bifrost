@@ -208,6 +208,28 @@ Close the remaining gaps between the current output and spec 06.
 
 ---
 
+## M9 — Step Detail Lines
+
+Add sub-detail lines under each deploy step so both human and JSON
+outputs carry the context needed to diagnose a deployment without
+checking config files separately.
+
+### Human / plain mode — `deploy`
+
+- [x] Release directory created: show `releases_root` and `shared_root` paths
+- [x] Shared directories linked: list each symlinked directory
+- [x] Shared files linked: list each symlinked file
+- [x] current symlink updated: show the full target path
+- [x] Old releases purged: list each deleted release name
+
+### JSON mode — `deploy`
+
+- [x] Enrich `done` `link` event with `dirs` and `files` arrays
+- [x] Enrich `done` `current_symlink` event with `path` field
+- [x] Enrich `done` `purge` event with `purged` array and `kept` count
+
+---
+
 ## Bugs fixed vs v1
 
 | Bug | Status | Fixed in |
