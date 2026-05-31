@@ -151,8 +151,15 @@ func newDeployCmd() *cobra.Command {
 				tui.PrintStep(out, "pre_link hooks", fmt.Sprintf("(%d/%d)", n, n))
 			}
 
+			if jsonMode {
+				emit.Emit(map[string]any{"event": "start", "step": "link"})
+			}
+			linkStart := time.Now()
 			if err := atomic.LinkShared(merged.SharedDirs, merged.SharedFiles, releaseDir, merged.SharedRoot); err != nil {
 				return emitError("link", fmt.Errorf("linking shared resources: %w", err))
+			}
+			if jsonMode {
+				emit.Emit(map[string]any{"event": "done", "step": "link", "duration_ms": time.Since(linkStart).Milliseconds()})
 			}
 			if !jsonMode {
 				tui.PrintStep(out, "Shared directories linked", fmt.Sprintf("(%d)", len(merged.SharedDirs)))
@@ -167,8 +174,15 @@ func newDeployCmd() *cobra.Command {
 				tui.PrintStep(out, "pre_enable_release hooks", fmt.Sprintf("(%d/%d)", n, n))
 			}
 
+			if jsonMode {
+				emit.Emit(map[string]any{"event": "start", "step": "current_symlink"})
+			}
+			currentStart := time.Now()
 			if err := atomic.SetCurrent(merged.ReleasesRoot, releaseDir); err != nil {
 				return emitError("current_symlink", fmt.Errorf("updating current symlink: %w", err))
+			}
+			if jsonMode {
+				emit.Emit(map[string]any{"event": "done", "step": "current_symlink", "duration_ms": time.Since(currentStart).Milliseconds()})
 			}
 			if !jsonMode {
 				tui.PrintStep(out, "current symlink updated", "")
@@ -182,8 +196,15 @@ func newDeployCmd() *cobra.Command {
 				tui.PrintStep(out, "post_enable_release hooks", fmt.Sprintf("(%d/%d)", n, n))
 			}
 
+			if jsonMode {
+				emit.Emit(map[string]any{"event": "start", "step": "purge"})
+			}
+			purgeStart := time.Now()
 			if err := atomic.Purge(merged.ReleasesRoot, merged.Settings.ReleasesToKeep); err != nil {
 				return emitError("purge", fmt.Errorf("purging old releases: %w", err))
+			}
+			if jsonMode {
+				emit.Emit(map[string]any{"event": "done", "step": "purge", "duration_ms": time.Since(purgeStart).Milliseconds()})
 			}
 			if !jsonMode {
 				tui.PrintStep(out, "Old releases purged", fmt.Sprintf("(kept %d)", merged.Settings.ReleasesToKeep))

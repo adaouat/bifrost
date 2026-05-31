@@ -147,6 +147,11 @@ func TestDeployCmd_JSONOutput(t *testing.T) {
 	assert.Contains(t, result.Output, `"event":"done"`)
 	assert.Contains(t, result.Output, `"step":"deploy"`)
 	assert.Contains(t, result.Output, `"release":"json-r1"`)
+
+	// Must have start/done events for link, current_symlink, and purge steps.
+	assert.Contains(t, result.Output, `"step":"link"`)
+	assert.Contains(t, result.Output, `"step":"current_symlink"`)
+	assert.Contains(t, result.Output, `"step":"purge"`)
 }
 
 func TestDeployCmd_JSONOutput_ErrorEvent(t *testing.T) {

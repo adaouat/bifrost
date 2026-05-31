@@ -199,7 +199,7 @@ Close the remaining gaps between the current output and spec 06.
 ### JSON mode — `deploy`
 
 - [x] `{"event":"error","step":"...","message":"...","exit_code":3}` on failure
-- [ ] `start`/`done` events for link, current-symlink, and purge steps
+- [x] `start`/`done` events for link, current-symlink, and purge steps
 
 ### Dry run — `deploy`
 
