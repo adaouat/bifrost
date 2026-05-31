@@ -187,7 +187,7 @@ Close the remaining gaps between the current output and spec 06.
 
 ### Human mode — `deploy`
 
-- [ ] Header panel: bordered box showing environment › application and release name
+- [x] Header panel: bordered box showing environment › application and release name
 - [ ] Per-step `✔` lines: config loaded, release dir created, artifact extracted (with duration), hooks (with count), shared dirs linked (with count), shared files linked (with count), current symlink updated, releases purged (with kept count)
 - [ ] Final summary line: `Deployed in Xs  →  <release>`
 

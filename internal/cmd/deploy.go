@@ -66,10 +66,15 @@ func newDeployCmd() *cobra.Command {
 				return err
 			}
 
+			out := cmd.OutOrStdout()
 			jsonMode := outputMode(cmd) == "json"
 			var emit *tui.JSONEmitter
 			if jsonMode {
-				emit = tui.NewJSONEmitter(cmd.OutOrStdout())
+				emit = tui.NewJSONEmitter(out)
+			}
+
+			if !jsonMode {
+				_, _ = fmt.Fprint(out, tui.DeployHeader(env, app, filepath.Base(releaseDir)))
 			}
 
 			deployStart := time.Now()
@@ -79,7 +84,7 @@ func newDeployCmd() *cobra.Command {
 				emit.Emit(map[string]any{"event": "start", "step": "extract", "artifact": artifact})
 			}
 			extractStart := time.Now()
-			updateProgress, doneProgress := tui.NewProgressBar(info.Size(), cmd.OutOrStdout())
+			updateProgress, doneProgress := tui.NewProgressBar(info.Size(), out)
 			var jsonProgressFn func(n int64)
 			if jsonMode {
 				var written int64
@@ -118,11 +123,11 @@ func newDeployCmd() *cobra.Command {
 
 			hookEventFn := deployHookEventFn(emit)
 
-			if err := hooks.RunWithEvents(merged.Hooks.PostExtract, hookData, releaseDir, cmd.OutOrStdout(), confirmFn, "post_extract", hookEventFn); err != nil {
+			if err := hooks.RunWithEvents(merged.Hooks.PostExtract, hookData, releaseDir, out, confirmFn, "post_extract", hookEventFn); err != nil {
 				return fmt.Errorf("post_extract hooks: %w", err)
 			}
 
-			if err := hooks.RunWithEvents(merged.Hooks.PreLink, hookData, releaseDir, cmd.OutOrStdout(), confirmFn, "pre_link", hookEventFn); err != nil {
+			if err := hooks.RunWithEvents(merged.Hooks.PreLink, hookData, releaseDir, out, confirmFn, "pre_link", hookEventFn); err != nil {
 				return fmt.Errorf("pre_link hooks: %w", err)
 			}
 
@@ -130,7 +135,7 @@ func newDeployCmd() *cobra.Command {
 				return fmt.Errorf("linking shared resources: %w", err)
 			}
 
-			if err := hooks.RunWithEvents(merged.Hooks.PreEnableRelease, hookData, releaseDir, cmd.OutOrStdout(), confirmFn, "pre_enable_release", hookEventFn); err != nil {
+			if err := hooks.RunWithEvents(merged.Hooks.PreEnableRelease, hookData, releaseDir, out, confirmFn, "pre_enable_release", hookEventFn); err != nil {
 				return fmt.Errorf("pre_enable_release hooks: %w", err)
 			}
 
@@ -138,7 +143,7 @@ func newDeployCmd() *cobra.Command {
 				return fmt.Errorf("updating current symlink: %w", err)
 			}
 
-			if err := hooks.RunWithEvents(merged.Hooks.PostEnableRelease, hookData, releaseDir, cmd.OutOrStdout(), confirmFn, "post_enable_release", hookEventFn); err != nil {
+			if err := hooks.RunWithEvents(merged.Hooks.PostEnableRelease, hookData, releaseDir, out, confirmFn, "post_enable_release", hookEventFn); err != nil {
 				return fmt.Errorf("post_enable_release hooks: %w", err)
 			}
 
