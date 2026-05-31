@@ -177,7 +177,7 @@ fills in the test gaps that weren't covered incrementally.
 - [x] Unit tests for shared resource linking algorithm
 - [x] Unit tests for hook template rendering
 - [x] Integration tests for `deploy` command (real filesystem, temp dir)
-- [ ] Integration tests for `release activate` / `release rollback`
+- [x] Integration tests for `release activate` / `release rollback`
 
 ---
 
