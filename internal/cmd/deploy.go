@@ -75,6 +75,8 @@ func newDeployCmd() *cobra.Command {
 
 			if !jsonMode {
 				_, _ = fmt.Fprint(out, tui.DeployHeader(env, app, filepath.Base(releaseDir)))
+				tui.PrintStep(out, "Config loaded and validated", "")
+				tui.PrintStep(out, "Release directory created", "")
 			}
 
 			deployStart := time.Now()
@@ -107,6 +109,9 @@ func newDeployCmd() *cobra.Command {
 			if jsonMode {
 				emit.Emit(map[string]any{"event": "done", "step": "extract", "duration_ms": time.Since(extractStart).Milliseconds()})
 			}
+			if !jsonMode {
+				tui.PrintStep(out, "Artifact extracted", fmt.Sprintf("(%.1fs)", time.Since(extractStart).Seconds()))
+			}
 
 			hookData := hooks.HookData{
 				Settings:  merged.Settings,
@@ -126,29 +131,55 @@ func newDeployCmd() *cobra.Command {
 			if err := hooks.RunWithEvents(merged.Hooks.PostExtract, hookData, releaseDir, out, confirmFn, "post_extract", hookEventFn); err != nil {
 				return fmt.Errorf("post_extract hooks: %w", err)
 			}
+			if !jsonMode && len(merged.Hooks.PostExtract) > 0 {
+				n := len(merged.Hooks.PostExtract)
+				tui.PrintStep(out, "post_extract hooks", fmt.Sprintf("(%d/%d)", n, n))
+			}
 
 			if err := hooks.RunWithEvents(merged.Hooks.PreLink, hookData, releaseDir, out, confirmFn, "pre_link", hookEventFn); err != nil {
 				return fmt.Errorf("pre_link hooks: %w", err)
+			}
+			if !jsonMode && len(merged.Hooks.PreLink) > 0 {
+				n := len(merged.Hooks.PreLink)
+				tui.PrintStep(out, "pre_link hooks", fmt.Sprintf("(%d/%d)", n, n))
 			}
 
 			if err := atomic.LinkShared(merged.SharedDirs, merged.SharedFiles, releaseDir, merged.SharedRoot); err != nil {
 				return fmt.Errorf("linking shared resources: %w", err)
 			}
+			if !jsonMode {
+				tui.PrintStep(out, "Shared directories linked", fmt.Sprintf("(%d)", len(merged.SharedDirs)))
+				tui.PrintStep(out, "Shared files linked", fmt.Sprintf("(%d)", len(merged.SharedFiles)))
+			}
 
 			if err := hooks.RunWithEvents(merged.Hooks.PreEnableRelease, hookData, releaseDir, out, confirmFn, "pre_enable_release", hookEventFn); err != nil {
 				return fmt.Errorf("pre_enable_release hooks: %w", err)
+			}
+			if !jsonMode && len(merged.Hooks.PreEnableRelease) > 0 {
+				n := len(merged.Hooks.PreEnableRelease)
+				tui.PrintStep(out, "pre_enable_release hooks", fmt.Sprintf("(%d/%d)", n, n))
 			}
 
 			if err := atomic.SetCurrent(merged.ReleasesRoot, releaseDir); err != nil {
 				return fmt.Errorf("updating current symlink: %w", err)
 			}
+			if !jsonMode {
+				tui.PrintStep(out, "current symlink updated", "")
+			}
 
 			if err := hooks.RunWithEvents(merged.Hooks.PostEnableRelease, hookData, releaseDir, out, confirmFn, "post_enable_release", hookEventFn); err != nil {
 				return fmt.Errorf("post_enable_release hooks: %w", err)
 			}
+			if !jsonMode && len(merged.Hooks.PostEnableRelease) > 0 {
+				n := len(merged.Hooks.PostEnableRelease)
+				tui.PrintStep(out, "post_enable_release hooks", fmt.Sprintf("(%d/%d)", n, n))
+			}
 
 			if err := atomic.Purge(merged.ReleasesRoot, merged.Settings.ReleasesToKeep); err != nil {
 				return fmt.Errorf("purging old releases: %w", err)
+			}
+			if !jsonMode {
+				tui.PrintStep(out, "Old releases purged", fmt.Sprintf("(kept %d)", merged.Settings.ReleasesToKeep))
 			}
 
 			if jsonMode {

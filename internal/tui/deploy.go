@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"io"
 
 	"charm.land/lipgloss/v2"
 )
@@ -16,4 +17,15 @@ func DeployHeader(env, app, release string) string {
 	envApp := env + " › " + app
 	content := fmt.Sprintf("Environment   %s\nRelease       %s", envApp, release)
 	return "\n" + style.Render(content) + "\n"
+}
+
+// PrintStep writes a completed step line to out.
+// detail is optional; pass "" to omit it.
+func PrintStep(out io.Writer, label, detail string) {
+	checkmark := SuccessStyle.Render("✔")
+	if detail != "" {
+		_, _ = fmt.Fprintf(out, "  %s %s   %s\n", checkmark, label, MutedStyle.Render(detail))
+	} else {
+		_, _ = fmt.Fprintf(out, "  %s %s\n", checkmark, label)
+	}
 }
