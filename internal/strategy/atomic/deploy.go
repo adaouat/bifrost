@@ -32,14 +32,19 @@ func Extract(ctx context.Context, artifactPath, destDir string, onProgress func(
 		return fmt.Errorf("format %T does not support extraction", format)
 	}
 
-	if err := ex.Extract(ctx, stream, extractHandler(destDir, onProgress)); err != nil {
+	extractStream := stream
+	if onProgress != nil {
+		extractStream = &progressReader{r: stream, fn: onProgress}
+	}
+
+	if err := ex.Extract(ctx, extractStream, extractHandler(destDir)); err != nil {
 		return fmt.Errorf("extracting archive: %w", err)
 	}
 
 	return nil
 }
 
-func extractHandler(destDir string, onProgress func(n int64)) archives.FileHandler {
+func extractHandler(destDir string) archives.FileHandler {
 	return func(ctx context.Context, fi archives.FileInfo) error {
 		name := path.Clean(fi.NameInArchive)
 		if name == "." {
@@ -75,12 +80,7 @@ func extractHandler(destDir string, onProgress func(n int64)) archives.FileHandl
 			return fmt.Errorf("creating %s: %w", name, err)
 		}
 
-		var w io.Writer = out
-		if onProgress != nil {
-			w = &progressWriter{w: out, fn: onProgress}
-		}
-
-		_, copyErr := io.Copy(w, src)
+		_, copyErr := io.Copy(out, src)
 		closeErr := out.Close()
 		if copyErr != nil {
 			return fmt.Errorf("writing %s: %w", name, copyErr)
@@ -93,13 +93,13 @@ func extractHandler(destDir string, onProgress func(n int64)) archives.FileHandl
 	}
 }
 
-type progressWriter struct {
-	w  io.Writer
+type progressReader struct {
+	r  io.Reader
 	fn func(n int64)
 }
 
-func (p *progressWriter) Write(b []byte) (int, error) {
-	n, err := p.w.Write(b)
+func (p *progressReader) Read(b []byte) (int, error) {
+	n, err := p.r.Read(b)
 	if n > 0 {
 		p.fn(int64(n))
 	}
