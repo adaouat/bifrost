@@ -1,30 +1,44 @@
 # Changelog
 
+## [0.7.1](//compare/v0.7.0..v0.7.1) - 2026-05-31
+
+### 🧪 Testing
+
+- *(cmd/deploy)* Integration test for release purge - ([7ccb14a](//commit/7ccb14a410358dd0123fa6163df093f822a8bfc7))
+
+- *(cmd/release)* Integration test for activating non-existent release - ([b80ace3](//commit/b80ace33d6186547d26397f607583a481620af96))
+
+- *(config)* Unit tests for merge logic - ([35b07a3](//commit/35b07a301c2430bdc48ad8153e207db656d385c9))
+
+- *(hooks)* Unit tests for hook template rendering - ([bc9a846](//commit/bc9a846eb201898da717c240996310bd1db7ba02))
+
+- *(strategy/atomic)* Integration tests for shared linking algorithm - ([ca29e49](//commit/ca29e491ab5040c882f13bc9c9a6ef4b7085f146))
+
 ## [0.7.0](//compare/v0.6.0..v0.7.0) - 2026-05-30
 
 ### 🚀 Features
 
-- *(deploy,release)* Dry-run mode prints planned actions without executing - ([31f2b13](//commit/31f2b13090feadef53186a904e13ea5756e3619f))
+- *(deploy,release)* Dry-run mode prints planned actions without executing - ([31f2b13](//commit/31f2b13090feadef53186a904e13ea5756e3619f)) by @bchatard
 
-- *(release)* Interactive release selector when --release is omitted - ([51499b5](//commit/51499b5e16a6ad899e1977b4df4a11603e1533b0))
+- *(release)* Interactive release selector when --release is omitted - ([51499b5](//commit/51499b5e16a6ad899e1977b4df4a11603e1533b0)) by @bchatard
 
-- *(tui)* JSON event stream for deploy and release list - ([d489806](//commit/d489806ccf0f808742b050facf71b7518f3100cc))
+- *(tui)* JSON event stream for deploy and release list - ([d489806](//commit/d489806ccf0f808742b050facf71b7518f3100cc)) by @bchatard
 
-- *(tui)* Add plain output mode — no colors, no spinners - ([c1a89d3](//commit/c1a89d3dbd59920bd8ecec0e89f37d8b84b7ba62))
+- *(tui)* Add plain output mode — no colors, no spinners - ([c1a89d3](//commit/c1a89d3dbd59920bd8ecec0e89f37d8b84b7ba62)) by @bchatard
 
-- *(tui)* NO_COLOR support and plain-mode color suppression - ([111c7ad](//commit/111c7ade8f282c36bcb077d32a6f0c01ed7b7c7b))
+- *(tui)* NO_COLOR support and plain-mode color suppression - ([111c7ad](//commit/111c7ade8f282c36bcb077d32a6f0c01ed7b7c7b)) by @bchatard
 
 
 ### 📚 Documentation
 
-- *(roadmap)* Add human mode step output task to M6 - ([253668c](//commit/253668c34fa9a72f9b02112053db75519af32ff3))
+- *(roadmap)* Add human mode step output task to M6 - ([253668c](//commit/253668c34fa9a72f9b02112053db75519af32ff3)) by @bchatard
 
-- *(roadmap)* Replace M6 stub with M8 spec-06 completion tasks - ([541d096](//commit/541d0964b128281778fc29e603f29bd10be84bb9))
+- *(roadmap)* Replace M6 stub with M8 spec-06 completion tasks - ([541d096](//commit/541d0964b128281778fc29e603f29bd10be84bb9)) by @bchatard
 
 
 ### 🧪 Testing
 
-- *(tui)* Verify non-TTY detection for interactive hooks and prompts - ([6f86806](//commit/6f868060459c4dfb54ab9efe756b247b7475ad79))
+- *(tui)* Verify non-TTY detection for interactive hooks and prompts - ([6f86806](//commit/6f868060459c4dfb54ab9efe756b247b7475ad79)) by @bchatard
 
 ## [0.6.0](//compare/v0.5.0..v0.6.0) - 2026-05-30
 
