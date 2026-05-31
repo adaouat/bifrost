@@ -1,18 +1,65 @@
 # Changelog
 
+## [0.8.0](//compare/v0.7.1..v0.8.0) - 2026-05-31
+
+### 🚀 Features
+
+- *(cmd/deploy)* Emit JSON error event on step failure - ([9243eb7](//commit/9243eb72247b0361040f16945117ffaab6be1185))
+
+- *(cmd/deploy)* Start/done JSON events for link, current_symlink, purge - ([934dc89](//commit/934dc89a9c4f44f29c2da7238f8dbcd8747b7c1a))
+
+- *(cmd/deploy)* Dry-run Would purge line with actual release names - ([bcc62c6](//commit/bcc62c6fb5c043ee7c52805a24432cbab58ef1bc))
+
+- *(cmd/deploy)* Show (sudo) suffix for sudo hooks in dry-run output - ([1d69311](//commit/1d693118ad5740e5192564099502568ad025ba51))
+
+- *(cmd/deploy)* Spinner while purging old releases - ([d212288](//commit/d212288285c518e2422aa5a2dd9727172342486e))
+
+- *(release/list)* Header line and ← current suffix in human output - ([94f7a06](//commit/94f7a0606c1b23b3adb00a0ed640f0e74462751c))
+
+- *(tui)* Deploy header panel with bordered box - ([d4b5404](//commit/d4b5404e943ea5a4817a8b0fa2f96410fa9057bd))
+
+- *(tui)* Per-step checkmark lines for deploy human output - ([1ab7ca6](//commit/1ab7ca6aa2506cd3020a47ffeaef451a904335be))
+
+- *(tui)* Final summary line for deploy human output - ([5429429](//commit/54294296ae148fd2fbfcd2898a2512695f70e3d9))
+
+- *(tui)* Step detail sub-lines and enriched JSON events - ([71cf30a](//commit/71cf30ad29181bc136c5d6faa4f64847f79ff409))
+
+- *(tui)* Add title prefix to extraction progress bar - ([e381a84](//commit/e381a843d18219224d5892de8abe2bd76fc8ba54))
+
+
+### 🐛 Bug Fixes
+
+- *(strategy/atomic)* Track compressed bytes for extraction progress - ([58de9e2](//commit/58de9e2f17b0631520c337f9585efe461a8cd93b))
+
+- *(strategy/atomic)* Protect active release from purge - ([3386860](//commit/33868600c4d733930e233ad257f850a385e84932))
+
+- Address important review findings - ([4143c38](//commit/4143c3878a76c5e762c3924d5b62318ab9440a52))
+
+
+### 🚜 Refactor
+
+- Address suggestion review findings - ([8873db2](//commit/8873db2c665cf84ac64821ec11ead5248a41c1f5))
+
+
+### 📚 Documentation
+
+- *(claude)* Sync CLAUDE.md project layout with current codebase - ([95b9018](//commit/95b9018f6711737be17ecfb58515ccd053a34a66))
+
+- *(specs)* Sync 06-tui-ux and 03-commands with current implementation - ([5fa71ef](//commit/5fa71efefcf614bf173d6c10e04b906474289018))
+
 ## [0.7.1](//compare/v0.7.0..v0.7.1) - 2026-05-31
 
 ### 🧪 Testing
 
-- *(cmd/deploy)* Integration test for release purge - ([7ccb14a](//commit/7ccb14a410358dd0123fa6163df093f822a8bfc7))
+- *(cmd/deploy)* Integration test for release purge - ([7ccb14a](//commit/7ccb14a410358dd0123fa6163df093f822a8bfc7)) by @bchatard
 
-- *(cmd/release)* Integration test for activating non-existent release - ([b80ace3](//commit/b80ace33d6186547d26397f607583a481620af96))
+- *(cmd/release)* Integration test for activating non-existent release - ([b80ace3](//commit/b80ace33d6186547d26397f607583a481620af96)) by @bchatard
 
-- *(config)* Unit tests for merge logic - ([35b07a3](//commit/35b07a301c2430bdc48ad8153e207db656d385c9))
+- *(config)* Unit tests for merge logic - ([35b07a3](//commit/35b07a301c2430bdc48ad8153e207db656d385c9)) by @bchatard
 
-- *(hooks)* Unit tests for hook template rendering - ([bc9a846](//commit/bc9a846eb201898da717c240996310bd1db7ba02))
+- *(hooks)* Unit tests for hook template rendering - ([bc9a846](//commit/bc9a846eb201898da717c240996310bd1db7ba02)) by @bchatard
 
-- *(strategy/atomic)* Integration tests for shared linking algorithm - ([ca29e49](//commit/ca29e491ab5040c882f13bc9c9a6ef4b7085f146))
+- *(strategy/atomic)* Integration tests for shared linking algorithm - ([ca29e49](//commit/ca29e491ab5040c882f13bc9c9a6ef4b7085f146)) by @bchatard
 
 ## [0.7.0](//compare/v0.6.0..v0.7.0) - 2026-05-30
 
