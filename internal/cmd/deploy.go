@@ -189,6 +189,8 @@ func newDeployCmd() *cobra.Command {
 					"release":     filepath.Base(releaseDir),
 					"duration_ms": time.Since(deployStart).Milliseconds(),
 				})
+			} else {
+				tui.PrintSummary(out, time.Since(deployStart), filepath.Base(releaseDir))
 			}
 
 			return nil

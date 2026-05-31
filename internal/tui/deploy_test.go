@@ -3,6 +3,7 @@ package tui_test
 import (
 	"bytes"
 	"testing"
+	"time"
 
 	"github.com/adaouat/bifrost/internal/tui"
 	"github.com/stretchr/testify/assert"
@@ -34,4 +35,13 @@ func TestPrintStep_WithDetail(t *testing.T) {
 	assert.Contains(t, out, "✔")
 	assert.Contains(t, out, "Artifact extracted")
 	assert.Contains(t, out, "(1.2s)")
+}
+
+func TestPrintSummary(t *testing.T) {
+	var buf bytes.Buffer
+	tui.PrintSummary(&buf, 4300*time.Millisecond, "20260520-141500")
+	out := buf.String()
+	assert.Contains(t, out, "4.3s")
+	assert.Contains(t, out, "20260520-141500")
+	assert.Contains(t, out, "→")
 }

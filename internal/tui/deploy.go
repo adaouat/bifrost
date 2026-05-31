@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 	"io"
+	"time"
 
 	"charm.land/lipgloss/v2"
 )
@@ -28,4 +29,10 @@ func PrintStep(out io.Writer, label, detail string) {
 	} else {
 		_, _ = fmt.Fprintf(out, "  %s %s\n", checkmark, label)
 	}
+}
+
+// PrintSummary writes the final deploy summary line to out.
+func PrintSummary(out io.Writer, elapsed time.Duration, release string) {
+	secs := elapsed.Seconds()
+	_, _ = fmt.Fprintf(out, "\n  Deployed in %.1fs  →  %s\n\n", secs, PrimaryStyle.Render(release))
 }
