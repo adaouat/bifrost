@@ -118,7 +118,8 @@ func purgeFromList(existing []string, keepN int) []string {
 }
 
 // purgeCandidates returns the entries from an ascending-sorted names slice that
-// would be removed when keeping keepN.
+// would be removed when keeping keepN. Callers that protect one slot for the
+// active or new release should pass keepN-1; see purgeFromList.
 func purgeCandidates(names []string, keepN int) []string {
 	if len(names) <= keepN {
 		return nil

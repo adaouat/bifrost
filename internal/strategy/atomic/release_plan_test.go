@@ -28,9 +28,9 @@ func TestPurgeCandidates_Empty(t *testing.T) {
 
 // purgeFromList tests — verifies the active-release protection logic.
 
-func TestPurgeFromList_MixedNaming_ProtectsNewRelease(t *testing.T) {
-	// Timestamp-named release sorts before version-named ones.
-	// newRelease must never appear in the result.
+func TestPurgeFromList_ReservesOneSlotForActive(t *testing.T) {
+	// keepN=3 but one slot is reserved for the active release,
+	// so only keepN-1=2 old releases survive. Oldest is removed.
 	result := purgeFromList([]string{"v1.0.0", "v1.0.1", "v1.0.3"}, 3)
 	assert.Equal(t, []string{"v1.0.0"}, result)
 }

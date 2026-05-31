@@ -80,6 +80,27 @@ func newDeployCmd() *cobra.Command {
 				return err
 			}
 
+			// runStep wraps a deploy step with JSON start/done emission and timing.
+			// fn returns optional extra fields for the done event.
+			runStep := func(step string, fn func() (map[string]any, error)) error {
+				if jsonMode {
+					emit.Emit(map[string]any{"event": "start", "step": step})
+				}
+				start := time.Now()
+				extras, err := fn()
+				if err != nil {
+					return emitError(step, err)
+				}
+				if jsonMode {
+					ev := map[string]any{"event": "done", "step": step, "duration_ms": time.Since(start).Milliseconds()}
+					for k, v := range extras {
+						ev[k] = v
+					}
+					emit.Emit(ev)
+				}
+				return nil
+			}
+
 			if !jsonMode {
 				_, _ = fmt.Fprint(out, tui.DeployHeader(env, app, filepath.Base(releaseDir)))
 				tui.PrintStep(out, "Config loaded and validated", "")
@@ -153,21 +174,11 @@ func newDeployCmd() *cobra.Command {
 				tui.PrintStep(out, "pre_link hooks", fmt.Sprintf("(%d/%d)", n, n))
 			}
 
-			if jsonMode {
-				emit.Emit(map[string]any{"event": "start", "step": "link"})
-			}
-			linkStart := time.Now()
-			if err := atomic.LinkShared(merged.SharedDirs, merged.SharedFiles, releaseDir, merged.SharedRoot); err != nil {
-				return emitError("link", fmt.Errorf("linking shared resources: %w", err))
-			}
-			if jsonMode {
-				emit.Emit(map[string]any{
-					"event":       "done",
-					"step":        "link",
-					"duration_ms": time.Since(linkStart).Milliseconds(),
-					"dirs":        merged.SharedDirs,
-					"files":       merged.SharedFiles,
-				})
+			if err := runStep("link", func() (map[string]any, error) {
+				err := atomic.LinkShared(merged.SharedDirs, merged.SharedFiles, releaseDir, merged.SharedRoot)
+				return map[string]any{"dirs": merged.SharedDirs, "files": merged.SharedFiles}, err
+			}); err != nil {
+				return fmt.Errorf("linking shared resources: %w", err)
 			}
 			if !jsonMode {
 				tui.PrintStep(out, "Shared directories linked", fmt.Sprintf("(%d)", len(merged.SharedDirs)))
@@ -188,25 +199,15 @@ func newDeployCmd() *cobra.Command {
 				tui.PrintStep(out, "pre_enable_release hooks", fmt.Sprintf("(%d/%d)", n, n))
 			}
 
-			if jsonMode {
-				emit.Emit(map[string]any{"event": "start", "step": "current_symlink"})
-			}
-			currentStart := time.Now()
-			if err := atomic.SetCurrent(merged.ReleasesRoot, releaseDir); err != nil {
-				return emitError("current_symlink", fmt.Errorf("updating current symlink: %w", err))
-			}
-			currentTarget := filepath.Join(merged.ReleasesRoot, filepath.Base(releaseDir))
-			if jsonMode {
-				emit.Emit(map[string]any{
-					"event":       "done",
-					"step":        "current_symlink",
-					"duration_ms": time.Since(currentStart).Milliseconds(),
-					"path":        currentTarget,
-				})
+			if err := runStep("current_symlink", func() (map[string]any, error) {
+				err := atomic.SetCurrent(merged.ReleasesRoot, releaseDir)
+				return map[string]any{"path": releaseDir}, err
+			}); err != nil {
+				return fmt.Errorf("updating current symlink: %w", err)
 			}
 			if !jsonMode {
 				tui.PrintStep(out, "current symlink updated", "")
-				tui.PrintDetail(out, currentTarget)
+				tui.PrintDetail(out, releaseDir)
 			}
 
 			if err := hooks.RunWithEvents(merged.Hooks.PostEnableRelease, hookData, releaseDir, out, confirmFn, "post_enable_release", hookEventFn); err != nil {
@@ -223,34 +224,21 @@ func newDeployCmd() *cobra.Command {
 			if purgePlanErr != nil {
 				purgePlan = nil
 			}
-			if jsonMode {
-				emit.Emit(map[string]any{"event": "start", "step": "purge"})
-			}
-			purgeStart := time.Now()
-			var purgeErr error
-			if !jsonMode && len(purgePlan) > 0 {
-				noun := "releases"
-				if len(purgePlan) == 1 {
-					noun = "release"
+			if err := runStep("purge", func() (map[string]any, error) {
+				extras := map[string]any{"purged": purgePlan, "kept": merged.Settings.ReleasesToKeep}
+				if !jsonMode && len(purgePlan) > 0 {
+					noun := "releases"
+					if len(purgePlan) == 1 {
+						noun = "release"
+					}
+					label := fmt.Sprintf("Purging %d old %s...", len(purgePlan), noun)
+					return extras, tui.RunWithSpinner(context.Background(), label, func(ctx context.Context) error {
+						return atomic.Purge(merged.ReleasesRoot, merged.Settings.ReleasesToKeep)
+					})
 				}
-				label := fmt.Sprintf("Purging %d old %s...", len(purgePlan), noun)
-				purgeErr = tui.RunWithSpinner(context.Background(), label, func(ctx context.Context) error {
-					return atomic.Purge(merged.ReleasesRoot, merged.Settings.ReleasesToKeep)
-				})
-			} else {
-				purgeErr = atomic.Purge(merged.ReleasesRoot, merged.Settings.ReleasesToKeep)
-			}
-			if purgeErr != nil {
-				return emitError("purge", fmt.Errorf("purging old releases: %w", purgeErr))
-			}
-			if jsonMode {
-				emit.Emit(map[string]any{
-					"event":       "done",
-					"step":        "purge",
-					"duration_ms": time.Since(purgeStart).Milliseconds(),
-					"purged":      purgePlan,
-					"kept":        merged.Settings.ReleasesToKeep,
-				})
+				return extras, atomic.Purge(merged.ReleasesRoot, merged.Settings.ReleasesToKeep)
+			}); err != nil {
+				return fmt.Errorf("purging old releases: %w", err)
 			}
 			if !jsonMode {
 				tui.PrintStep(out, "Old releases purged", fmt.Sprintf("(kept %d)", merged.Settings.ReleasesToKeep))
