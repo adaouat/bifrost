@@ -37,7 +37,7 @@ Directory layout on the target server:
 
 - [`docs/specs/`](docs/specs/) — full technical specifications (commands, config schema, hooks)
 - [`docs/adr/`](docs/adr/) — architecture decision records
-- [`docs/tasks/`](docs/tasks/) — version roadmap (v0–v5) and implementation milestones (M0–M7)
+- [`docs/tasks/`](docs/tasks/) — version roadmap (v0–v5) and implementation milestones (M0–M10)
 
 ## Tech stack
 
@@ -64,6 +64,7 @@ Directory layout on the target server:
 cmd/bifrost/main.go           # Entry point: fang.Execute
 internal/
   cmd/                        # cobra command definitions
+    cmdutil/                  # Path resolution helpers (ResolvePath, InitDest)
     root.go                   # Global flags: --config, --output, --dry-run, --verbose
     config/
       config.go               # `config` parent command
@@ -77,6 +78,7 @@ internal/
       activate.go             # `release activate`
       rollback.go             # `release rollback`
       init.go                 # `release init`
+  cmderr/                     # ExitError — shared exit-code error type
   config/
     schema.go                 # Go structs matching the YAML schema
     loader.go                 # YAML loading + strict validation
@@ -89,9 +91,12 @@ internal/
   hooks/                      # Hook execution — shared across all strategies
     runner.go                 # sh -c, sudo, template rendering, priority sort
   tui/
-    styles.go                 # lipgloss color scheme
-    output.go                 # Step/error/table output helpers
-    progress.go               # Spinner + progress bar wrappers
+    styles.go                 # lipgloss color scheme and style constants
+    deploy.go                 # Deploy output: header panel, step/detail/summary lines
+    events.go                 # JSONEmitter — newline-delimited JSON event writer
+    header.go                 # ASCII art and version template (root help)
+    mode.go                   # Output mode state (human / plain / json)
+    progress.go               # IsTTY, RunWithSpinner, NewProgressBar
   testutil/                   # Shared test helpers (container setup, binary builder)
 testdata/                     # Read-only test fixtures (YAML configs, small archives)
 ```
