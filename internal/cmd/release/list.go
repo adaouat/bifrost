@@ -3,6 +3,7 @@ package release
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -62,13 +63,7 @@ func newListCmd() *cobra.Command {
 				return nil
 			}
 
-			for _, r := range releases {
-				if r == active {
-					_, _ = fmt.Fprintf(out, "* %s\n", r)
-				} else {
-					_, _ = fmt.Fprintf(out, "  %s\n", r)
-				}
-			}
+			renderReleaseList(out, env, app, releases, active)
 			return nil
 		},
 	}
@@ -107,4 +102,17 @@ func listReleases(releasesRoot string) (releases []string, active string, err er
 	}
 
 	return releases, active, nil
+}
+
+// renderReleaseList writes the human-mode release list to out.
+func renderReleaseList(out io.Writer, env, app string, releases []string, active string) {
+	_, _ = fmt.Fprintf(out, "\n  Releases for %s › %s  (%d total)\n\n", env, app, len(releases))
+	for _, r := range releases {
+		if r == active {
+			_, _ = fmt.Fprintf(out, "    %s  ← current\n", r)
+		} else {
+			_, _ = fmt.Fprintf(out, "    %s\n", r)
+		}
+	}
+	_, _ = fmt.Fprintln(out)
 }

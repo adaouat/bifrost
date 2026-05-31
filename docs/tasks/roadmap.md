@@ -193,8 +193,8 @@ Close the remaining gaps between the current output and spec 06.
 
 ### Human mode — `release list`
 
-- [ ] Header line: `Releases for <env> › <app>  (<n> total)`
-- [ ] Current release shown with `← current` suffix instead of `*` prefix
+- [x] Header line: `Releases for <env> › <app>  (<n> total)`
+- [x] Current release shown with `← current` suffix instead of `*` prefix
 
 ### JSON mode — `deploy`
 
