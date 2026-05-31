@@ -88,8 +88,8 @@ bifrost release list --environment/--env <env> --application/--app <app>
 | `--environment` | `--env` | Yes | Target environment key |
 | `--application` | `--app` | Yes | Target application key |
 
-Output: list of release directory names sorted newest-first, with the active release
-marked. Excludes the `current` symlink itself.
+Output: list of release directory names sorted newest-first. The active release is shown
+with a `← current` suffix. Excludes the `current` symlink itself.
 
 In `--output json` mode: JSON array of objects with `name` and `active` fields.
 

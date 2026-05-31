@@ -16,29 +16,42 @@ disabled automatically. Output is still colored unless `NO_COLOR` is set.
 ## Human mode — deploy output
 
 ```
-  ┌─ Deployer ──────────────────────────────────────────────┐
-  │  Environment   prod › web                               │
-  │  Release       20260520-141500                          │
-  └─────────────────────────────────────────────────────────┘
+  ┌──────────────────────────────────────┐
+  │  Environment   prod › web            │
+  │  Release       20260520-141500       │
+  └──────────────────────────────────────┘
 
   ✔ Config loaded and validated
   ✔ Release directory created
-  ⠸ Extracting artifact...          ████████░░░░░░░  52%
+      - Root path: /var/www/releases
+      - Shared path: /var/nas/shared
+  Extracting artifact   ████████░░░░░░░  52%
   ✔ Artifact extracted              (1.2s)
-  ✔ pre_artifact hooks              (1/1)
-  ✔ Shared directories linked       (3)
+  ✔ post_extract hooks              (1/1)
+  ✔ pre_link hooks                  (1/1)
+  ✔ Shared directories linked       (2)
+      - var/log
+      - var/cache
   ✔ Shared files linked             (1)
+      - .env
   ✔ pre_enable_release hooks        (2/2)
   ✔ current symlink updated
+      - /var/www/releases/20260520-141500
   ✔ post_enable_release hooks       (1/1)
+  ⠸ Purging 1 old release...
   ✔ Old releases purged             (kept 10)
+      - 20260101-120000 deleted
 
   Deployed in 4.3s  →  20260520-141500
 ```
 
+Hook step lines (`post_extract hooks`, `pre_link hooks`, etc.) are only shown when at
+least one hook is configured for that lifecycle. Spinner for purge only shown when there
+are releases to remove.
+
 ## Human mode — interactive release selection
 
-When `release enable` is called without `--release`:
+When `release activate` is called without `--release`:
 
 ```
   Which release would you like to enable?
@@ -59,19 +72,20 @@ When the selected release is already current:
 ## Human mode — dry run
 
 ```
-  $ bifrost artifact --environment prod --application web \
+  $ bifrost deploy --environment prod --application web \
       --artifact ./release.tar.gz --dry-run
 
   DRY RUN — no changes will be made
 
   Would create   /var/www/releases/20260520-141500/
   Would extract  ./release.tar.gz  →  /var/www/releases/20260520-141500/
-  Would run      [pre_artifact]           composer install
+  Would run      [post_extract]        composer install
+  Would run      [pre_link]            cp .env.example .env
   Would link     .../20260520-141500/var/log  →  /var/nas/shared/var/log
   Would link     .../20260520-141500/.env     →  /var/nas/shared/.env
-  Would run      [pre_enable]             echo "deploying"
+  Would run      [pre_enable_release]  echo "deploying"
   Would update   /var/www/releases/current  →  20260520-141500
-  Would run      [post_enable]            systemctl restart nginx  (sudo)
+  Would run      [post_enable_release] systemctl restart nginx  (sudo)
   Would purge    20250101-120000, 20250515-083045  (keeping 10)
 ```
 
@@ -93,15 +107,26 @@ Each step emits one JSON line to stdout:
 {"event":"start","step":"extract","artifact":"/tmp/release.tar.gz"}
 {"event":"progress","step":"extract","bytes":524288,"total":1048576}
 {"event":"done","step":"extract","duration_ms":1234}
-{"event":"hook","lifecycle":"pre_enable","index":0,"cmd":"echo hello","exit_code":0}
+{"event":"hook","lifecycle":"post_extract","index":0,"cmd":"composer install","exit_code":0}
+{"event":"start","step":"link"}
+{"event":"done","step":"link","duration_ms":45,"dirs":["var/log","var/cache"],"files":[".env"]}
+{"event":"hook","lifecycle":"pre_enable_release","index":0,"cmd":"echo deploying","exit_code":0}
+{"event":"start","step":"current_symlink"}
+{"event":"done","step":"current_symlink","duration_ms":2,"path":"/var/www/releases/20260520-141500"}
+{"event":"hook","lifecycle":"post_enable_release","index":0,"cmd":"systemctl restart nginx","exit_code":0}
+{"event":"start","step":"purge"}
+{"event":"done","step":"purge","duration_ms":123,"purged":["20260101-120000"],"kept":10}
 {"event":"done","step":"deploy","release":"20260520-141500","duration_ms":4312}
 ```
 
 On error:
 
 ```json
-{"event":"error","step":"extract","message":"...","exit_code":3}
+{"event":"error","step":"extract","message":"extracting archive: ...","exit_code":1}
 ```
+
+Hook lifecycles emitted as `hook` events: `post_extract`, `pre_link`, `pre_enable_release`,
+`post_enable_release`.
 
 ## release list output
 
@@ -110,9 +135,10 @@ On error:
 ```
   Releases for prod › web  (3 total)
 
-  * 20260520-141500  ← current
+    20260520-141500  ← current
     20260519-093012
     20260517-160041
+
 ```
 
 **JSON:**
