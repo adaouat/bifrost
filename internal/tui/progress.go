@@ -29,13 +29,15 @@ func RunWithSpinner(ctx context.Context, title string, fn func(context.Context) 
 		Run()
 }
 
-// NewProgressBar returns an update func and a done func for rendering a terminal progress bar.
+// NewProgressBar returns an update func and a done func for rendering a titled progress bar.
 // total is the expected byte count used to compute fill percentage.
 // Only renders in human mode when stdout is a real TTY.
-func NewProgressBar(total int64, out io.Writer) (update func(n int64), done func()) {
-	model := progress.New(progress.WithDefaultBlend(), progress.WithWidth(60))
+func NewProgressBar(total int64, title string, out io.Writer) (update func(n int64), done func()) {
+	model := progress.New(progress.WithDefaultBlend(), progress.WithWidth(50))
 	var written atomic.Int64
 	active := IsHumanMode() && IsTTY()
+
+	prefix := fmt.Sprintf("  %s   ", title)
 
 	update = func(n int64) {
 		written.Add(n)
@@ -46,12 +48,12 @@ func NewProgressBar(total int64, out io.Writer) (update func(n int64), done func
 		if pct > 1 {
 			pct = 1
 		}
-		_, _ = fmt.Fprintf(out, "\r%s", model.ViewAs(pct))
+		_, _ = fmt.Fprintf(out, "\r%s%s", prefix, model.ViewAs(pct))
 	}
 
 	done = func() {
 		if active {
-			_, _ = fmt.Fprintf(out, "\r%s\n", model.ViewAs(1.0))
+			_, _ = fmt.Fprintf(out, "\r%s%s\n", prefix, model.ViewAs(1.0))
 		}
 	}
 

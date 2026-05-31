@@ -95,7 +95,7 @@ func newDeployCmd() *cobra.Command {
 				emit.Emit(map[string]any{"event": "start", "step": "extract", "artifact": artifact})
 			}
 			extractStart := time.Now()
-			updateProgress, doneProgress := tui.NewProgressBar(info.Size(), out)
+			updateProgress, doneProgress := tui.NewProgressBar(info.Size(), "Extracting artifact", out)
 			var jsonProgressFn func(n int64)
 			if jsonMode {
 				var written int64
