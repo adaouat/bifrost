@@ -229,6 +229,51 @@ func TestDeployCmd_DryRun(t *testing.T) {
 	assert.NotEqual(t, 0, res.ExitCode, "release directory should not exist after dry run")
 }
 
+func TestDeployCmd_DryRun_WouldPurge(t *testing.T) {
+	ctx := context.Background()
+	c := testutil.NewContainer(ctx, t, bifrostBin)
+
+	// releases_to_keep=2; deploy r1, r2 first, then dry-run r3 — r1 should appear in Would purge.
+	cfg, err := os.ReadFile("../../testdata/bifrost-deploy-purge-test.yml")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, cfg, "/tmp/bifrost-purge.yml", 0o644))
+
+	artifact, err := os.ReadFile("../../testdata/release.tar.gz")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, artifact, "/tmp/release.tar.gz", 0o644))
+
+	for i, name := range []string{"dryp-r1", "dryp-r2"} {
+		args := []string{
+			"deploy",
+			"--config", "/tmp/bifrost-purge.yml",
+			"--env", "test",
+			"--app", "app",
+			"--artifact", "/tmp/release.tar.gz",
+			"--release-name", name,
+		}
+		if i == 0 {
+			args = append(args, "--init")
+		}
+		result, err := c.RunBifrost(ctx, args...)
+		require.NoError(t, err)
+		assert.Equal(t, 0, result.ExitCode, "deploy %s output:\n%s", name, result.Output)
+	}
+
+	result, err := c.RunBifrost(ctx,
+		"deploy",
+		"--dry-run",
+		"--config", "/tmp/bifrost-purge.yml",
+		"--env", "test",
+		"--app", "app",
+		"--artifact", "/tmp/release.tar.gz",
+		"--release-name", "dryp-r3",
+	)
+	require.NoError(t, err)
+	assert.Equal(t, 0, result.ExitCode, "dry-run output:\n%s\nstderr:\n%s", result.Output, result.Stderr)
+	assert.Contains(t, result.Output, "Would purge")
+	assert.Contains(t, result.Output, "dryp-r1")
+}
+
 func TestDeployCmd_Hooks(t *testing.T) {
 	ctx := context.Background()
 	c := testutil.NewContainer(ctx, t, bifrostBin)

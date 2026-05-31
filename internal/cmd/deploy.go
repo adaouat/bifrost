@@ -269,6 +269,9 @@ func deployDryRun(cmd *cobra.Command, merged *config.MergedConfig, artifact, rel
 	for _, h := range merged.Hooks.PostEnableRelease {
 		_, _ = fmt.Fprintf(out, "  Would run      [post_enable_release]  %s\n", h.Cmd)
 	}
+	if candidates, err := atomic.PurgePlan(merged.ReleasesRoot, relBase, merged.Settings.ReleasesToKeep); err == nil && len(candidates) > 0 {
+		_, _ = fmt.Fprintf(out, "  Would purge    %s  (keeping %d)\n", strings.Join(candidates, ", "), merged.Settings.ReleasesToKeep)
+	}
 	return nil
 }
 

@@ -66,16 +66,47 @@ func Purge(releasesRoot string, keepN int) error {
 		}
 	}
 
-	sort.Strings(names) // lexicographic = chronological for timestamp names
+	sort.Strings(names)
 
-	if len(names) <= keepN {
-		return nil
-	}
-
-	for _, name := range names[:len(names)-keepN] {
+	for _, name := range purgeCandidates(names, keepN) {
 		if err := os.RemoveAll(filepath.Join(releasesRoot, name)); err != nil {
 			return fmt.Errorf("purging release %s: %w", name, err)
 		}
 	}
 	return nil
+}
+
+// PurgePlan returns the release names that would be removed by a purge keeping keepN releases.
+// The new release name is included in the simulation.
+// Returns nil if releasesRoot does not exist (no releases yet).
+func PurgePlan(releasesRoot, newRelease string, keepN int) ([]string, error) {
+	entries, err := os.ReadDir(releasesRoot)
+	if os.IsNotExist(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("reading releases dir: %w", err)
+	}
+
+	names := []string{newRelease}
+	for _, e := range entries {
+		if e.Name() == "current" || e.Name() == newRelease {
+			continue
+		}
+		if e.IsDir() {
+			names = append(names, e.Name())
+		}
+	}
+
+	sort.Strings(names)
+	return purgeCandidates(names, keepN), nil
+}
+
+// purgeCandidates returns the entries from an ascending-sorted names slice that
+// would be removed when keeping keepN.
+func purgeCandidates(names []string, keepN int) []string {
+	if len(names) <= keepN {
+		return nil
+	}
+	return names[:len(names)-keepN]
 }
