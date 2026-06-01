@@ -44,6 +44,19 @@ strategy: atomic                 # Deployment strategy. Default: atomic. See ADR
                                  # v0 valid values: atomic
                                  # v4/v5: docker, k8s
 
+# ── Servers (v1) ───────────────────────────────────────────────────────────────
+# Named SSH target servers. Referenced by name from environments / applications.
+# If no servers are referenced, Bifrost runs in local mode (v0 behaviour).
+servers:
+  <server_name>:
+    host: 192.168.1.10           # REQUIRED. Hostname or IP address.
+    port: 22                     # Default: 22
+    user: deploy                 # REQUIRED. SSH username.
+    key_file: ~/.ssh/id_rsa      # Optional. Private key path. ~ is expanded.
+                                 # Falls back to SSH agent (SSH_AUTH_SOCK) if omitted.
+    staging_dir: /tmp            # Optional. Base dir for the remote staging folder.
+                                 # Full path: {staging_dir}/bifrost-{uuid}/
+
 # ── Global defaults ────────────────────────────────────────────────────────────
 paths:
   releases_root: /var/www/releases  # REQUIRED after merge
@@ -68,9 +81,11 @@ hooks:
 environments:
   <env_name>:
     name: "Human-readable name"    # Optional
+    servers: [<server_name>, ...]  # Optional (v1). Default for all apps in this env.
     applications:                  # REQUIRED — at least one application
       <app_name>:
         name: "Human-readable name"
+        servers: [<server_name>]   # Optional (v1). Overrides env-level servers list.
         paths: { ... }             # Override / extend global + env paths
         settings: { ... }
         variables: { ... }

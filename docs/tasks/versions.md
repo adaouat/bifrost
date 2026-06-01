@@ -22,8 +22,8 @@ handles the SSH transport (copy artifact, copy binary, call binary remotely).
 - Extraction errors always surfaced (not hidden)
 
 **Features:**
-- `bifrost artifact` — full deploy flow
-- `bifrost release list / enable / rollback` — release management
+- `bifrost deploy` — full deploy flow
+- `bifrost release list / activate / rollback` — release management
 - `bifrost config` — config validation and display
 - Three-level config merge: global < environment < application
 - Hook system: pre/post lifecycle hooks with template variables, priority ordering, sudo,
@@ -37,27 +37,32 @@ handles the SSH transport (copy artifact, copy binary, call binary remotely).
 ## v1 — SSH orchestration + agent model
 
 Bifrost manages SSH itself. CI/CD no longer needs to handle transport.
+v0 local mode is preserved: no `servers:` config = runs on the server as before.
 
 **New deployment model:**
 - Bifrost runs **client-side** (local machine or CI runner)
 - Opens SSH connections to one or more target servers
-- Sends the artifact via SFTP
-- Copies itself to the remote server (`/tmp/bifrost-agent`)
-- Executes the agent remotely in `--output json` mode
-- Streams output back and renders it locally in human mode
-- Supports parallel deployment to multiple servers
+- Detects remote OS/arch via `uname`, downloads the matching Bifrost binary from GitHub
+  Releases (cached at `{os.UserCacheDir()}/bifrost/agents/{version}/{os}_{arch}/bifrost`)
+- Uploads binary + artifact + flat merged config to `/tmp/bifrost-{uuid}/` via SFTP
+- Executes itself as the agent in `--output json` mode
+- Streams JSON events back and renders them locally
+- Supports sequential deployment to multiple servers (parallel planned for v2+)
 
-**Why agent model over pure SSH orchestration:**
-- Hooks run with full server-local context (env vars, filesystem, installed tools)
-- Single SSH connection setup, then local operations are fast
-- The agent binary is architecture-matched automatically at deploy time
+**Why self-agent over a dedicated agent binary:**
+- Single binary to distribute; agent always version-matches client
+- Existing `--output json` is the protocol — no new wire format
+- All commands (`release list`, `activate`, `rollback`) automatically work over SSH
 
 **New features:**
-- SSH connection config in `.bifrost.yml` (host, port, user, key, known_hosts)
-- Multi-server deployment (parallel or sequential, configurable)
-- `strategy.go` interface formalized — the atomic strategy becomes the first
-  implementation of a typed interface
-- Deployment result aggregation across servers
+- Top-level `servers:` map in `.bifrost.yml`; env/app reference server names
+- Auth: key file → SSH agent → `BIFROST_SSH_PASSWORD` env var
+- `--agent-binary <path>` flag for air-gapped or pre-release builds
+- `release activate` multi-server TUI: per-server release selector (huh form)
+- `strategy.go` interface formalized — atomic strategy becomes the first typed implementation
+- `release list` / `activate` / `rollback` work over SSH
+
+**Implementation milestones:** see [`v1-roadmap.md`](v1-roadmap.md) (M11–M17).
 
 **Known limitation carried forward:**
 - Windows: `sh -c` in hooks requires Git Bash or WSL in PATH; symlinks require Developer

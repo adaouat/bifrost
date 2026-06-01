@@ -11,3 +11,7 @@ ADRs document significant architectural choices: what was decided, why, and what
 | [0005](0005-tool-name-bifrost.md) | Name the tool "Bifrost" | Accepted |
 | [0006](0006-strategy-architecture.md) | Strategy-based deployment architecture | Accepted |
 | [0007](0007-testing-strategy.md) | Testing strategy | Accepted |
+| [0008](0008-config-path-resolution.md) | Config path resolution priority chain | Accepted |
+| [0009](0009-agent-model.md) | Self-agent model for SSH transport | Accepted |
+| [0010](0010-server-config-schema.md) | Server configuration schema | Accepted |
+| [0011](0011-agent-binary-distribution.md) | Agent binary distribution via GitHub Releases | Accepted |
