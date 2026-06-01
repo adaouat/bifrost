@@ -12,9 +12,9 @@ See [`roadmap.md`](roadmap.md) for the process rules.
 Introduce the `strategy.go` interface that ADR-0006 deferred to v1. The atomic strategy
 becomes the first typed implementation. No behaviour change.
 
-- [ ] `internal/strategy/strategy.go` — `Deployer` interface with `Deploy(ctx, opts) error`
-- [ ] `internal/strategy/atomic/` implements `Deployer`
-- [ ] `internal/cmd/deploy.go` uses the interface, not the concrete type
+- [x] `internal/strategy/strategy.go` — `Deployer` interface with `Deploy(ctx, opts) error`
+- [x] `internal/strategy/atomic/` implements `Deployer`
+- [x] `internal/cmd/deploy.go` uses the interface, not the concrete type
 
 Deliverable: `go build` passes; no behaviour change; interface is the extension point for
 future strategies.
