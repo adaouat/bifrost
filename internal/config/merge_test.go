@@ -295,3 +295,118 @@ func TestMerge_GlobalFallback(t *testing.T) {
 		t.Errorf("releases_to_keep fallback: got %d, want 10", m.Settings.ReleasesToKeep)
 	}
 }
+
+func TestMerge_ServersNilBothLevels(t *testing.T) {
+	m, err := config.Merge(base(), "prod", "web")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(m.Servers) != 0 {
+		t.Errorf("expected empty Servers, got %v", m.Servers)
+	}
+}
+
+func TestMerge_ServersEnvLevel(t *testing.T) {
+	cfg := base()
+	cfg.Servers = map[string]config.ServerConfig{
+		"web-01": {Host: "1.2.3.4", Port: 22, User: "deploy"},
+	}
+	env := cfg.Environments["prod"]
+	env.Servers = []string{"web-01"}
+	cfg.Environments["prod"] = env
+
+	m, err := config.Merge(cfg, "prod", "web")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(m.Servers) != 1 {
+		t.Fatalf("expected 1 server, got %d", len(m.Servers))
+	}
+	if m.Servers[0].Name != "web-01" {
+		t.Errorf("server name: got %q, want web-01", m.Servers[0].Name)
+	}
+	if m.Servers[0].Host != "1.2.3.4" {
+		t.Errorf("server host: got %q, want 1.2.3.4", m.Servers[0].Host)
+	}
+}
+
+func TestMerge_ServersAppOverridesEnv(t *testing.T) {
+	cfg := base()
+	cfg.Servers = map[string]config.ServerConfig{
+		"web-01": {Host: "1.2.3.4", Port: 22, User: "deploy"},
+		"web-02": {Host: "1.2.3.5", Port: 22, User: "deploy"},
+	}
+	env := cfg.Environments["prod"]
+	env.Servers = []string{"web-01", "web-02"}
+	env.Applications = map[string]config.Application{
+		"web": {Servers: []string{"web-01"}},
+	}
+	cfg.Environments["prod"] = env
+
+	m, err := config.Merge(cfg, "prod", "web")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(m.Servers) != 1 {
+		t.Fatalf("expected 1 server (app overrides env), got %d", len(m.Servers))
+	}
+	if m.Servers[0].Name != "web-01" {
+		t.Errorf("server name: got %q, want web-01", m.Servers[0].Name)
+	}
+}
+
+func TestMerge_ServersNilAppInheritsEnv(t *testing.T) {
+	cfg := base()
+	cfg.Servers = map[string]config.ServerConfig{
+		"web-01": {Host: "1.2.3.4", Port: 22, User: "deploy"},
+		"web-02": {Host: "1.2.3.5", Port: 22, User: "deploy"},
+	}
+	env := cfg.Environments["prod"]
+	env.Servers = []string{"web-01", "web-02"}
+	// app has no Servers set → nil → inherits env
+	cfg.Environments["prod"] = env
+
+	m, err := config.Merge(cfg, "prod", "web")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(m.Servers) != 2 {
+		t.Fatalf("expected 2 servers (inherited from env), got %d", len(m.Servers))
+	}
+}
+
+func TestMergeFlat_TopLevelFields(t *testing.T) {
+	cfg := &config.Config{
+		Strategy: "atomic",
+		Paths: config.Paths{
+			ReleasesRoot: "/flat/releases",
+			SharedRoot:   "/flat/shared",
+			Shared: config.SharedPaths{
+				Directories: []string{"var/log"},
+				Files:       []string{".env"},
+			},
+		},
+		Settings:  config.Settings{ReleasesToKeep: 5},
+		Variables: map[string]string{"key": "val"},
+	}
+
+	m := config.MergeFlat(cfg)
+	if m.ReleasesRoot != "/flat/releases" {
+		t.Errorf("ReleasesRoot: got %q", m.ReleasesRoot)
+	}
+	if m.SharedRoot != "/flat/shared" {
+		t.Errorf("SharedRoot: got %q", m.SharedRoot)
+	}
+	if len(m.SharedDirs) != 1 || m.SharedDirs[0] != "var/log" {
+		t.Errorf("SharedDirs: got %v", m.SharedDirs)
+	}
+	if len(m.SharedFiles) != 1 || m.SharedFiles[0] != ".env" {
+		t.Errorf("SharedFiles: got %v", m.SharedFiles)
+	}
+	if m.Settings.ReleasesToKeep != 5 {
+		t.Errorf("ReleasesToKeep: got %d, want 5", m.Settings.ReleasesToKeep)
+	}
+	if m.Variables["key"] != "val" {
+		t.Errorf("Variables: got %v", m.Variables)
+	}
+}

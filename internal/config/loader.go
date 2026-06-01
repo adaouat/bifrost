@@ -4,18 +4,70 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/adaouat/bifrost/internal/cmderr"
 )
 
 // Load reads and strictly parses a .bifrost.yml file at the given path.
+// Returns *cmderr.ExitError with code 2 if server references are invalid.
 func Load(path string) (*Config, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("opening config file: %w", err)
 	}
 	defer func() { _ = f.Close() }()
-	return Parse(f)
+	cfg, err := Parse(f)
+	if err != nil {
+		return nil, err
+	}
+	if errs := ValidateServerRefs(cfg); len(errs) > 0 {
+		return nil, &cmderr.ExitError{Code: 2, Message: strings.Join(errs, "\n")}
+	}
+	return cfg, nil
+}
+
+// IsFlat reports whether cfg has no environments defined.
+// A flat config is the merged result used by the remote agent — it has no environments or server refs.
+func IsFlat(cfg *Config) bool {
+	return len(cfg.Environments) == 0
+}
+
+// ValidateServerRefs checks that:
+//   - every ServerConfig in cfg.Servers has a non-empty Host and User
+//   - every name in env/app Servers lists exists in cfg.Servers
+//
+// Returns a slice of human-readable error messages; empty means valid.
+func ValidateServerRefs(cfg *Config) []string {
+	var errs []string
+
+	for name, srv := range cfg.Servers {
+		if srv.Host == "" {
+			errs = append(errs, fmt.Sprintf("servers.%s: host is required", name))
+		}
+		if srv.User == "" {
+			errs = append(errs, fmt.Sprintf("servers.%s: user is required", name))
+		}
+	}
+
+	for envName, env := range cfg.Environments {
+		for _, ref := range env.Servers {
+			if _, ok := cfg.Servers[ref]; !ok {
+				errs = append(errs, fmt.Sprintf("environments.%s.servers: unknown server %q", envName, ref))
+			}
+		}
+		for appName, app := range env.Applications {
+			for _, ref := range app.Servers {
+				if _, ok := cfg.Servers[ref]; !ok {
+					errs = append(errs, fmt.Sprintf("environments.%s.applications.%s.servers: unknown server %q", envName, appName, ref))
+				}
+			}
+		}
+	}
+
+	return errs
 }
 
 // Parse strictly parses .bifrost.yml content from r and applies defaults.
@@ -37,6 +89,7 @@ func applyDefaults(cfg *Config) {
 	if cfg.Settings.ReleasesToKeep == 0 {
 		cfg.Settings.ReleasesToKeep = 10
 	}
+	applyServerDefaults(cfg)
 	applyHookDefaults(&cfg.Hooks)
 	for envName, env := range cfg.Environments {
 		applyHookDefaults(&env.Hooks)
@@ -45,6 +98,18 @@ func applyDefaults(cfg *Config) {
 			env.Applications[appName] = app
 		}
 		cfg.Environments[envName] = env
+	}
+}
+
+func applyServerDefaults(cfg *Config) {
+	for name, srv := range cfg.Servers {
+		if srv.Port == 0 {
+			srv.Port = 22
+		}
+		if srv.StagingDir == "" {
+			srv.StagingDir = "/tmp"
+		}
+		cfg.Servers[name] = srv
 	}
 }
 

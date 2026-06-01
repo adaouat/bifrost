@@ -5,6 +5,16 @@ import (
 	"sort"
 )
 
+// ResolvedServer is a named server entry resolved from the top-level servers map.
+type ResolvedServer struct {
+	Name       string `json:"name"`
+	Host       string `json:"host"`
+	Port       int    `json:"port"`
+	User       string `json:"user"`
+	KeyFile    string `json:"key_file,omitempty"`
+	StagingDir string `json:"staging_dir,omitempty"`
+}
+
 // MergedConfig is the fully resolved configuration for a single env+app deployment.
 type MergedConfig struct {
 	Strategy     string            `json:"strategy"`
@@ -15,6 +25,7 @@ type MergedConfig struct {
 	Settings     Settings          `json:"settings"`
 	Variables    map[string]string `json:"variables,omitempty"`
 	Hooks        Hooks             `json:"hooks,omitempty"`
+	Servers      []ResolvedServer  `json:"servers,omitempty"`
 }
 
 // Merge resolves the three-level hierarchy (global < env < app) for the given
@@ -27,6 +38,12 @@ func Merge(cfg *Config, envName, appName string) (*MergedConfig, error) {
 	app, ok := env.Applications[appName]
 	if !ok {
 		return nil, fmt.Errorf("application %q not found in environment %q", appName, envName)
+	}
+
+	// Server resolution: app-level overrides env-level; nil inherits from parent.
+	serverNames := app.Servers
+	if serverNames == nil {
+		serverNames = env.Servers
 	}
 
 	m := &MergedConfig{
@@ -45,9 +62,46 @@ func Merge(cfg *Config, envName, appName string) (*MergedConfig, error) {
 			PreEnableRelease:  sortedHooks(cfg.Hooks.PreEnableRelease, env.Hooks.PreEnableRelease, app.Hooks.PreEnableRelease),
 			PostEnableRelease: sortedHooks(cfg.Hooks.PostEnableRelease, env.Hooks.PostEnableRelease, app.Hooks.PostEnableRelease),
 		},
+		Servers: resolveServers(cfg.Servers, serverNames),
 	}
 
 	return m, nil
+}
+
+// MergeFlat converts a flat Config (no environments) directly to a MergedConfig.
+// Used when the agent receives a pre-merged config without an environments block.
+func MergeFlat(cfg *Config) *MergedConfig {
+	return &MergedConfig{
+		Strategy:     cfg.Strategy,
+		ReleasesRoot: cfg.Paths.ReleasesRoot,
+		SharedRoot:   cfg.Paths.SharedRoot,
+		SharedDirs:   cfg.Paths.Shared.Directories,
+		SharedFiles:  cfg.Paths.Shared.Files,
+		Settings:     cfg.Settings,
+		Variables:    cfg.Variables,
+		Hooks:        cfg.Hooks,
+	}
+}
+
+// resolveServers returns a ResolvedServer slice for the given server names.
+func resolveServers(serverMap map[string]ServerConfig, names []string) []ResolvedServer {
+	if len(names) == 0 {
+		return nil
+	}
+	resolved := make([]ResolvedServer, 0, len(names))
+	for _, name := range names {
+		if srv, ok := serverMap[name]; ok {
+			resolved = append(resolved, ResolvedServer{
+				Name:       name,
+				Host:       srv.Host,
+				Port:       srv.Port,
+				User:       srv.User,
+				KeyFile:    srv.KeyFile,
+				StagingDir: srv.StagingDir,
+			})
+		}
+	}
+	return resolved
 }
 
 // Validate returns a message for each required field missing from a MergedConfig.

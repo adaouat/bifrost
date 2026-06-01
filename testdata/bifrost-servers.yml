@@ -1,0 +1,15 @@
+servers:
+  web-01:
+    host: 192.168.1.10
+    user: deploy
+    key_file: ~/.ssh/id_rsa
+
+paths:
+  releases_root: /var/www/releases
+  shared_root: /var/www/shared
+
+environments:
+  prod:
+    servers: [web-01]
+    applications:
+      web: {}

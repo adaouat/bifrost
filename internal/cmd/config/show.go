@@ -25,6 +25,9 @@ func newShowCmd() *cobra.Command {
 			}
 
 			if env == "" {
+				if config.IsFlat(cfg) {
+					return printJSON(cmd, config.MergeFlat(cfg))
+				}
 				return printJSON(cmd, cfg)
 			}
 

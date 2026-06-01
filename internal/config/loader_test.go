@@ -1,9 +1,11 @@
 package config_test
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
+	"github.com/adaouat/bifrost/internal/cmderr"
 	"github.com/adaouat/bifrost/internal/config"
 )
 
@@ -145,6 +147,201 @@ hooks:
 	h := cfg.Hooks.PostExtract[0]
 	if h.Priority == nil || *h.Priority != 0 {
 		t.Errorf("hook priority explicit 0: want 0, got %v", h.Priority)
+	}
+}
+
+func TestParse_ServerBlock_DefaultsApplied(t *testing.T) {
+	cfg, err := config.Parse(strings.NewReader(`
+servers:
+  web-01:
+    host: 192.168.1.10
+    user: deploy
+paths:
+  releases_root: /x
+  shared_root: /y
+`))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	srv, ok := cfg.Servers["web-01"]
+	if !ok {
+		t.Fatal("expected web-01 in Servers map")
+	}
+	if srv.Host != "192.168.1.10" {
+		t.Errorf("Host: got %q", srv.Host)
+	}
+	if srv.User != "deploy" {
+		t.Errorf("User: got %q", srv.User)
+	}
+	if srv.Port != 22 {
+		t.Errorf("Port default: got %d, want 22", srv.Port)
+	}
+	if srv.StagingDir != "/tmp" {
+		t.Errorf("StagingDir default: got %q, want /tmp", srv.StagingDir)
+	}
+}
+
+func TestParse_ServerBlock_ExplicitPort(t *testing.T) {
+	cfg, err := config.Parse(strings.NewReader(`
+servers:
+  web-01:
+    host: 192.168.1.10
+    port: 2222
+    user: deploy
+paths:
+  releases_root: /x
+  shared_root: /y
+`))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.Servers["web-01"].Port != 2222 {
+		t.Errorf("Port: got %d, want 2222", cfg.Servers["web-01"].Port)
+	}
+}
+
+func TestValidateServerRefs_Valid(t *testing.T) {
+	cfg := &config.Config{
+		Servers: map[string]config.ServerConfig{
+			"web-01": {Host: "1.2.3.4", User: "deploy"},
+		},
+		Environments: map[string]config.Environment{
+			"prod": {
+				Servers: []string{"web-01"},
+				Applications: map[string]config.Application{
+					"web": {},
+				},
+			},
+		},
+	}
+	errs := config.ValidateServerRefs(cfg)
+	if len(errs) != 0 {
+		t.Errorf("expected no errors, got: %v", errs)
+	}
+}
+
+func TestValidateServerRefs_UnknownRef(t *testing.T) {
+	cfg := &config.Config{
+		Environments: map[string]config.Environment{
+			"prod": {
+				Servers: []string{"nonexistent"},
+				Applications: map[string]config.Application{
+					"web": {},
+				},
+			},
+		},
+	}
+	errs := config.ValidateServerRefs(cfg)
+	if len(errs) == 0 {
+		t.Fatal("expected error for unknown server reference")
+	}
+}
+
+func TestValidateServerRefs_AppUnknownRef(t *testing.T) {
+	cfg := &config.Config{
+		Servers: map[string]config.ServerConfig{
+			"web-01": {Host: "1.2.3.4", User: "deploy"},
+		},
+		Environments: map[string]config.Environment{
+			"prod": {
+				Applications: map[string]config.Application{
+					"web": {Servers: []string{"nonexistent"}},
+				},
+			},
+		},
+	}
+	errs := config.ValidateServerRefs(cfg)
+	if len(errs) == 0 {
+		t.Fatal("expected error for unknown server reference in app")
+	}
+}
+
+func TestValidateServerRefs_MissingHost(t *testing.T) {
+	cfg := &config.Config{
+		Servers: map[string]config.ServerConfig{
+			"web-01": {User: "deploy"},
+		},
+	}
+	errs := config.ValidateServerRefs(cfg)
+	if len(errs) == 0 {
+		t.Fatal("expected error for server missing host")
+	}
+}
+
+func TestValidateServerRefs_MissingUser(t *testing.T) {
+	cfg := &config.Config{
+		Servers: map[string]config.ServerConfig{
+			"web-01": {Host: "1.2.3.4"},
+		},
+	}
+	errs := config.ValidateServerRefs(cfg)
+	if len(errs) == 0 {
+		t.Fatal("expected error for server missing user")
+	}
+}
+
+func TestValidateServerRefs_NoServersNoEnvRefs(t *testing.T) {
+	cfg := &config.Config{
+		Environments: map[string]config.Environment{
+			"prod": {
+				Applications: map[string]config.Application{"web": {}},
+			},
+		},
+	}
+	errs := config.ValidateServerRefs(cfg)
+	if len(errs) != 0 {
+		t.Errorf("expected no errors when no servers configured, got: %v", errs)
+	}
+}
+
+func TestIsFlat_WithEnvironments(t *testing.T) {
+	cfg := &config.Config{
+		Environments: map[string]config.Environment{
+			"prod": {},
+		},
+	}
+	if config.IsFlat(cfg) {
+		t.Error("expected IsFlat=false when environments are present")
+	}
+}
+
+func TestIsFlat_WithoutEnvironments(t *testing.T) {
+	cfg := &config.Config{}
+	if !config.IsFlat(cfg) {
+		t.Error("expected IsFlat=true when no environments")
+	}
+}
+
+func TestParse_FlatConfig(t *testing.T) {
+	cfg, err := config.Parse(strings.NewReader(`
+paths:
+  releases_root: /var/www/releases
+  shared_root: /var/www/shared
+settings:
+  releases_to_keep: 5
+`))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.Paths.ReleasesRoot != "/var/www/releases" {
+		t.Errorf("releases_root: got %q", cfg.Paths.ReleasesRoot)
+	}
+	if len(cfg.Environments) != 0 {
+		t.Errorf("expected no environments, got %d", len(cfg.Environments))
+	}
+}
+
+func TestLoad_InvalidServerRef_ExitCode2(t *testing.T) {
+	_, err := config.Load("../../testdata/bifrost-invalid-server-ref.yml")
+	if err == nil {
+		t.Fatal("expected error for invalid server reference")
+	}
+	var exitErr *cmderr.ExitError
+	if !errors.As(err, &exitErr) {
+		t.Fatalf("expected *cmderr.ExitError, got %T: %v", err, err)
+	}
+	if exitErr.Code != 2 {
+		t.Errorf("exit code: got %d, want 2", exitErr.Code)
 	}
 }
 

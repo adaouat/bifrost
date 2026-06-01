@@ -102,3 +102,60 @@ func TestApplication_InheritsCommonFields(t *testing.T) {
 	_ = a.Variables
 	_ = a.Hooks
 }
+
+func TestServerConfig_Fields(t *testing.T) {
+	s := config.ServerConfig{
+		Host:       "192.168.1.1",
+		Port:       22,
+		User:       "deploy",
+		KeyFile:    "~/.ssh/id_rsa",
+		StagingDir: "/tmp",
+	}
+	if s.Host != "192.168.1.1" {
+		t.Errorf("Host: got %q", s.Host)
+	}
+	if s.Port != 22 {
+		t.Errorf("Port: got %d, want 22", s.Port)
+	}
+	if s.User != "deploy" {
+		t.Errorf("User: got %q", s.User)
+	}
+	if s.KeyFile != "~/.ssh/id_rsa" {
+		t.Errorf("KeyFile: got %q", s.KeyFile)
+	}
+	if s.StagingDir != "/tmp" {
+		t.Errorf("StagingDir: got %q", s.StagingDir)
+	}
+}
+
+func TestConfig_ServersMap(t *testing.T) {
+	c := config.Config{
+		Servers: map[string]config.ServerConfig{
+			"web-01": {Host: "1.2.3.4", Port: 22, User: "deploy"},
+		},
+	}
+	srv, ok := c.Servers["web-01"]
+	if !ok {
+		t.Fatal("expected web-01 in Servers map")
+	}
+	if srv.Host != "1.2.3.4" {
+		t.Errorf("Host: got %q", srv.Host)
+	}
+}
+
+func TestEnvironment_HasServers(t *testing.T) {
+	e := config.Environment{Servers: []string{"web-01", "web-02"}}
+	if len(e.Servers) != 2 {
+		t.Errorf("Servers length: got %d, want 2", len(e.Servers))
+	}
+	if e.Servers[0] != "web-01" {
+		t.Errorf("Servers[0]: got %q, want web-01", e.Servers[0])
+	}
+}
+
+func TestApplication_HasServers(t *testing.T) {
+	a := config.Application{Servers: []string{"web-01"}}
+	if len(a.Servers) != 1 || a.Servers[0] != "web-01" {
+		t.Errorf("Servers: got %v, want [web-01]", a.Servers)
+	}
+}

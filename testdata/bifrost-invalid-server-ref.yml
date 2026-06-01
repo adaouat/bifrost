@@ -1,0 +1,9 @@
+paths:
+  releases_root: /var/www/releases
+  shared_root: /var/www/shared
+
+environments:
+  prod:
+    servers: [nonexistent-server]
+    applications:
+      web: {}

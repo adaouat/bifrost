@@ -39,6 +39,7 @@ type Settings struct {
 // Application is the innermost config level — one deployable unit.
 type Application struct {
 	Name      string            `yaml:"name"      json:"name,omitempty"`
+	Servers   []string          `yaml:"servers"   json:"servers,omitempty"`
 	Paths     Paths             `yaml:"paths"     json:"paths,omitempty"`
 	Settings  Settings          `yaml:"settings"  json:"settings,omitempty"`
 	Variables map[string]string `yaml:"variables" json:"variables,omitempty"`
@@ -48,6 +49,7 @@ type Application struct {
 // Environment groups applications that share common config overrides.
 type Environment struct {
 	Name         string                 `yaml:"name"         json:"name,omitempty"`
+	Servers      []string               `yaml:"servers"      json:"servers,omitempty"`
 	Paths        Paths                  `yaml:"paths"        json:"paths,omitempty"`
 	Settings     Settings               `yaml:"settings"     json:"settings,omitempty"`
 	Variables    map[string]string      `yaml:"variables"    json:"variables,omitempty"`
@@ -55,12 +57,22 @@ type Environment struct {
 	Applications map[string]Application `yaml:"applications" json:"applications,omitempty"`
 }
 
+// ServerConfig holds SSH connection details for a named target server.
+type ServerConfig struct {
+	Host       string `yaml:"host"        json:"host"`
+	Port       int    `yaml:"port"        json:"port,omitempty"`
+	User       string `yaml:"user"        json:"user"`
+	KeyFile    string `yaml:"key_file"    json:"key_file,omitempty"`
+	StagingDir string `yaml:"staging_dir" json:"staging_dir,omitempty"`
+}
+
 // Config is the top-level structure parsed from a .bifrost.yml file.
 type Config struct {
-	Strategy     string                 `yaml:"strategy"     json:"strategy"`
-	Paths        Paths                  `yaml:"paths"        json:"paths"`
-	Settings     Settings               `yaml:"settings"     json:"settings"`
-	Variables    map[string]string      `yaml:"variables"    json:"variables,omitempty"`
-	Hooks        Hooks                  `yaml:"hooks"        json:"hooks,omitempty"`
-	Environments map[string]Environment `yaml:"environments" json:"environments,omitempty"`
+	Strategy     string                  `yaml:"strategy"     json:"strategy"`
+	Servers      map[string]ServerConfig `yaml:"servers"     json:"servers,omitempty"`
+	Paths        Paths                   `yaml:"paths"        json:"paths"`
+	Settings     Settings                `yaml:"settings"     json:"settings"`
+	Variables    map[string]string       `yaml:"variables"    json:"variables,omitempty"`
+	Hooks        Hooks                   `yaml:"hooks"        json:"hooks,omitempty"`
+	Environments map[string]Environment  `yaml:"environments" json:"environments,omitempty"`
 }

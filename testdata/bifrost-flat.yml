@@ -1,0 +1,11 @@
+paths:
+  releases_root: /var/www/releases
+  shared_root: /var/www/shared
+
+settings:
+  releases_to_keep: 5
+
+hooks:
+  post_enable_release:
+    - cmd: "systemctl reload nginx"
+      sudo: true

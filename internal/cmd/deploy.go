@@ -24,12 +24,6 @@ func newDeployCmd() *cobra.Command {
 		Use:   "deploy",
 		Short: "Deploy an application from an artifact archive",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			if env == "" {
-				return fmt.Errorf("--env (or --environment) is required")
-			}
-			if app == "" {
-				return fmt.Errorf("--app (or --application) is required")
-			}
 			if artifact == "" {
 				return fmt.Errorf("--artifact is required")
 			}
@@ -39,12 +33,28 @@ func newDeployCmd() *cobra.Command {
 				return err
 			}
 
-			merged, err := config.Merge(cfg, env, app)
-			if err != nil {
-				return err
+			var merged *config.MergedConfig
+			if config.IsFlat(cfg) {
+				merged = config.MergeFlat(cfg)
+			} else {
+				if env == "" {
+					return fmt.Errorf("--env (or --environment) is required")
+				}
+				if app == "" {
+					return fmt.Errorf("--app (or --application) is required")
+				}
+				merged, err = config.Merge(cfg, env, app)
+				if err != nil {
+					return err
+				}
 			}
+
 			if errs := config.Validate(merged); len(errs) > 0 {
 				return &ExitError{Code: 2, Message: strings.Join(errs, "\n")}
+			}
+
+			if len(merged.Servers) > 0 {
+				return &ExitError{Code: 1, Message: "client mode not yet implemented (servers configured)"}
 			}
 
 			if err := ensureRoots(merged.ReleasesRoot, merged.SharedRoot, init_); err != nil {

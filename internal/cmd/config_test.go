@@ -94,3 +94,18 @@ func TestConfigShowCmd_MissingConfigFile(t *testing.T) {
 	err := root.Execute()
 	assert.Error(t, err)
 }
+
+func TestConfigShowCmd_FlatConfig_NoEnvApp(t *testing.T) {
+	root := cmd.NewRootCmd()
+	buf := &bytes.Buffer{}
+	root.SetOut(buf)
+	root.SetErr(&bytes.Buffer{})
+	root.SetArgs([]string{"config", "show", "--config", "../../testdata/bifrost-flat.yml"})
+
+	err := root.Execute()
+	require.NoError(t, err)
+
+	var result map[string]any
+	require.NoError(t, json.Unmarshal(buf.Bytes(), &result), "output must be valid JSON:\n%s", buf.String())
+	assert.Equal(t, "/var/www/releases", result["releases_root"])
+}

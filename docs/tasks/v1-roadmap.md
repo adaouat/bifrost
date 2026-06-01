@@ -25,17 +25,17 @@ future strategies.
 
 Add SSH server definitions and server references to the config layer. No SSH connections yet.
 
-- [ ] `internal/config/schema.go` — add `ServerConfig` struct; add `Servers []string` to
+- [x] `internal/config/schema.go` — add `ServerConfig` struct; add `Servers []string` to
   `EnvConfig` and `AppConfig`
-- [ ] `internal/config/loader.go` — flat config path: if no `environments:` key, load
+- [x] `internal/config/loader.go` — flat config path: if no `environments:` key, load
   top-level directly; skip `--env`/`--app` requirement
-- [ ] `internal/config/loader.go` — validate server references: every name in `servers:`
+- [x] `internal/config/loader.go` — validate server references: every name in `servers:`
   lists must exist in the top-level `servers:` map (exit code 2)
-- [ ] `internal/config/merge.go` — server resolution: app-level `servers` overrides
+- [x] `internal/config/merge.go` — server resolution: app-level `servers` overrides
   env-level; `nil` inherits from parent
-- [ ] `internal/cmd/deploy.go` — detect client mode: resolved `servers` list non-empty
-- [ ] Update `config show` and `config check` to display/validate server entries
-- [ ] Update `testdata/` fixtures and unit tests
+- [x] `internal/cmd/deploy.go` — detect client mode: resolved `servers` list non-empty
+- [x] Update `config show` and `config check` to display/validate server entries
+- [x] Update `testdata/` fixtures and unit tests
 
 Spec references: [Spec 02](../specs/02-configuration.md), [Spec 07](../specs/07-ssh-transport.md),
 [ADR-0010](../adr/0010-server-config-schema.md).

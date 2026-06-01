@@ -16,21 +16,27 @@ func newCheckCmd() *cobra.Command {
 		Use:   "check",
 		Short: "Validate required fields for a deployment target",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			if env == "" {
-				return fmt.Errorf("--env (or --environment) is required")
-			}
-			if app == "" {
-				return fmt.Errorf("--app (or --application) is required")
-			}
-
 			cfg, err := config.Load(configPath(cmd))
 			if err != nil {
 				return err
 			}
-			merged, err := config.Merge(cfg, env, app)
-			if err != nil {
-				return err
+
+			var merged *config.MergedConfig
+			if config.IsFlat(cfg) {
+				merged = config.MergeFlat(cfg)
+			} else {
+				if env == "" {
+					return fmt.Errorf("--env (or --environment) is required")
+				}
+				if app == "" {
+					return fmt.Errorf("--app (or --application) is required")
+				}
+				merged, err = config.Merge(cfg, env, app)
+				if err != nil {
+					return err
+				}
 			}
+
 			if errs := config.Validate(merged); len(errs) > 0 {
 				return &cmderr.ExitError{Code: 2, Message: strings.Join(errs, "\n")}
 			}
