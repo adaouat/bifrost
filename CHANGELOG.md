@@ -1,51 +1,62 @@
 # Changelog
 
-## [0.8.0](//compare/v0.7.1..v0.8.0) - 2026-05-31
-
-### 🚀 Features
-
-- *(cmd/deploy)* Emit JSON error event on step failure - ([9243eb7](//commit/9243eb72247b0361040f16945117ffaab6be1185))
-
-- *(cmd/deploy)* Start/done JSON events for link, current_symlink, purge - ([934dc89](//commit/934dc89a9c4f44f29c2da7238f8dbcd8747b7c1a))
-
-- *(cmd/deploy)* Dry-run Would purge line with actual release names - ([bcc62c6](//commit/bcc62c6fb5c043ee7c52805a24432cbab58ef1bc))
-
-- *(cmd/deploy)* Show (sudo) suffix for sudo hooks in dry-run output - ([1d69311](//commit/1d693118ad5740e5192564099502568ad025ba51))
-
-- *(cmd/deploy)* Spinner while purging old releases - ([d212288](//commit/d212288285c518e2422aa5a2dd9727172342486e))
-
-- *(release/list)* Header line and ← current suffix in human output - ([94f7a06](//commit/94f7a0606c1b23b3adb00a0ed640f0e74462751c))
-
-- *(tui)* Deploy header panel with bordered box - ([d4b5404](//commit/d4b5404e943ea5a4817a8b0fa2f96410fa9057bd))
-
-- *(tui)* Per-step checkmark lines for deploy human output - ([1ab7ca6](//commit/1ab7ca6aa2506cd3020a47ffeaef451a904335be))
-
-- *(tui)* Final summary line for deploy human output - ([5429429](//commit/54294296ae148fd2fbfcd2898a2512695f70e3d9))
-
-- *(tui)* Step detail sub-lines and enriched JSON events - ([71cf30a](//commit/71cf30ad29181bc136c5d6faa4f64847f79ff409))
-
-- *(tui)* Add title prefix to extraction progress bar - ([e381a84](//commit/e381a843d18219224d5892de8abe2bd76fc8ba54))
-
-
-### 🐛 Bug Fixes
-
-- *(strategy/atomic)* Track compressed bytes for extraction progress - ([58de9e2](//commit/58de9e2f17b0631520c337f9585efe461a8cd93b))
-
-- *(strategy/atomic)* Protect active release from purge - ([3386860](//commit/33868600c4d733930e233ad257f850a385e84932))
-
-- Address important review findings - ([4143c38](//commit/4143c3878a76c5e762c3924d5b62318ab9440a52))
-
+## [0.8.1](//compare/v0.8.0..v0.8.1) - 2026-06-01
 
 ### 🚜 Refactor
 
-- Address suggestion review findings - ([8873db2](//commit/8873db2c665cf84ac64821ec11ead5248a41c1f5))
+- *(strategy)* Introduce Deployer interface and move atomic deploy logic - ([08f918b](//commit/08f918b3389da4e8e917e0be58884ed05b2e24d1))
 
 
 ### 📚 Documentation
 
-- *(claude)* Sync CLAUDE.md project layout with current codebase - ([95b9018](//commit/95b9018f6711737be17ecfb58515ccd053a34a66))
+- *(v1)* Add roadmap, specs, and ADRs for SSH orchestration + agent model - ([2e8f923](//commit/2e8f9233e37ab0325c3a0da65458213dda4201d4))
 
-- *(specs)* Sync 06-tui-ux and 03-commands with current implementation - ([5fa71ef](//commit/5fa71efefcf614bf173d6c10e04b906474289018))
+## [0.8.0](//compare/v0.7.1..v0.8.0) - 2026-05-31
+
+### 🚀 Features
+
+- *(cmd/deploy)* Emit JSON error event on step failure - ([9243eb7](//commit/9243eb72247b0361040f16945117ffaab6be1185)) by @bchatard
+
+- *(cmd/deploy)* Start/done JSON events for link, current_symlink, purge - ([934dc89](//commit/934dc89a9c4f44f29c2da7238f8dbcd8747b7c1a)) by @bchatard
+
+- *(cmd/deploy)* Dry-run Would purge line with actual release names - ([bcc62c6](//commit/bcc62c6fb5c043ee7c52805a24432cbab58ef1bc)) by @bchatard
+
+- *(cmd/deploy)* Show (sudo) suffix for sudo hooks in dry-run output - ([1d69311](//commit/1d693118ad5740e5192564099502568ad025ba51)) by @bchatard
+
+- *(cmd/deploy)* Spinner while purging old releases - ([d212288](//commit/d212288285c518e2422aa5a2dd9727172342486e)) by @bchatard
+
+- *(release/list)* Header line and ← current suffix in human output - ([94f7a06](//commit/94f7a0606c1b23b3adb00a0ed640f0e74462751c)) by @bchatard
+
+- *(tui)* Deploy header panel with bordered box - ([d4b5404](//commit/d4b5404e943ea5a4817a8b0fa2f96410fa9057bd)) by @bchatard
+
+- *(tui)* Per-step checkmark lines for deploy human output - ([1ab7ca6](//commit/1ab7ca6aa2506cd3020a47ffeaef451a904335be)) by @bchatard
+
+- *(tui)* Final summary line for deploy human output - ([5429429](//commit/54294296ae148fd2fbfcd2898a2512695f70e3d9)) by @bchatard
+
+- *(tui)* Step detail sub-lines and enriched JSON events - ([71cf30a](//commit/71cf30ad29181bc136c5d6faa4f64847f79ff409)) by @bchatard
+
+- *(tui)* Add title prefix to extraction progress bar - ([e381a84](//commit/e381a843d18219224d5892de8abe2bd76fc8ba54)) by @bchatard
+
+
+### 🐛 Bug Fixes
+
+- *(strategy/atomic)* Track compressed bytes for extraction progress - ([58de9e2](//commit/58de9e2f17b0631520c337f9585efe461a8cd93b)) by @bchatard
+
+- *(strategy/atomic)* Protect active release from purge - ([3386860](//commit/33868600c4d733930e233ad257f850a385e84932)) by @bchatard
+
+- Address important review findings - ([4143c38](//commit/4143c3878a76c5e762c3924d5b62318ab9440a52)) by @bchatard
+
+
+### 🚜 Refactor
+
+- Address suggestion review findings - ([8873db2](//commit/8873db2c665cf84ac64821ec11ead5248a41c1f5)) by @bchatard
+
+
+### 📚 Documentation
+
+- *(claude)* Sync CLAUDE.md project layout with current codebase - ([95b9018](//commit/95b9018f6711737be17ecfb58515ccd053a34a66)) by @bchatard
+
+- *(specs)* Sync 06-tui-ux and 03-commands with current implementation - ([5fa71ef](//commit/5fa71efefcf614bf173d6c10e04b906474289018)) by @bchatard
 
 ## [0.7.1](//compare/v0.7.0..v0.7.1) - 2026-05-31
 
