@@ -1,10 +1,9 @@
+// Package cmderr re-exports forge's ExitError under bifrost's historic name, so
+// existing &cmderr.ExitError{Code, Message} call sites keep working.
 package cmderr
 
-// ExitError is an error that requests a specific process exit code.
-// main.go checks for this type before falling back to exit code 1.
-type ExitError struct {
-	Code    int
-	Message string
-}
+import forgeexit "github.com/adaouat/forge/exitcode"
 
-func (e *ExitError) Error() string { return e.Message }
+// ExitError is an error that requests a specific process exit code.
+// main resolves it via forge's exitcode.Resolve.
+type ExitError = forgeexit.ExitError
