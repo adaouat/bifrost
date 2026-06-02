@@ -3,6 +3,7 @@ package hooks
 import (
 	"bytes"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/adaouat/bifrost/internal/config"
@@ -115,6 +116,20 @@ func TestRun_AllowFailWritesWarning(t *testing.T) {
 	var out bytes.Buffer
 	require.NoError(t, Run(mr, hooks, HookData{}, "/tmp", &out))
 	assert.Contains(t, out.String(), "warning")
+}
+
+func TestRun_AllowFailWarningDoesNotDuplicateStderr(t *testing.T) {
+	mr := exectest.NewMockRunner()
+	// forge's CmdRunner folds stderr into the returned error; the warning must
+	// not echo that stderr a second time after it was already streamed to out.
+	mr.QueueResponse("", "boom\n", errors.New("sh: exit status 1: boom"))
+
+	hooks := []config.HookEntry{{Cmd: "fail", AllowFail: true, Priority: prio(99999)}}
+	var out bytes.Buffer
+	require.NoError(t, Run(mr, hooks, HookData{}, "/tmp", &out))
+
+	assert.Equal(t, 1, strings.Count(out.String(), "boom"), "stderr must appear once, not again in the warning")
+	assert.Contains(t, out.String(), `warning: hook "fail" failed (allow_fail): exit status 1`)
 }
 
 func TestRun_InteractiveSkippedWhenNotEnabled(t *testing.T) {

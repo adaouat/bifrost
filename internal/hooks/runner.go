@@ -104,7 +104,9 @@ func runOne(runner forgeexec.Runner, h config.HookEntry, data HookData, workingD
 			code = exitErr.ExitCode()
 		}
 		if h.AllowFail {
-			_, _ = fmt.Fprintf(out, "warning: hook %q failed (allow_fail): %v\n", h.Cmd, runErr)
+			// Report the exit status, not runErr: forge embeds the captured
+			// stderr in its error, which was already streamed to out above.
+			_, _ = fmt.Fprintf(out, "warning: hook %q failed (allow_fail): exit status %d\n", h.Cmd, code)
 			return code, nil
 		}
 		return code, fmt.Errorf("hook %q: %w", h.Cmd, runErr)
