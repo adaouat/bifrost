@@ -58,7 +58,7 @@ Low-level SSH and SFTP plumbing. No deploy logic yet.
 - [x] `internal/transport/agent.go` — arch detection (`uname -s/m` via SSH), platform key
   mapping, binary download from GitHub Releases, local cache at
   `{os.UserCacheDir()}/bifrost/agents/{version}/{os}_{arch}/bifrost`
-- [ ] `--agent-binary <path>` flag wired into all SSH-capable commands (bypass download)
+- [x] `--agent-binary <path>` flag wired into all SSH-capable commands (bypass download)
 - [x] Unit tests for arch mapping and cache key logic (no real SSH)
 
 Dependencies: `golang.org/x/crypto/ssh`, `github.com/pkg/sftp`

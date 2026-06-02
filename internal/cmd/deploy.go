@@ -17,7 +17,7 @@ import (
 )
 
 func newDeployCmd() *cobra.Command {
-	var env, app, artifact, releaseName string
+	var env, app, artifact, releaseName, agentBinary string
 	var init_ bool
 
 	cmd := &cobra.Command{
@@ -91,6 +91,7 @@ func newDeployCmd() *cobra.Command {
 	f.StringVar(&app, "app", "", "alias for --application")
 	f.StringVar(&artifact, "artifact", "", "path to artifact file (.tar.gz, .zip)")
 	f.StringVar(&releaseName, "release-name", "", "override auto-generated release name")
+	f.StringVar(&agentBinary, "agent-binary", "", "path to a prebuilt agent binary (skips download in client mode)")
 	f.BoolVar(&init_, "init", false, "create releases_root and shared_root if missing")
 
 	return cmd

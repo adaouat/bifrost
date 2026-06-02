@@ -14,7 +14,7 @@ import (
 )
 
 func newRollbackCmd() *cobra.Command {
-	var env, app string
+	var env, app, agentBinary string
 
 	cmd := &cobra.Command{
 		Use:   "rollback",
@@ -90,6 +90,7 @@ func newRollbackCmd() *cobra.Command {
 	f.StringVar(&env, "env", "", "alias for --environment")
 	f.StringVar(&app, "application", "", "target application key")
 	f.StringVar(&app, "app", "", "alias for --application")
+	f.StringVar(&agentBinary, "agent-binary", "", "path to a prebuilt agent binary (skips download in client mode)")
 
 	return cmd
 }

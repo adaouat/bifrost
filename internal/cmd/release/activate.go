@@ -18,7 +18,7 @@ import (
 )
 
 func newActivateCmd() *cobra.Command {
-	var env, app, releaseName string
+	var env, app, releaseName, agentBinary string
 	var noConfirm bool
 
 	cmd := &cobra.Command{
@@ -123,6 +123,7 @@ func newActivateCmd() *cobra.Command {
 	f.StringVar(&app, "application", "", "target application key")
 	f.StringVar(&app, "app", "", "alias for --application")
 	f.StringVar(&releaseName, "release", "", "release name to activate (interactive selector if omitted)")
+	f.StringVar(&agentBinary, "agent-binary", "", "path to a prebuilt agent binary (skips download in client mode)")
 	f.BoolVar(&noConfirm, "no-confirm", false, "exit 3 if release is already current instead of prompting")
 
 	return cmd

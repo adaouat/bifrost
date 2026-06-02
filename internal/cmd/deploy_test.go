@@ -6,9 +6,23 @@ import (
 
 	"github.com/adaouat/bifrost/internal/cmd"
 	"github.com/adaouat/bifrost/internal/cmderr"
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestDeployCmd_HasAgentBinaryFlag(t *testing.T) {
+	root := cmd.NewRootCmd()
+	var deploy *cobra.Command
+	for _, c := range root.Commands() {
+		if c.Name() == "deploy" {
+			deploy = c
+			break
+		}
+	}
+	require.NotNil(t, deploy)
+	assert.NotNil(t, deploy.Flags().Lookup("agent-binary"))
+}
 
 func TestDeployCmd_ClientMode_NotYetImplemented(t *testing.T) {
 	root := cmd.NewRootCmd()
