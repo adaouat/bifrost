@@ -1,15 +1,26 @@
 # Changelog
 
-## [0.8.1](//compare/v0.8.0..v0.8.1) - 2026-06-01
+## [0.9.0](//compare/v0.8.1..v0.9.0) - 2026-06-02
 
-### 🚜 Refactor
+### 🚀 Features
 
-- *(strategy)* Introduce Deployer interface and move atomic deploy logic - ([08f918b](//commit/08f918b3389da4e8e917e0be58884ed05b2e24d1))
+- *(config)* Add server config schema, validation, and merge resolution (M12) - ([81d729d](//commit/81d729dc1bb39df15fa6728106bffb17f07b48d9))
 
 
 ### 📚 Documentation
 
-- *(v1)* Add roadmap, specs, and ADRs for SSH orchestration + agent model - ([2e8f923](//commit/2e8f9233e37ab0325c3a0da65458213dda4201d4))
+- *(v1)* Add JSON Schema task to M17 - ([56297c7](//commit/56297c75b8341a1856d62a58965981644b2550cf))
+
+## [0.8.1](//compare/v0.8.0..v0.8.1) - 2026-06-01
+
+### 🚜 Refactor
+
+- *(strategy)* Introduce Deployer interface and move atomic deploy logic - ([08f918b](//commit/08f918b3389da4e8e917e0be58884ed05b2e24d1)) by @bchatard
+
+
+### 📚 Documentation
+
+- *(v1)* Add roadmap, specs, and ADRs for SSH orchestration + agent model - ([2e8f923](//commit/2e8f9233e37ab0325c3a0da65458213dda4201d4)) by @bchatard
 
 ## [0.8.0](//compare/v0.7.1..v0.8.0) - 2026-05-31
 
