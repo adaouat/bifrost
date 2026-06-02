@@ -7,6 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	forgeexec "github.com/adaouat/forge/exec"
+
 	"github.com/adaouat/bifrost/internal/cmderr"
 	"github.com/adaouat/bifrost/internal/config"
 	"github.com/adaouat/bifrost/internal/hooks"
@@ -68,8 +70,9 @@ func newRollbackCmd() *cobra.Command {
 				Env: releaseOsEnv(),
 			}
 			confirmFn := releaseInteractiveConfirm()
+			hookRunner := forgeexec.New(false, false)
 
-			if err := hooks.RunInteractive(merged.Hooks.PreEnableRelease, hookData, releaseDir, cmd.OutOrStdout(), confirmFn); err != nil {
+			if err := hooks.RunInteractive(hookRunner, merged.Hooks.PreEnableRelease, hookData, releaseDir, cmd.OutOrStdout(), confirmFn); err != nil {
 				return fmt.Errorf("pre_enable_release hooks: %w", err)
 			}
 
@@ -77,7 +80,7 @@ func newRollbackCmd() *cobra.Command {
 				return fmt.Errorf("updating current symlink: %w", err)
 			}
 
-			if err := hooks.RunInteractive(merged.Hooks.PostEnableRelease, hookData, releaseDir, cmd.OutOrStdout(), confirmFn); err != nil {
+			if err := hooks.RunInteractive(hookRunner, merged.Hooks.PostEnableRelease, hookData, releaseDir, cmd.OutOrStdout(), confirmFn); err != nil {
 				return fmt.Errorf("post_enable_release hooks: %w", err)
 			}
 

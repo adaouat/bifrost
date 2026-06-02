@@ -1,7 +1,7 @@
 package hooks
 
 import (
-	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os/exec"
@@ -9,11 +9,8 @@ import (
 	"text/template"
 
 	"github.com/adaouat/bifrost/internal/config"
+	forgeexec "github.com/adaouat/forge/exec"
 )
-
-// execCommand is the function used to create exec.Cmd instances.
-// Replaced in tests to avoid shell execution on the local host.
-var execCommand = exec.Command
 
 // HookData is the template context available in hook cmd fields.
 type HookData struct {
@@ -38,21 +35,21 @@ type HookEventFn func(lifecycle string, index int, cmd string, exitCode int)
 // Run executes hooks in order, skipping interactive hooks with a warning.
 // Hooks must already be sorted by priority (config.Merge guarantees this).
 // workingDir is the default working directory. Hook output is written to out.
-func Run(hooks []config.HookEntry, data HookData, workingDir string, out io.Writer) error {
-	return RunInteractive(hooks, data, workingDir, out, nil)
+func Run(runner forgeexec.Runner, hooks []config.HookEntry, data HookData, workingDir string, out io.Writer) error {
+	return RunInteractive(runner, hooks, data, workingDir, out, nil)
 }
 
 // RunInteractive is like Run but calls confirmFn before each interactive hook.
 // If confirmFn is nil or returns false, the hook is skipped with a warning.
-func RunInteractive(hooks []config.HookEntry, data HookData, workingDir string, out io.Writer, confirmFn func(cmd string) bool) error {
-	return RunWithEvents(hooks, data, workingDir, out, confirmFn, "", nil)
+func RunInteractive(runner forgeexec.Runner, hooks []config.HookEntry, data HookData, workingDir string, out io.Writer, confirmFn func(cmd string) bool) error {
+	return RunWithEvents(runner, hooks, data, workingDir, out, confirmFn, "", nil)
 }
 
 // RunWithEvents is like RunInteractive but calls eventFn after each hook executes.
 // lifecycle is the name of the hook group (e.g. "pre_enable_release"). eventFn may be nil.
-func RunWithEvents(hooks []config.HookEntry, data HookData, workingDir string, out io.Writer, confirmFn func(cmd string) bool, lifecycle string, eventFn HookEventFn) error {
+func RunWithEvents(runner forgeexec.Runner, hooks []config.HookEntry, data HookData, workingDir string, out io.Writer, confirmFn func(cmd string) bool, lifecycle string, eventFn HookEventFn) error {
 	for i, h := range hooks {
-		exitCode, err := runOne(h, data, workingDir, out, confirmFn)
+		exitCode, err := runOne(runner, h, data, workingDir, out, confirmFn)
 		if eventFn != nil {
 			rendered, _ := renderCmd(h.Cmd, data)
 			eventFn(lifecycle, i, rendered, exitCode)
@@ -66,7 +63,7 @@ func RunWithEvents(hooks []config.HookEntry, data HookData, workingDir string, o
 
 // runOne executes a single hook and returns its exit code and any error.
 // Exit code 0 means success; -1 means the hook was skipped.
-func runOne(h config.HookEntry, data HookData, workingDir string, out io.Writer, confirmFn func(cmd string) bool) (exitCode int, err error) {
+func runOne(runner forgeexec.Runner, h config.HookEntry, data HookData, workingDir string, out io.Writer, confirmFn func(cmd string) bool) (exitCode int, err error) {
 	if h.Interactive {
 		if confirmFn == nil || !confirmFn(h.Cmd) {
 			_, _ = fmt.Fprintf(out, "warning: skipping interactive hook %q\n", h.Cmd)
@@ -79,35 +76,31 @@ func runOne(h config.HookEntry, data HookData, workingDir string, out io.Writer,
 		return -1, fmt.Errorf("hook template: %w", err)
 	}
 
-	var cmd *exec.Cmd
-	if h.Sudo {
-		cmd = execCommand("sudo", "sh", "-c", rendered)
-	} else {
-		cmd = execCommand("sh", "-c", rendered)
-	}
-
 	dir := workingDir
 	if h.CmdDir != "" {
 		dir = h.CmdDir
 	}
-	cmd.Dir = dir
 
-	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
+	name := "sh"
+	args := []string{"-c", rendered}
+	if h.Sudo {
+		name = "sudo"
+		args = []string{"sh", "-c", rendered}
+	}
 
-	runErr := cmd.Run()
+	stdout, stderr, runErr := runner.RunDir(dir, nil, name, args...)
 
-	if stdout.Len() > 0 {
-		_, _ = fmt.Fprint(out, stdout.String())
+	if stdout != "" {
+		_, _ = fmt.Fprint(out, stdout)
 	}
 
 	if runErr != nil {
-		if stderr.Len() > 0 {
-			_, _ = fmt.Fprint(out, stderr.String())
+		if stderr != "" {
+			_, _ = fmt.Fprint(out, stderr)
 		}
 		code := 1
-		if exitErr, ok := runErr.(*exec.ExitError); ok {
+		var exitErr *exec.ExitError
+		if errors.As(runErr, &exitErr) {
 			code = exitErr.ExitCode()
 		}
 		if h.AllowFail {

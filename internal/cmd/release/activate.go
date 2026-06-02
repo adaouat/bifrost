@@ -9,6 +9,8 @@ import (
 	"charm.land/huh/v2"
 	"github.com/spf13/cobra"
 
+	forgeexec "github.com/adaouat/forge/exec"
+
 	"github.com/adaouat/bifrost/internal/cmd/cmdutil"
 	"github.com/adaouat/bifrost/internal/cmderr"
 	"github.com/adaouat/bifrost/internal/config"
@@ -100,8 +102,9 @@ func newActivateCmd() *cobra.Command {
 				Env: releaseOsEnv(),
 			}
 			confirmFn := releaseInteractiveConfirm()
+			hookRunner := forgeexec.New(false, false)
 
-			if err := hooks.RunInteractive(merged.Hooks.PreEnableRelease, hookData, releaseDir, cmd.OutOrStdout(), confirmFn); err != nil {
+			if err := hooks.RunInteractive(hookRunner, merged.Hooks.PreEnableRelease, hookData, releaseDir, cmd.OutOrStdout(), confirmFn); err != nil {
 				return fmt.Errorf("pre_enable_release hooks: %w", err)
 			}
 
@@ -109,7 +112,7 @@ func newActivateCmd() *cobra.Command {
 				return fmt.Errorf("updating current symlink: %w", err)
 			}
 
-			if err := hooks.RunInteractive(merged.Hooks.PostEnableRelease, hookData, releaseDir, cmd.OutOrStdout(), confirmFn); err != nil {
+			if err := hooks.RunInteractive(hookRunner, merged.Hooks.PostEnableRelease, hookData, releaseDir, cmd.OutOrStdout(), confirmFn); err != nil {
 				return fmt.Errorf("post_enable_release hooks: %w", err)
 			}
 

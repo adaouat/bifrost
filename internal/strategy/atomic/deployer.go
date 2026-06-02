@@ -12,6 +12,7 @@ import (
 	"github.com/adaouat/bifrost/internal/hooks"
 	"github.com/adaouat/bifrost/internal/strategy"
 	"github.com/adaouat/bifrost/internal/tui"
+	forgeexec "github.com/adaouat/forge/exec"
 )
 
 // Deployer implements strategy.Deployer for the atomic deployment strategy.
@@ -19,13 +20,14 @@ type Deployer struct {
 	out       io.Writer
 	jsonMode  bool
 	confirmFn func(string) bool
+	runner    forgeexec.Runner
 }
 
 var _ strategy.Deployer = (*Deployer)(nil)
 
 // New creates a new atomic Deployer.
 func New(out io.Writer, jsonMode bool, confirmFn func(string) bool) *Deployer {
-	return &Deployer{out: out, jsonMode: jsonMode, confirmFn: confirmFn}
+	return &Deployer{out: out, jsonMode: jsonMode, confirmFn: confirmFn, runner: forgeexec.New(false, false)}
 }
 
 // Deploy executes a full atomic deployment.
@@ -128,7 +130,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 	}
 	hookEventFn := hookEmitter(emit)
 
-	if err := hooks.RunWithEvents(merged.Hooks.PostExtract, hookData, releaseDir, d.out, d.confirmFn, "post_extract", hookEventFn); err != nil {
+	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PostExtract, hookData, releaseDir, d.out, d.confirmFn, "post_extract", hookEventFn); err != nil {
 		return emitError("post_extract", fmt.Errorf("post_extract hooks: %w", err))
 	}
 	if !d.jsonMode && len(merged.Hooks.PostExtract) > 0 {
@@ -136,7 +138,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 		tui.PrintStep(d.out, "post_extract hooks", fmt.Sprintf("(%d/%d)", n, n))
 	}
 
-	if err := hooks.RunWithEvents(merged.Hooks.PreLink, hookData, releaseDir, d.out, d.confirmFn, "pre_link", hookEventFn); err != nil {
+	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PreLink, hookData, releaseDir, d.out, d.confirmFn, "pre_link", hookEventFn); err != nil {
 		return emitError("pre_link", fmt.Errorf("pre_link hooks: %w", err))
 	}
 	if !d.jsonMode && len(merged.Hooks.PreLink) > 0 {
@@ -161,7 +163,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 		}
 	}
 
-	if err := hooks.RunWithEvents(merged.Hooks.PreEnableRelease, hookData, releaseDir, d.out, d.confirmFn, "pre_enable_release", hookEventFn); err != nil {
+	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PreEnableRelease, hookData, releaseDir, d.out, d.confirmFn, "pre_enable_release", hookEventFn); err != nil {
 		return emitError("pre_enable_release", fmt.Errorf("pre_enable_release hooks: %w", err))
 	}
 	if !d.jsonMode && len(merged.Hooks.PreEnableRelease) > 0 {
@@ -180,7 +182,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 		tui.PrintDetail(d.out, releaseDir)
 	}
 
-	if err := hooks.RunWithEvents(merged.Hooks.PostEnableRelease, hookData, releaseDir, d.out, d.confirmFn, "post_enable_release", hookEventFn); err != nil {
+	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PostEnableRelease, hookData, releaseDir, d.out, d.confirmFn, "post_enable_release", hookEventFn); err != nil {
 		return emitError("post_enable_release", fmt.Errorf("post_enable_release hooks: %w", err))
 	}
 	if !d.jsonMode && len(merged.Hooks.PostEnableRelease) > 0 {
