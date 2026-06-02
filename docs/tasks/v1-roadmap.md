@@ -53,7 +53,7 @@ Low-level SSH and SFTP plumbing. No deploy logic yet.
   readers + exit code), close. Auth: key file → SSH agent → `BIFROST_SSH_PASSWORD` env var.
   Known-hosts: system `~/.ssh/known_hosts`, strict.
 - [x] `internal/transport/sftp.go` — SFTP wrapper: upload file, mkdir, chmod
-- [ ] `internal/transport/staging.go` — staging dir lifecycle: create (`/tmp/bifrost-{uuid}/`
+- [x] `internal/transport/staging.go` — staging dir lifecycle: create (`/tmp/bifrost-{uuid}/`
   or configured base), upload contents, cleanup (`rm -rf`)
 - [ ] `internal/transport/agent.go` — arch detection (`uname -s/m` via SSH), platform key
   mapping, binary download from GitHub Releases, local cache at
