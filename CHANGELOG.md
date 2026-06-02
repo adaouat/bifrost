@@ -1,15 +1,29 @@
 # Changelog
 
+## [0.10.0](//compare/v0.9.0..v0.10.0) - 2026-06-02
+
+### 🚀 Features
+
+- *(cmd)* Add --agent-binary flag to deploy and SSH-capable release commands - ([98fc9c9](//commit/98fc9c9109f75d4fc9acfa9aac7c0838c696e47a))
+
+- *(transport)* Add SSH client wrapper with auth chain and strict host keys - ([4dfeb0b](//commit/4dfeb0b8a5c0b3cb53d625095baebda2016b0c1a))
+
+- *(transport)* Add SFTP wrapper for upload, mkdir, chmod - ([6f98610](//commit/6f986103880cf71437647b4697513fd29a44990c))
+
+- *(transport)* Add remote staging directory lifecycle - ([6e245aa](//commit/6e245aabfbc2c7c4f82114eec9c7445253b2a238))
+
+- *(transport)* Add agent binary resolution with arch detection and cache - ([75d94f2](//commit/75d94f22beb7e9c6e39e4d3a9201ae108bece73c))
+
 ## [0.9.0](//compare/v0.8.1..v0.9.0) - 2026-06-02
 
 ### 🚀 Features
 
-- *(config)* Add server config schema, validation, and merge resolution (M12) - ([81d729d](//commit/81d729dc1bb39df15fa6728106bffb17f07b48d9))
+- *(config)* Add server config schema, validation, and merge resolution (M12) - ([81d729d](//commit/81d729dc1bb39df15fa6728106bffb17f07b48d9)) by @bchatard
 
 
 ### 📚 Documentation
 
-- *(v1)* Add JSON Schema task to M17 - ([56297c7](//commit/56297c75b8341a1856d62a58965981644b2550cf))
+- *(v1)* Add JSON Schema task to M17 - ([56297c7](//commit/56297c75b8341a1856d62a58965981644b2550cf)) by @bchatard
 
 ## [0.8.1](//compare/v0.8.0..v0.8.1) - 2026-06-01
 
