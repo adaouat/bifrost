@@ -49,7 +49,7 @@ Local mode (no servers) is unchanged.
 
 Low-level SSH and SFTP plumbing. No deploy logic yet.
 
-- [ ] `internal/transport/ssh.go` — SSH client wrapper: connect, exec (returns stdout/stderr
+- [x] `internal/transport/ssh.go` — SSH client wrapper: connect, exec (returns stdout/stderr
   readers + exit code), close. Auth: key file → SSH agent → `BIFROST_SSH_PASSWORD` env var.
   Known-hosts: system `~/.ssh/known_hosts`, strict.
 - [ ] `internal/transport/sftp.go` — SFTP wrapper: upload file, mkdir, chmod
