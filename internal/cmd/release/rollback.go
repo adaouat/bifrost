@@ -38,7 +38,7 @@ func newRollbackCmd() *cobra.Command {
 				return err
 			}
 			if errs := config.Validate(merged); len(errs) > 0 {
-				return &cmderr.ExitError{Code: 2, Message: strings.Join(errs, "\n")}
+				return &cmderr.ExitError{Code: cmderr.Config, Message: strings.Join(errs, "\n")}
 			}
 
 			releases, active, err := listReleases(merged.ReleasesRoot)
@@ -102,17 +102,17 @@ func newRollbackCmd() *cobra.Command {
 // newest-first sorted list. Returns ExitError{3} if rollback is not possible.
 func findRollbackTarget(releases []string, active string) (string, error) {
 	if active == "" {
-		return "", &cmderr.ExitError{Code: 3, Message: "no active release — nothing to roll back from"}
+		return "", &cmderr.ExitError{Code: cmderr.Runtime, Message: "no active release — nothing to roll back from"}
 	}
 
 	for i, r := range releases {
 		if r == active {
 			if i+1 >= len(releases) {
-				return "", &cmderr.ExitError{Code: 3, Message: "no previous release to roll back to"}
+				return "", &cmderr.ExitError{Code: cmderr.Runtime, Message: "no previous release to roll back to"}
 			}
 			return releases[i+1], nil
 		}
 	}
 
-	return "", &cmderr.ExitError{Code: 3, Message: fmt.Sprintf("active release %q not found in releases list", active)}
+	return "", &cmderr.ExitError{Code: cmderr.Runtime, Message: fmt.Sprintf("active release %q not found in releases list", active)}
 }

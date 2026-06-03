@@ -38,7 +38,7 @@ func newListCmd() *cobra.Command {
 				return err
 			}
 			if errs := config.Validate(merged); len(errs) > 0 {
-				return &cmderr.ExitError{Code: 2, Message: strings.Join(errs, "\n")}
+				return &cmderr.ExitError{Code: cmderr.Config, Message: strings.Join(errs, "\n")}
 			}
 
 			releases, active, err := listReleases(merged.ReleasesRoot)

@@ -50,11 +50,11 @@ func newDeployCmd() *cobra.Command {
 			}
 
 			if errs := config.Validate(merged); len(errs) > 0 {
-				return &ExitError{Code: 2, Message: strings.Join(errs, "\n")}
+				return &ExitError{Code: Config, Message: strings.Join(errs, "\n")}
 			}
 
 			if len(merged.Servers) > 0 {
-				return &ExitError{Code: 1, Message: "client mode not yet implemented (servers configured)"}
+				return &ExitError{Code: Usage, Message: "client mode not yet implemented (servers configured)"}
 			}
 
 			if err := ensureRoots(merged.ReleasesRoot, merged.SharedRoot, init_); err != nil {
@@ -62,7 +62,7 @@ func newDeployCmd() *cobra.Command {
 			}
 
 			if _, err := os.Stat(artifact); err != nil {
-				return &ExitError{Code: 3, Message: fmt.Sprintf("artifact not found: %s", artifact)}
+				return &ExitError{Code: Runtime, Message: fmt.Sprintf("artifact not found: %s", artifact)}
 			}
 
 			if isDryRun(cmd) {
@@ -166,7 +166,7 @@ func ensureRoots(releasesRoot, sharedRoot string, create bool) error {
 	for _, dir := range []string{releasesRoot, sharedRoot} {
 		if _, err := os.Stat(dir); os.IsNotExist(err) {
 			if !create {
-				return &ExitError{Code: 3, Message: fmt.Sprintf("directory does not exist: %s (use --init to create)", dir)}
+				return &ExitError{Code: Runtime, Message: fmt.Sprintf("directory does not exist: %s (use --init to create)", dir)}
 			}
 			if err := os.MkdirAll(dir, 0o755); err != nil {
 				return fmt.Errorf("creating directory %s: %w", dir, err)

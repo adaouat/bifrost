@@ -34,7 +34,7 @@ func newInitCmd() *cobra.Command {
 				return err
 			}
 			if errs := config.Validate(merged); len(errs) > 0 {
-				return &cmderr.ExitError{Code: 2, Message: strings.Join(errs, "\n")}
+				return &cmderr.ExitError{Code: cmderr.Config, Message: strings.Join(errs, "\n")}
 			}
 
 			return ensureRoots(merged.ReleasesRoot, merged.SharedRoot)

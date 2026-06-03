@@ -43,7 +43,7 @@ func newActivateCmd() *cobra.Command {
 				return err
 			}
 			if errs := config.Validate(merged); len(errs) > 0 {
-				return &cmderr.ExitError{Code: 2, Message: strings.Join(errs, "\n")}
+				return &cmderr.ExitError{Code: cmderr.Config, Message: strings.Join(errs, "\n")}
 			}
 
 			if releaseName == "" {
@@ -69,13 +69,13 @@ func newActivateCmd() *cobra.Command {
 
 			releaseDir := filepath.Join(merged.ReleasesRoot, releaseName)
 			if _, err := os.Stat(releaseDir); err != nil {
-				return &cmderr.ExitError{Code: 3, Message: fmt.Sprintf("release not found: %s", releaseName)}
+				return &cmderr.ExitError{Code: cmderr.Runtime, Message: fmt.Sprintf("release not found: %s", releaseName)}
 			}
 
 			currentLink := filepath.Join(merged.ReleasesRoot, "current")
 			if target, err := os.Readlink(currentLink); err == nil && target == releaseDir {
 				if noConfirm || !tui.IsTTY() {
-					return &cmderr.ExitError{Code: 3, Message: fmt.Sprintf("release %q is already current", releaseName)}
+					return &cmderr.ExitError{Code: cmderr.Runtime, Message: fmt.Sprintf("release %q is already current", releaseName)}
 				}
 				var ok bool
 				if err := huh.NewConfirm().

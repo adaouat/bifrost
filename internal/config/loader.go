@@ -24,7 +24,7 @@ func Load(path string) (*Config, error) {
 		return nil, err
 	}
 	if errs := ValidateServerRefs(cfg); len(errs) > 0 {
-		return nil, &cmderr.ExitError{Code: 2, Message: strings.Join(errs, "\n")}
+		return nil, &cmderr.ExitError{Code: cmderr.Config, Message: strings.Join(errs, "\n")}
 	}
 	return cfg, nil
 }
