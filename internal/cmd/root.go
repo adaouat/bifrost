@@ -40,7 +40,6 @@ func NewRootCmd() *cobra.Command {
 			if err := ValidateOutputMode(output); err != nil {
 				return err
 			}
-			tui.SetOutputMode(output)
 			// plain and json modes have no colored output; set NO_COLOR so charm
 			// libraries (fang, huh, bubbles) also suppress ANSI color sequences.
 			if output == "plain" || output == "json" {

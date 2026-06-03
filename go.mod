@@ -8,7 +8,6 @@ require (
 	charm.land/huh/v2 v2.0.3
 	charm.land/lipgloss/v2 v2.0.2
 	charm.land/log/v2 v2.0.0
-	github.com/charmbracelet/x/term v0.2.2
 	github.com/google/uuid v1.6.0
 	github.com/mholt/archives v0.1.5
 	github.com/moby/moby/api v1.54.1
@@ -19,6 +18,8 @@ require (
 	golang.org/x/crypto v0.48.0
 	gopkg.in/yaml.v3 v3.0.1
 )
+
+require github.com/charmbracelet/x/term v0.2.2 // indirect
 
 require (
 	charm.land/bubbletea/v2 v2.0.2 // indirect

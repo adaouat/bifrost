@@ -13,12 +13,13 @@ import (
 	"github.com/adaouat/bifrost/internal/strategy"
 	"github.com/adaouat/bifrost/internal/tui"
 	forgeexec "github.com/adaouat/forge/exec"
+	forgeui "github.com/adaouat/forge/ui"
 )
 
 // Deployer implements strategy.Deployer for the atomic deployment strategy.
 type Deployer struct {
 	out       io.Writer
-	jsonMode  bool
+	mode      forgeui.Mode
 	confirmFn func(string) bool
 	runner    forgeexec.Runner
 }
@@ -26,9 +27,11 @@ type Deployer struct {
 var _ strategy.Deployer = (*Deployer)(nil)
 
 // New creates a new atomic Deployer.
-func New(out io.Writer, jsonMode bool, confirmFn func(string) bool) *Deployer {
-	return &Deployer{out: out, jsonMode: jsonMode, confirmFn: confirmFn, runner: forgeexec.New(false, false)}
+func New(out io.Writer, mode forgeui.Mode, confirmFn func(string) bool) *Deployer {
+	return &Deployer{out: out, mode: mode, confirmFn: confirmFn, runner: forgeexec.New(false, false)}
 }
+
+func (d *Deployer) jsonMode() bool { return d.mode == forgeui.JSON }
 
 // Deploy executes a full atomic deployment.
 func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) error {
@@ -40,7 +43,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 	}
 
 	var emit *tui.JSONEmitter
-	if d.jsonMode {
+	if d.jsonMode() {
 		emit = tui.NewJSONEmitter(d.out)
 	}
 
@@ -52,7 +55,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 	}
 
 	runStep := func(step string, fn func() (map[string]any, error)) error {
-		if d.jsonMode {
+		if d.jsonMode() {
 			emit.Emit(map[string]any{"event": "start", "step": step})
 		}
 		start := time.Now()
@@ -60,7 +63,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 		if err != nil {
 			return emitError(step, err)
 		}
-		if d.jsonMode {
+		if d.jsonMode() {
 			ev := map[string]any{"event": "done", "step": step, "duration_ms": time.Since(start).Milliseconds()}
 			for k, v := range extras {
 				ev[k] = v
@@ -70,12 +73,12 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 		return nil
 	}
 
-	if !d.jsonMode {
-		_, _ = fmt.Fprint(d.out, tui.DeployHeader(opts.Env, opts.App, filepath.Base(releaseDir)))
-		tui.PrintStep(d.out, "Config loaded and validated", "")
-		tui.PrintStep(d.out, "Release directory created", "")
-		tui.PrintDetail(d.out, "Root path: "+merged.ReleasesRoot)
-		tui.PrintDetail(d.out, "Shared path: "+merged.SharedRoot)
+	if !d.jsonMode() {
+		_, _ = fmt.Fprint(d.out, tui.DeployHeader(d.mode, opts.Env, opts.App, filepath.Base(releaseDir)))
+		tui.PrintStep(d.mode, d.out, "Config loaded and validated", "")
+		tui.PrintStep(d.mode, d.out, "Release directory created", "")
+		tui.PrintDetail(d.mode, d.out, "Root path: "+merged.ReleasesRoot)
+		tui.PrintDetail(d.mode, d.out, "Shared path: "+merged.SharedRoot)
 	}
 
 	deployStart := time.Now()
@@ -86,13 +89,13 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 		return fmt.Errorf("stat artifact: %w", err)
 	}
 
-	if d.jsonMode {
+	if d.jsonMode() {
 		emit.Emit(map[string]any{"event": "start", "step": "extract", "artifact": opts.Artifact})
 	}
 	extractStart := time.Now()
-	updateProgress, doneProgress := tui.NewProgressBar(info.Size(), "Extracting artifact", d.out)
+	updateProgress, doneProgress := tui.NewProgressBar(d.mode, info.Size(), "Extracting artifact", d.out)
 	var jsonProgressFn func(n int64)
-	if d.jsonMode {
+	if d.jsonMode() {
 		var written int64
 		total := info.Size()
 		jsonProgressFn = func(n int64) {
@@ -110,11 +113,11 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 		return emitError("extract", fmt.Errorf("extracting artifact: %w", err))
 	}
 	doneProgress()
-	if d.jsonMode {
+	if d.jsonMode() {
 		emit.Emit(map[string]any{"event": "done", "step": "extract", "duration_ms": time.Since(extractStart).Milliseconds()})
 	}
-	if !d.jsonMode {
-		tui.PrintStep(d.out, "Artifact extracted", fmt.Sprintf("(%.1fs)", time.Since(extractStart).Seconds()))
+	if !d.jsonMode() {
+		tui.PrintStep(d.mode, d.out, "Artifact extracted", fmt.Sprintf("(%.1fs)", time.Since(extractStart).Seconds()))
 	}
 
 	hookData := hooks.HookData{
@@ -133,17 +136,17 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PostExtract, hookData, releaseDir, d.out, d.confirmFn, "post_extract", hookEventFn); err != nil {
 		return emitError("post_extract", fmt.Errorf("post_extract hooks: %w", err))
 	}
-	if !d.jsonMode && len(merged.Hooks.PostExtract) > 0 {
+	if !d.jsonMode() && len(merged.Hooks.PostExtract) > 0 {
 		n := len(merged.Hooks.PostExtract)
-		tui.PrintStep(d.out, "post_extract hooks", fmt.Sprintf("(%d/%d)", n, n))
+		tui.PrintStep(d.mode, d.out, "post_extract hooks", fmt.Sprintf("(%d/%d)", n, n))
 	}
 
 	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PreLink, hookData, releaseDir, d.out, d.confirmFn, "pre_link", hookEventFn); err != nil {
 		return emitError("pre_link", fmt.Errorf("pre_link hooks: %w", err))
 	}
-	if !d.jsonMode && len(merged.Hooks.PreLink) > 0 {
+	if !d.jsonMode() && len(merged.Hooks.PreLink) > 0 {
 		n := len(merged.Hooks.PreLink)
-		tui.PrintStep(d.out, "pre_link hooks", fmt.Sprintf("(%d/%d)", n, n))
+		tui.PrintStep(d.mode, d.out, "pre_link hooks", fmt.Sprintf("(%d/%d)", n, n))
 	}
 
 	if err := runStep("link", func() (map[string]any, error) {
@@ -152,23 +155,23 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 	}); err != nil {
 		return fmt.Errorf("linking shared resources: %w", err)
 	}
-	if !d.jsonMode {
-		tui.PrintStep(d.out, "Shared directories linked", fmt.Sprintf("(%d)", len(merged.SharedDirs)))
+	if !d.jsonMode() {
+		tui.PrintStep(d.mode, d.out, "Shared directories linked", fmt.Sprintf("(%d)", len(merged.SharedDirs)))
 		for _, dir := range merged.SharedDirs {
-			tui.PrintDetail(d.out, dir)
+			tui.PrintDetail(d.mode, d.out, dir)
 		}
-		tui.PrintStep(d.out, "Shared files linked", fmt.Sprintf("(%d)", len(merged.SharedFiles)))
+		tui.PrintStep(d.mode, d.out, "Shared files linked", fmt.Sprintf("(%d)", len(merged.SharedFiles)))
 		for _, f := range merged.SharedFiles {
-			tui.PrintDetail(d.out, f)
+			tui.PrintDetail(d.mode, d.out, f)
 		}
 	}
 
 	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PreEnableRelease, hookData, releaseDir, d.out, d.confirmFn, "pre_enable_release", hookEventFn); err != nil {
 		return emitError("pre_enable_release", fmt.Errorf("pre_enable_release hooks: %w", err))
 	}
-	if !d.jsonMode && len(merged.Hooks.PreEnableRelease) > 0 {
+	if !d.jsonMode() && len(merged.Hooks.PreEnableRelease) > 0 {
 		n := len(merged.Hooks.PreEnableRelease)
-		tui.PrintStep(d.out, "pre_enable_release hooks", fmt.Sprintf("(%d/%d)", n, n))
+		tui.PrintStep(d.mode, d.out, "pre_enable_release hooks", fmt.Sprintf("(%d/%d)", n, n))
 	}
 
 	if err := runStep("current_symlink", func() (map[string]any, error) {
@@ -177,17 +180,17 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 	}); err != nil {
 		return fmt.Errorf("updating current symlink: %w", err)
 	}
-	if !d.jsonMode {
-		tui.PrintStep(d.out, "current symlink updated", "")
-		tui.PrintDetail(d.out, releaseDir)
+	if !d.jsonMode() {
+		tui.PrintStep(d.mode, d.out, "current symlink updated", "")
+		tui.PrintDetail(d.mode, d.out, releaseDir)
 	}
 
 	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PostEnableRelease, hookData, releaseDir, d.out, d.confirmFn, "post_enable_release", hookEventFn); err != nil {
 		return emitError("post_enable_release", fmt.Errorf("post_enable_release hooks: %w", err))
 	}
-	if !d.jsonMode && len(merged.Hooks.PostEnableRelease) > 0 {
+	if !d.jsonMode() && len(merged.Hooks.PostEnableRelease) > 0 {
 		n := len(merged.Hooks.PostEnableRelease)
-		tui.PrintStep(d.out, "post_enable_release hooks", fmt.Sprintf("(%d/%d)", n, n))
+		tui.PrintStep(d.mode, d.out, "post_enable_release hooks", fmt.Sprintf("(%d/%d)", n, n))
 	}
 
 	// PurgePlan failure is non-fatal: Purge carries its own error path.
@@ -197,13 +200,13 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 	}
 	if err := runStep("purge", func() (map[string]any, error) {
 		extras := map[string]any{"purged": purgePlan, "kept": merged.Settings.ReleasesToKeep}
-		if !d.jsonMode && len(purgePlan) > 0 {
+		if !d.jsonMode() && len(purgePlan) > 0 {
 			noun := "releases"
 			if len(purgePlan) == 1 {
 				noun = "release"
 			}
 			label := fmt.Sprintf("Purging %d old %s...", len(purgePlan), noun)
-			return extras, tui.RunWithSpinner(context.Background(), label, func(ctx context.Context) error {
+			return extras, tui.RunWithSpinner(d.mode, context.Background(), label, func(ctx context.Context) error {
 				return Purge(merged.ReleasesRoot, merged.Settings.ReleasesToKeep)
 			})
 		}
@@ -211,14 +214,14 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 	}); err != nil {
 		return fmt.Errorf("purging old releases: %w", err)
 	}
-	if !d.jsonMode {
-		tui.PrintStep(d.out, "Old releases purged", fmt.Sprintf("(kept %d)", merged.Settings.ReleasesToKeep))
+	if !d.jsonMode() {
+		tui.PrintStep(d.mode, d.out, "Old releases purged", fmt.Sprintf("(kept %d)", merged.Settings.ReleasesToKeep))
 		for _, r := range purgePlan {
-			tui.PrintDetail(d.out, r+" deleted")
+			tui.PrintDetail(d.mode, d.out, r+" deleted")
 		}
 	}
 
-	if d.jsonMode {
+	if d.jsonMode() {
 		emit.Emit(map[string]any{
 			"event":       "done",
 			"step":        "deploy",
@@ -226,7 +229,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 			"duration_ms": time.Since(deployStart).Milliseconds(),
 		})
 	} else {
-		tui.PrintSummary(d.out, time.Since(deployStart), filepath.Base(releaseDir))
+		tui.PrintSummary(d.mode, d.out, time.Since(deployStart), filepath.Base(releaseDir))
 	}
 
 	return nil

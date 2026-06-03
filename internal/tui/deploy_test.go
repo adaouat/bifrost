@@ -6,11 +6,12 @@ import (
 	"time"
 
 	"github.com/adaouat/bifrost/internal/tui"
+	forgeui "github.com/adaouat/forge/ui"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestDeployHeader(t *testing.T) {
-	result := tui.DeployHeader("prod", "web", "20260520-141500")
+	result := tui.DeployHeader(forgeui.Human, "prod", "web", "20260520-141500")
 
 	assert.Contains(t, result, "prod › web")
 	assert.Contains(t, result, "20260520-141500")
@@ -22,7 +23,7 @@ func TestDeployHeader(t *testing.T) {
 
 func TestPrintStep_LabelOnly(t *testing.T) {
 	var buf bytes.Buffer
-	tui.PrintStep(&buf, "Config loaded and validated", "")
+	tui.PrintStep(forgeui.Human, &buf, "Config loaded and validated", "")
 	out := buf.String()
 	assert.Contains(t, out, "✔")
 	assert.Contains(t, out, "Config loaded and validated")
@@ -30,7 +31,7 @@ func TestPrintStep_LabelOnly(t *testing.T) {
 
 func TestPrintStep_WithDetail(t *testing.T) {
 	var buf bytes.Buffer
-	tui.PrintStep(&buf, "Artifact extracted", "(1.2s)")
+	tui.PrintStep(forgeui.Human, &buf, "Artifact extracted", "(1.2s)")
 	out := buf.String()
 	assert.Contains(t, out, "✔")
 	assert.Contains(t, out, "Artifact extracted")
@@ -39,7 +40,7 @@ func TestPrintStep_WithDetail(t *testing.T) {
 
 func TestPrintSummary(t *testing.T) {
 	var buf bytes.Buffer
-	tui.PrintSummary(&buf, 4300*time.Millisecond, "20260520-141500")
+	tui.PrintSummary(forgeui.Human, &buf, 4300*time.Millisecond, "20260520-141500")
 	out := buf.String()
 	assert.Contains(t, out, "4.3s")
 	assert.Contains(t, out, "20260520-141500")
@@ -48,7 +49,7 @@ func TestPrintSummary(t *testing.T) {
 
 func TestPrintDetail(t *testing.T) {
 	var buf bytes.Buffer
-	tui.PrintDetail(&buf, "Root path: /var/releases")
+	tui.PrintDetail(forgeui.Human, &buf, "Root path: /var/releases")
 	out := buf.String()
 	assert.Contains(t, out, "Root path: /var/releases")
 	assert.Contains(t, out, "-")

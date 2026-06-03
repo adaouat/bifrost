@@ -6,14 +6,16 @@ import (
 	"time"
 
 	"charm.land/lipgloss/v2"
+
+	forgeui "github.com/adaouat/forge/ui"
 )
 
 // DeployHeader returns a bordered panel displaying env › app and release name.
-func DeployHeader(env, app, release string) string {
+func DeployHeader(mode forgeui.Mode, env, app, release string) string {
 	style := lipgloss.NewStyle().
 		Border(lipgloss.NormalBorder()).
 		Padding(0, 2)
-	if IsHumanMode() {
+	if mode.IsHuman() {
 		style = style.BorderForeground(ColorPrimary)
 	}
 	envApp := env + " › " + app
@@ -23,14 +25,14 @@ func DeployHeader(env, app, release string) string {
 
 // PrintStep writes a completed step line to out.
 // detail is optional; pass "" to omit it.
-func PrintStep(out io.Writer, label, detail string) {
+func PrintStep(mode forgeui.Mode, out io.Writer, label, detail string) {
 	checkmark := "✔"
-	if IsHumanMode() {
+	if mode.IsHuman() {
 		checkmark = SuccessStyle.Render("✔")
 	}
 	if detail != "" {
 		d := detail
-		if IsHumanMode() {
+		if mode.IsHuman() {
 			d = MutedStyle.Render(detail)
 		}
 		_, _ = fmt.Fprintf(out, "  %s %s   %s\n", checkmark, label, d)
@@ -40,18 +42,18 @@ func PrintStep(out io.Writer, label, detail string) {
 }
 
 // PrintDetail writes an indented sub-detail line under a step.
-func PrintDetail(out io.Writer, label string) {
+func PrintDetail(mode forgeui.Mode, out io.Writer, label string) {
 	dash := "-"
-	if IsHumanMode() {
+	if mode.IsHuman() {
 		dash = MutedStyle.Render("-")
 	}
 	_, _ = fmt.Fprintf(out, "      %s %s\n", dash, label)
 }
 
 // PrintSummary writes the final deploy summary line to out.
-func PrintSummary(out io.Writer, elapsed time.Duration, release string) {
+func PrintSummary(mode forgeui.Mode, out io.Writer, elapsed time.Duration, release string) {
 	rel := release
-	if IsHumanMode() {
+	if mode.IsHuman() {
 		rel = PrimaryStyle.Render(release)
 	}
 	_, _ = fmt.Fprintf(out, "\n  Deployed in %.1fs  →  %s\n\n", elapsed.Seconds(), rel)

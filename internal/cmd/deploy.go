@@ -14,6 +14,7 @@ import (
 	"github.com/adaouat/bifrost/internal/strategy"
 	"github.com/adaouat/bifrost/internal/strategy/atomic"
 	"github.com/adaouat/bifrost/internal/tui"
+	forgeui "github.com/adaouat/forge/ui"
 )
 
 func newDeployCmd() *cobra.Command {
@@ -70,10 +71,10 @@ func newDeployCmd() *cobra.Command {
 			}
 
 			out := cmd.OutOrStdout()
-			jsonMode := outputMode(cmd) == "json"
+			mode := forgeui.ParseMode(outputMode(cmd))
 			confirmFn := interactiveConfirm()
 
-			var deployer strategy.Deployer = atomic.New(out, jsonMode, confirmFn)
+			var deployer strategy.Deployer = atomic.New(out, mode, confirmFn)
 			return deployer.Deploy(context.Background(), strategy.DeployOptions{
 				Config:      merged,
 				Artifact:    artifact,
