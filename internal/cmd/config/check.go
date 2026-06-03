@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/adaouat/bifrost/internal/cmderr"
 	"github.com/adaouat/bifrost/internal/config"
@@ -38,7 +37,7 @@ func newCheckCmd() *cobra.Command {
 			}
 
 			if errs := config.Validate(merged); len(errs) > 0 {
-				return &cmderr.ExitError{Code: cmderr.Config, Message: strings.Join(errs, "\n")}
+				return &cmderr.ExitError{Code: cmderr.Config, Message: errs.Error()}
 			}
 			return nil
 		},

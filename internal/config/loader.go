@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
-
-	"gopkg.in/yaml.v3"
 
 	"github.com/adaouat/bifrost/internal/cmderr"
+	forgeconfig "github.com/adaouat/forge/config"
 )
 
 // Load reads and strictly parses a .bifrost.yml file at the given path.
@@ -24,7 +22,7 @@ func Load(path string) (*Config, error) {
 		return nil, err
 	}
 	if errs := ValidateServerRefs(cfg); len(errs) > 0 {
-		return nil, &cmderr.ExitError{Code: cmderr.Config, Message: strings.Join(errs, "\n")}
+		return nil, &cmderr.ExitError{Code: cmderr.Config, Message: errs.Error()}
 	}
 	return cfg, nil
 }
@@ -40,28 +38,34 @@ func IsFlat(cfg *Config) bool {
 //   - every name in env/app Servers lists exists in cfg.Servers
 //
 // Returns a slice of human-readable error messages; empty means valid.
-func ValidateServerRefs(cfg *Config) []string {
-	var errs []string
+func ValidateServerRefs(cfg *Config) forgeconfig.ValidationErrors {
+	var errs forgeconfig.ValidationErrors
 
 	for name, srv := range cfg.Servers {
 		if srv.Host == "" {
-			errs = append(errs, fmt.Sprintf("servers.%s: host is required", name))
+			errs = append(errs, forgeconfig.ValidationError{Path: "servers." + name, Message: "host is required"})
 		}
 		if srv.User == "" {
-			errs = append(errs, fmt.Sprintf("servers.%s: user is required", name))
+			errs = append(errs, forgeconfig.ValidationError{Path: "servers." + name, Message: "user is required"})
 		}
 	}
 
 	for envName, env := range cfg.Environments {
 		for _, ref := range env.Servers {
 			if _, ok := cfg.Servers[ref]; !ok {
-				errs = append(errs, fmt.Sprintf("environments.%s.servers: unknown server %q", envName, ref))
+				errs = append(errs, forgeconfig.ValidationError{
+					Path:    fmt.Sprintf("environments.%s.servers", envName),
+					Message: fmt.Sprintf("unknown server %q", ref),
+				})
 			}
 		}
 		for appName, app := range env.Applications {
 			for _, ref := range app.Servers {
 				if _, ok := cfg.Servers[ref]; !ok {
-					errs = append(errs, fmt.Sprintf("environments.%s.applications.%s.servers: unknown server %q", envName, appName, ref))
+					errs = append(errs, forgeconfig.ValidationError{
+						Path:    fmt.Sprintf("environments.%s.applications.%s.servers", envName, appName),
+						Message: fmt.Sprintf("unknown server %q", ref),
+					})
 				}
 			}
 		}
@@ -73,9 +77,7 @@ func ValidateServerRefs(cfg *Config) []string {
 // Parse strictly parses .bifrost.yml content from r and applies defaults.
 func Parse(r io.Reader) (*Config, error) {
 	var cfg Config
-	dec := yaml.NewDecoder(r)
-	dec.KnownFields(true)
-	if err := dec.Decode(&cfg); err != nil {
+	if err := forgeconfig.Decode(r, &cfg); err != nil {
 		return nil, fmt.Errorf("parsing config: %w", err)
 	}
 	applyDefaults(&cfg)

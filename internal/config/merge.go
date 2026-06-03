@@ -3,6 +3,8 @@ package config
 import (
 	"fmt"
 	"sort"
+
+	forgeconfig "github.com/adaouat/forge/config"
 )
 
 // ResolvedServer is a named server entry resolved from the top-level servers map.
@@ -104,14 +106,14 @@ func resolveServers(serverMap map[string]ServerConfig, names []string) []Resolve
 	return resolved
 }
 
-// Validate returns a message for each required field missing from a MergedConfig.
-func Validate(m *MergedConfig) []string {
-	var errs []string
+// Validate returns a ValidationError for each required field missing from a MergedConfig.
+func Validate(m *MergedConfig) forgeconfig.ValidationErrors {
+	var errs forgeconfig.ValidationErrors
 	if m.ReleasesRoot == "" {
-		errs = append(errs, "paths.releases_root: required but not set")
+		errs = append(errs, forgeconfig.ValidationError{Path: "paths.releases_root", Message: "required but not set"})
 	}
 	if m.SharedRoot == "" {
-		errs = append(errs, "paths.shared_root: required but not set")
+		errs = append(errs, forgeconfig.ValidationError{Path: "paths.shared_root", Message: "required but not set"})
 	}
 	return errs
 }

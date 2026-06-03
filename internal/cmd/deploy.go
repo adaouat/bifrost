@@ -51,7 +51,7 @@ func newDeployCmd() *cobra.Command {
 			}
 
 			if errs := config.Validate(merged); len(errs) > 0 {
-				return &ExitError{Code: Config, Message: strings.Join(errs, "\n")}
+				return &ExitError{Code: Config, Message: errs.Error()}
 			}
 
 			if len(merged.Servers) > 0 {
