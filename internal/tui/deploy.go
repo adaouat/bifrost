@@ -23,22 +23,15 @@ func DeployHeader(mode forgeui.Mode, env, app, release string) string {
 	return "\n" + style.Render(content) + "\n"
 }
 
-// PrintStep writes a completed step line to out.
+// PrintStep writes a completed step line ("✓ label — detail") to out via the
+// shared status helper, so instant steps match forge.Spinner's resolved lines.
 // detail is optional; pass "" to omit it.
-func PrintStep(mode forgeui.Mode, out io.Writer, label, detail string) {
-	checkmark := "✔"
-	if mode.IsHuman() {
-		checkmark = SuccessStyle.Render("✔")
-	}
+func PrintStep(out io.Writer, label, detail string) {
+	msg := label
 	if detail != "" {
-		d := detail
-		if mode.IsHuman() {
-			d = MutedStyle.Render(detail)
-		}
-		_, _ = fmt.Fprintf(out, "  %s %s   %s\n", checkmark, label, d)
-	} else {
-		_, _ = fmt.Fprintf(out, "  %s %s\n", checkmark, label)
+		msg += " — " + detail
 	}
+	_, _ = fmt.Fprintln(out, forgeui.Success(out, msg))
 }
 
 // PrintDetail writes an indented sub-detail line under a step.

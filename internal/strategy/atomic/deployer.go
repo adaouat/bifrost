@@ -75,8 +75,8 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 
 	if !d.jsonMode() {
 		_, _ = fmt.Fprint(d.out, tui.DeployHeader(d.mode, opts.Env, opts.App, filepath.Base(releaseDir)))
-		tui.PrintStep(d.mode, d.out, "Config loaded and validated", "")
-		tui.PrintStep(d.mode, d.out, "Release directory created", "")
+		tui.PrintStep(d.out, "Config loaded and validated", "")
+		tui.PrintStep(d.out, "Release directory created", "")
 		tui.PrintDetail(d.mode, d.out, "Root path: "+merged.ReleasesRoot)
 		tui.PrintDetail(d.mode, d.out, "Shared path: "+merged.SharedRoot)
 	}
@@ -117,7 +117,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 		emit.Emit(map[string]any{"event": "done", "step": "extract", "duration_ms": time.Since(extractStart).Milliseconds()})
 	}
 	if !d.jsonMode() {
-		tui.PrintStep(d.mode, d.out, "Artifact extracted", fmt.Sprintf("(%.1fs)", time.Since(extractStart).Seconds()))
+		tui.PrintStep(d.out, "Artifact extracted", fmt.Sprintf("(%.1fs)", time.Since(extractStart).Seconds()))
 	}
 
 	hookData := hooks.HookData{
@@ -138,7 +138,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 	}
 	if !d.jsonMode() && len(merged.Hooks.PostExtract) > 0 {
 		n := len(merged.Hooks.PostExtract)
-		tui.PrintStep(d.mode, d.out, "post_extract hooks", fmt.Sprintf("(%d/%d)", n, n))
+		tui.PrintStep(d.out, "post_extract hooks", fmt.Sprintf("(%d/%d)", n, n))
 	}
 
 	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PreLink, hookData, releaseDir, d.out, d.confirmFn, "pre_link", hookEventFn); err != nil {
@@ -146,7 +146,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 	}
 	if !d.jsonMode() && len(merged.Hooks.PreLink) > 0 {
 		n := len(merged.Hooks.PreLink)
-		tui.PrintStep(d.mode, d.out, "pre_link hooks", fmt.Sprintf("(%d/%d)", n, n))
+		tui.PrintStep(d.out, "pre_link hooks", fmt.Sprintf("(%d/%d)", n, n))
 	}
 
 	if err := runStep("link", func() (map[string]any, error) {
@@ -156,11 +156,11 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 		return fmt.Errorf("linking shared resources: %w", err)
 	}
 	if !d.jsonMode() {
-		tui.PrintStep(d.mode, d.out, "Shared directories linked", fmt.Sprintf("(%d)", len(merged.SharedDirs)))
+		tui.PrintStep(d.out, "Shared directories linked", fmt.Sprintf("(%d)", len(merged.SharedDirs)))
 		for _, dir := range merged.SharedDirs {
 			tui.PrintDetail(d.mode, d.out, dir)
 		}
-		tui.PrintStep(d.mode, d.out, "Shared files linked", fmt.Sprintf("(%d)", len(merged.SharedFiles)))
+		tui.PrintStep(d.out, "Shared files linked", fmt.Sprintf("(%d)", len(merged.SharedFiles)))
 		for _, f := range merged.SharedFiles {
 			tui.PrintDetail(d.mode, d.out, f)
 		}
@@ -171,7 +171,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 	}
 	if !d.jsonMode() && len(merged.Hooks.PreEnableRelease) > 0 {
 		n := len(merged.Hooks.PreEnableRelease)
-		tui.PrintStep(d.mode, d.out, "pre_enable_release hooks", fmt.Sprintf("(%d/%d)", n, n))
+		tui.PrintStep(d.out, "pre_enable_release hooks", fmt.Sprintf("(%d/%d)", n, n))
 	}
 
 	if err := runStep("current_symlink", func() (map[string]any, error) {
@@ -181,7 +181,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 		return fmt.Errorf("updating current symlink: %w", err)
 	}
 	if !d.jsonMode() {
-		tui.PrintStep(d.mode, d.out, "current symlink updated", "")
+		tui.PrintStep(d.out, "current symlink updated", "")
 		tui.PrintDetail(d.mode, d.out, releaseDir)
 	}
 
@@ -190,7 +190,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 	}
 	if !d.jsonMode() && len(merged.Hooks.PostEnableRelease) > 0 {
 		n := len(merged.Hooks.PostEnableRelease)
-		tui.PrintStep(d.mode, d.out, "post_enable_release hooks", fmt.Sprintf("(%d/%d)", n, n))
+		tui.PrintStep(d.out, "post_enable_release hooks", fmt.Sprintf("(%d/%d)", n, n))
 	}
 
 	// PurgePlan failure is non-fatal: Purge carries its own error path.
@@ -200,22 +200,18 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 	}
 	if err := runStep("purge", func() (map[string]any, error) {
 		extras := map[string]any{"purged": purgePlan, "kept": merged.Settings.ReleasesToKeep}
-		if !d.jsonMode() && len(purgePlan) > 0 {
-			noun := "releases"
-			if len(purgePlan) == 1 {
-				noun = "release"
-			}
-			label := fmt.Sprintf("Purging %d old %s...", len(purgePlan), noun)
-			return extras, tui.RunWithSpinner(d.mode, context.Background(), label, func(ctx context.Context) error {
-				return Purge(merged.ReleasesRoot, merged.Settings.ReleasesToKeep)
-			})
+		purge := func() error { return Purge(merged.ReleasesRoot, merged.Settings.ReleasesToKeep) }
+		if d.jsonMode() {
+			return extras, purge()
 		}
-		return extras, Purge(merged.ReleasesRoot, merged.Settings.ReleasesToKeep)
+		// Spin while purging (human + TTY) then resolve to "✓ Old releases purged — (kept N)".
+		return extras, forgeui.NewSpinner(d.out, d.mode).Run("Old releases purged", func() (forgeui.Result, error) {
+			return forgeui.Result{Detail: fmt.Sprintf("(kept %d)", merged.Settings.ReleasesToKeep)}, purge()
+		})
 	}); err != nil {
 		return fmt.Errorf("purging old releases: %w", err)
 	}
 	if !d.jsonMode() {
-		tui.PrintStep(d.mode, d.out, "Old releases purged", fmt.Sprintf("(kept %d)", merged.Settings.ReleasesToKeep))
 		for _, r := range purgePlan {
 			tui.PrintDetail(d.mode, d.out, r+" deleted")
 		}

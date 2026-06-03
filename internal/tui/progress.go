@@ -1,32 +1,18 @@
 package tui
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"os"
 	"sync/atomic"
 
 	"charm.land/bubbles/v2/progress"
-	"charm.land/huh/v2/spinner"
 
 	forgeui "github.com/adaouat/forge/ui"
 )
 
 // IsTTY reports whether stdout is connected to a real terminal.
 func IsTTY() bool { return forgeui.IsTTY(os.Stdout) }
-
-// RunWithSpinner runs fn inside a spinner when in human mode on a real TTY; otherwise calls fn directly.
-func RunWithSpinner(mode forgeui.Mode, ctx context.Context, title string, fn func(context.Context) error) error {
-	if !mode.IsHuman() || !IsTTY() {
-		return fn(ctx)
-	}
-	return spinner.New().
-		Title(title).
-		Context(ctx).
-		ActionWithErr(fn).
-		Run()
-}
 
 // NewProgressBar returns an update func and a done func for rendering a titled progress bar.
 // total is the expected byte count used to compute fill percentage.
