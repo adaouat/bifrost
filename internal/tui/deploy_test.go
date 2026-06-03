@@ -21,23 +21,6 @@ func TestDeployHeader(t *testing.T) {
 	assert.Contains(t, result, "└")
 }
 
-func TestPrintStep_LabelOnly(t *testing.T) {
-	var buf bytes.Buffer
-	tui.PrintStep(&buf, "Config loaded and validated", "")
-	out := buf.String()
-	assert.Contains(t, out, "✓")
-	assert.Contains(t, out, "Config loaded and validated")
-}
-
-func TestPrintStep_WithDetail(t *testing.T) {
-	var buf bytes.Buffer
-	tui.PrintStep(&buf, "Artifact extracted", "(1.2s)")
-	out := buf.String()
-	assert.Contains(t, out, "✓")
-	assert.Contains(t, out, "Artifact extracted")
-	assert.Contains(t, out, "(1.2s)")
-}
-
 func TestPrintSummary(t *testing.T) {
 	var buf bytes.Buffer
 	tui.PrintSummary(forgeui.Human, &buf, 4300*time.Millisecond, "20260520-141500")

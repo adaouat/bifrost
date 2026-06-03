@@ -23,17 +23,6 @@ func DeployHeader(mode forgeui.Mode, env, app, release string) string {
 	return "\n" + style.Render(content) + "\n"
 }
 
-// PrintStep writes a completed step line ("✓ label — detail") to out via the
-// shared status helper, so instant steps match forge.Spinner's resolved lines.
-// detail is optional; pass "" to omit it.
-func PrintStep(out io.Writer, label, detail string) {
-	msg := label
-	if detail != "" {
-		msg += " — " + detail
-	}
-	_, _ = fmt.Fprintln(out, forgeui.Success(out, msg))
-}
-
 // PrintDetail writes an indented sub-detail line under a step.
 func PrintDetail(mode forgeui.Mode, out io.Writer, label string) {
 	dash := "-"
