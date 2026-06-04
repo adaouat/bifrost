@@ -14,6 +14,7 @@ import (
 var Version = "dev"
 
 func main() {
-	err := fang.Execute(context.Background(), cmd.NewRootCmd(Version), fang.WithVersion(Version))
+	err := fang.Execute(context.Background(), cmd.NewRootCmd(Version),
+		fang.WithVersion(Version), fang.WithColorSchemeFunc(colorScheme))
 	os.Exit(forgeexit.Resolve(err))
 }
