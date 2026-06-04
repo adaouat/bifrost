@@ -9,7 +9,9 @@ before:
 builds:
   - id: bifrost
     main: ./cmd/bifrost/
-    binary: "bifrost_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    # Plain name so the Homebrew cask installs the binary as `bifrost`; the version
+    # lives in the asset name via archives.name_template below.
+    binary: bifrost
     env:
       - CGO_ENABLED=0
     goos:
@@ -26,9 +28,8 @@ builds:
       - -s -w -X main.Version={{ .Tag }}
 
 # Raw versioned binaries, no archive wrapper — the family-wide release model.
-# Asset name = bifrost_<version>_<os>_<arch>; checksums.txt covers the executable
-# users run. The explicit name_template (vs the format:binary default, which keys
-# off .Binary) keeps the name single across goreleaser versions. See forge
+# The version lives in the asset name via this explicit name_template (builds.binary
+# is plain); checksums.txt covers the binary users run. See forge
 # docs/guides/distribution.md.
 archives:
   - id: default
@@ -38,3 +39,14 @@ archives:
 
 checksum:
   name_template: checksums.txt
+
+# Homebrew cask pushed to adaouat/homebrew-tap on release. goreleaser owns bifrost's
+# release, so the default download URL works (no url override needed, unlike heraut).
+homebrew_casks:
+  - repository:
+      owner: adaouat
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    directory: Casks
+    homepage: "https://github.com/adaouat/bifrost"
+    description: "Atomic deployment CLI"

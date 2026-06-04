@@ -4,6 +4,12 @@ Atomic deployment CLI.
 
 ## Install
 
+### Homebrew
+
+```bash
+brew install --cask adaouat/tap/bifrost
+```
+
 ### `go install`
 
 ```bash
