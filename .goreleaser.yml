@@ -40,13 +40,20 @@ archives:
 checksum:
   name_template: checksums.txt
 
-# Homebrew cask pushed to adaouat/homebrew-tap on release. goreleaser owns bifrost's
-# release, so the default download URL works (no url override needed, unlike heraut).
+# release.disable: true — goreleaser is build-only in the CI pipeline (ADR-0018).
+# heraut owns GitHub Release creation via `heraut release --version`.
+release:
+  disable: true
+
+# Homebrew cask. goreleaser is build-only (release.disable + --skip=publish), so it only
+# generates the cask — the release workflow pushes it after `heraut release`. The explicit
+# url.template is required because release.disable means goreleaser can't derive the URL.
 homebrew_casks:
   - repository:
       owner: adaouat
       name: homebrew-tap
-      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
     directory: Casks
+    url:
+      template: "https://github.com/adaouat/bifrost/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
     homepage: "https://github.com/adaouat/bifrost"
     description: "Atomic deployment CLI"

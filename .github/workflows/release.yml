@@ -1,50 +1,123 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - v*
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Override version (e.g. v1.2.3). Leave empty to use `heraut version next`."
+        required: false
+        default: ""
 
 jobs:
-  goreleaser:
+  release:
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
     permissions:
-      contents: write # create GitHub Release + upload assets
-      pull-requests: read # GoReleaser links PRs to commits in release notes
+      contents: write # create GitHub Release + push tag + upload assets
       id-token: write # OIDC token for build provenance attestation
       attestations: write # persist build provenance attestations
+    env:
+      HERAUT_CHECK_UPDATE: false
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          fetch-depth: 0 # GoReleaser needs full tag history
+          fetch-depth: 0 # full history for changelog generation
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4
+      - name: Setup Mise
+        uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4
 
-      - name: Generate release notes
-        uses: orhun/git-cliff-action@f50e11560dce63f7c33227798f90b924471a88b5 # v4
-        with:
-          config: .config/cliff.toml
-          args: --latest --strip all
+      - name: Install Héraut
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OUTPUT: /tmp/RELEASE_NOTES.md
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download --repo adaouat/heraut \
+            --pattern "heraut_*_linux_amd64" \
+            --output /usr/local/bin/heraut --clobber
+          chmod +x /usr/local/bin/heraut
 
-      - uses: goreleaser/goreleaser-action@5daf1e915a5f0af01ddbcd89a43b8061ff4f1a89 # v7
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@2dc316deee8e90f13e1a351ab510b4d5bc0c82cd # v7
+        with:
+          gpg_private_key: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+          git_tag_gpgsign: true
+
+      - name: Configure git identity
+        run: |
+          git config --global user.name "Héraut Release Bot"
+          git config --global user.email "heraut+github@adaouat.dev"
+
+      - name: Resolve version
+        id: version
+        run: |
+          if [[ -n "${{ inputs.version }}" ]]; then
+            echo "VERSION=${{ inputs.version }}" >> "$GITHUB_ENV"
+            echo "VERSION_OVERRIDDEN=true" >> "$GITHUB_ENV"
+            echo "tag=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            # Strip the release block so the bootstrap heraut (which predates
+            # fields added in the version being released) does not fail on
+            # unknown YAML keys. version next only needs the versioning block.
+            yq 'del(.release)' .config/heraut.yml > /tmp/heraut-version.yml
+            V=$(HERAUT_FILE=/tmp/heraut-version.yml heraut version next)
+            echo "VERSION=$V" >> "$GITHUB_ENV"
+            echo "VERSION_OVERRIDDEN=false" >> "$GITHUB_ENV"
+            echo "tag=$V" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build binaries
+        uses: goreleaser/goreleaser-action@5daf1e915a5f0af01ddbcd89a43b8061ff4f1a89 # v7
         with:
           version: "~> v2"
-          args: release --clean --release-notes /tmp/RELEASE_NOTES.md
+          args: release --clean --skip=publish,announce,validate
         env:
+          GORELEASER_CURRENT_TAG: ${{ env.VERSION }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Pushes the Homebrew cask to adaouat/homebrew-tap (cross-repo, so the
-          # default GITHUB_TOKEN isn't enough). Set this secret before releasing.
-          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+
+      - name: Collect release binaries
+        # builds.binary is plain `bifrost`, so the versioned asset names live in
+        # goreleaser's artifacts.json — copy each build output to its versioned name so
+        # `heraut release` can upload them (matches .config/heraut.yml release.assets).
+        run: |
+          jq -r '.[] | select(.type == "Binary" and (.name | startswith("bifrost_"))) | "\(.path)\t\(.name)"' \
+            dist/artifacts.json | while IFS=$'\t' read -r path name; do cp "$path" "dist/$name"; done
 
       - name: Attest build provenance
         uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26 # v4
         with:
           subject-checksums: dist/checksums.txt
 
-      - name: Publish release
-        run: gh release edit "${{ github.ref_name }}" --draft=false
+      - name: Preflight check
+        run: heraut check
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+
+      - name: Release
+        run: heraut release --version "$VERSION"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+
+      - name: Publish Homebrew cask
+        # goreleaser is build-only (--skip=publish), so it only generated the cask;
+        # push it to the tap now that `heraut release` has uploaded the assets. Skips
+        # gracefully if the token isn't set, so it never breaks a release.
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |-
+          if [ -z "$HOMEBREW_TAP_TOKEN" ]; then
+            echo "HOMEBREW_TAP_TOKEN not set — skipping cask publish."
+            exit 0
+          fi
+          git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/adaouat/homebrew-tap.git" /tmp/tap
+          install -D dist/homebrew/Casks/bifrost.rb /tmp/tap/Casks/bifrost.rb
+          cd /tmp/tap
+          git add Casks/bifrost.rb
+          git diff --cached --quiet && { echo "cask unchanged"; exit 0; }
+          git commit -m "bifrost ${VERSION}"
+          git push

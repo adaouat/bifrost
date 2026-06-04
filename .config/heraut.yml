@@ -1,9 +1,26 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/adaouat/heraut/v0.13.4/schema.json
-
+# yaml-language-server: $schema=https://raw.githubusercontent.com/adaouat/heraut/main/schema.json
 version: "1"
+
 versioning:
   strategy: semver
-  tag_prefix: v
+  tag_prefix: "v"
+  initial_version: "0.1.0"
+  bump: auto
+
 changelog:
   generator: git-cliff
   output: CHANGELOG.md
+
+release:
+  notes:
+    generator: git-cliff
+  platforms:
+    - platform: github
+      repository: adaouat/bifrost
+  assets:
+    - "dist/bifrost_*_linux_amd64"
+    - "dist/bifrost_*_linux_arm64"
+    - "dist/bifrost_*_darwin_amd64"
+    - "dist/bifrost_*_darwin_arm64"
+    - "dist/bifrost_*_windows_amd64.exe"
+    - "dist/checksums.txt"
