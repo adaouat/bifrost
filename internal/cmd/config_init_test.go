@@ -14,7 +14,7 @@ import (
 
 func TestConfigInitCmd_WritesDefaultConfig(t *testing.T) {
 	t.Setenv("BIFROST_FILE", "")
-	root := cmd.NewRootCmd()
+	root := cmd.NewRootCmd("dev")
 	buf := &bytes.Buffer{}
 	root.SetOut(buf)
 	root.SetErr(&bytes.Buffer{})
@@ -41,7 +41,7 @@ func TestConfigInitCmd_WritesDefaultConfig(t *testing.T) {
 
 func TestConfigInitCmd_RefusesOverwriteWithoutForce(t *testing.T) {
 	t.Setenv("BIFROST_FILE", "")
-	root := cmd.NewRootCmd()
+	root := cmd.NewRootCmd("dev")
 	root.SetOut(&bytes.Buffer{})
 	root.SetErr(&bytes.Buffer{})
 	root.SetArgs([]string{"config", "init", "--config", "/tmp/test-bifrost-init.yml"})
@@ -60,7 +60,7 @@ func TestConfigInitCmd_RefusesOverwriteWithoutForce(t *testing.T) {
 
 func TestConfigInitCmd_EnvVarDeterminesWriteDest(t *testing.T) {
 	t.Setenv("BIFROST_FILE", "/env/dest.yml")
-	root := cmd.NewRootCmd()
+	root := cmd.NewRootCmd("dev")
 	root.SetOut(&bytes.Buffer{})
 	root.SetErr(&bytes.Buffer{})
 	root.SetArgs([]string{"config", "init"})
@@ -83,7 +83,7 @@ func TestConfigInitCmd_EnvVarDeterminesWriteDest(t *testing.T) {
 
 func TestConfigInitCmd_FlagWinsOverEnvVar(t *testing.T) {
 	t.Setenv("BIFROST_FILE", "/env/dest.yml")
-	root := cmd.NewRootCmd()
+	root := cmd.NewRootCmd("dev")
 	root.SetOut(&bytes.Buffer{})
 	root.SetErr(&bytes.Buffer{})
 	root.SetArgs([]string{"config", "init", "--config", "/flag/dest.yml"})
@@ -111,7 +111,7 @@ func TestConfigInitCmd_AutoDestUsesConfigDir(t *testing.T) {
 	t.Setenv("BIFROST_FILE", "")
 	require.NoError(t, os.MkdirAll(".config", 0o755))
 
-	root := cmd.NewRootCmd()
+	root := cmd.NewRootCmd("dev")
 	root.SetOut(&bytes.Buffer{})
 	root.SetErr(&bytes.Buffer{})
 	root.SetArgs([]string{"config", "init"})
@@ -130,7 +130,7 @@ func TestConfigInitCmd_AutoDestUsesConfigDir(t *testing.T) {
 
 func TestConfigInitCmd_OverwritesWithForce(t *testing.T) {
 	t.Setenv("BIFROST_FILE", "")
-	root := cmd.NewRootCmd()
+	root := cmd.NewRootCmd("dev")
 	root.SetOut(&bytes.Buffer{})
 	root.SetErr(&bytes.Buffer{})
 	root.SetArgs([]string{"config", "init", "--config", "/tmp/test-bifrost-init.yml", "--force"})

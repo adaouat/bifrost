@@ -11,7 +11,7 @@ import (
 )
 
 func TestConfigShowCmd_NoFlags_OutputsJSON(t *testing.T) {
-	root := cmd.NewRootCmd()
+	root := cmd.NewRootCmd("dev")
 	buf := &bytes.Buffer{}
 	root.SetOut(buf)
 	root.SetErr(&bytes.Buffer{})
@@ -32,7 +32,7 @@ func TestConfigShowCmd_NoFlags_OutputsJSON(t *testing.T) {
 }
 
 func TestConfigShowCmd_WithEnvApp_OutputsMergedJSON(t *testing.T) {
-	root := cmd.NewRootCmd()
+	root := cmd.NewRootCmd("dev")
 	buf := &bytes.Buffer{}
 	root.SetOut(buf)
 	root.SetErr(&bytes.Buffer{})
@@ -56,7 +56,7 @@ func TestConfigShowCmd_WithEnvApp_OutputsMergedJSON(t *testing.T) {
 }
 
 func TestConfigShowCmd_EnvWithoutApp_Errors(t *testing.T) {
-	root := cmd.NewRootCmd()
+	root := cmd.NewRootCmd("dev")
 	root.SetOut(&bytes.Buffer{})
 	root.SetErr(&bytes.Buffer{})
 	root.SetArgs([]string{
@@ -71,7 +71,7 @@ func TestConfigShowCmd_EnvWithoutApp_Errors(t *testing.T) {
 }
 
 func TestConfigShowCmd_AppWithoutEnv_Errors(t *testing.T) {
-	root := cmd.NewRootCmd()
+	root := cmd.NewRootCmd("dev")
 	root.SetOut(&bytes.Buffer{})
 	root.SetErr(&bytes.Buffer{})
 	root.SetArgs([]string{
@@ -86,7 +86,7 @@ func TestConfigShowCmd_AppWithoutEnv_Errors(t *testing.T) {
 }
 
 func TestConfigShowCmd_MissingConfigFile(t *testing.T) {
-	root := cmd.NewRootCmd()
+	root := cmd.NewRootCmd("dev")
 	root.SetOut(&bytes.Buffer{})
 	root.SetErr(&bytes.Buffer{})
 	root.SetArgs([]string{"config", "show", "--config", "/nonexistent/.bifrost.yml"})
@@ -96,7 +96,7 @@ func TestConfigShowCmd_MissingConfigFile(t *testing.T) {
 }
 
 func TestConfigShowCmd_FlatConfig_NoEnvApp(t *testing.T) {
-	root := cmd.NewRootCmd()
+	root := cmd.NewRootCmd("dev")
 	buf := &bytes.Buffer{}
 	root.SetOut(buf)
 	root.SetErr(&bytes.Buffer{})

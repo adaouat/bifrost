@@ -12,7 +12,7 @@ import (
 )
 
 func TestDeployCmd_HasAgentBinaryFlag(t *testing.T) {
-	root := cmd.NewRootCmd()
+	root := cmd.NewRootCmd("dev")
 	var deploy *cobra.Command
 	for _, c := range root.Commands() {
 		if c.Name() == "deploy" {
@@ -25,7 +25,7 @@ func TestDeployCmd_HasAgentBinaryFlag(t *testing.T) {
 }
 
 func TestDeployCmd_ClientMode_NotYetImplemented(t *testing.T) {
-	root := cmd.NewRootCmd()
+	root := cmd.NewRootCmd("dev")
 	root.SetOut(&bytes.Buffer{})
 	root.SetErr(&bytes.Buffer{})
 	root.SetArgs([]string{
@@ -46,7 +46,7 @@ func TestDeployCmd_ClientMode_NotYetImplemented(t *testing.T) {
 }
 
 func TestDeployCmd_FlatConfig_RequiresNoEnvApp(t *testing.T) {
-	root := cmd.NewRootCmd()
+	root := cmd.NewRootCmd("dev")
 	root.SetOut(&bytes.Buffer{})
 	root.SetErr(&bytes.Buffer{})
 	// flat config + no --env/--app + no real paths → will fail on ensureRoots, not on missing flags

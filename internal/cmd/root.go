@@ -1,14 +1,19 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"path/filepath"
+	"time"
 
 	clog "charm.land/log/v2"
+	"github.com/spf13/cobra"
+
 	"github.com/adaouat/bifrost/internal/cmd/config"
 	"github.com/adaouat/bifrost/internal/cmd/release"
 	"github.com/adaouat/bifrost/internal/tui"
-	"github.com/spf13/cobra"
+	"github.com/adaouat/forge/updatecheck"
 )
 
 // ValidateOutputMode returns an error if mode is not one of: human, json, plain.
@@ -21,7 +26,9 @@ func ValidateOutputMode(mode string) error {
 	}
 }
 
-func NewRootCmd() *cobra.Command {
+// NewRootCmd constructs the root bifrost command. version is the build version,
+// used by --version and the update-check hint.
+func NewRootCmd(version string) *cobra.Command {
 	var (
 		cfgFile string
 		output  string
@@ -45,6 +52,28 @@ func NewRootCmd() *cobra.Command {
 			if output == "plain" || output == "json" {
 				_ = os.Setenv("NO_COLOR", "1")
 			}
+			return nil
+		},
+		// After each command, print a one-line update hint if a newer release
+		// exists (cached 24h, errors swallowed). Skipped for dev builds, the
+		// opt-out env var, and non-human output modes.
+		PersistentPostRunE: func(c *cobra.Command, _ []string) error {
+			if version == "dev" || output != "human" || os.Getenv("BIFROST_CHECK_UPDATE") == "false" {
+				return nil
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+			defer cancel()
+			cacheFile := ""
+			if dir, err := os.UserCacheDir(); err == nil {
+				cacheFile = filepath.Join(dir, "bifrost", "update-check.json")
+			}
+			updatecheck.Hinter{
+				Repo:      "adaouat/bifrost",
+				Bin:       "bifrost",
+				Module:    "github.com/adaouat/bifrost/cmd/bifrost",
+				Current:   version,
+				CacheFile: cacheFile,
+			}.Print(ctx, c.ErrOrStderr())
 			return nil
 		},
 	}

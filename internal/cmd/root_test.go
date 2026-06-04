@@ -9,7 +9,7 @@ import (
 )
 
 func TestRootFlagsDefaults(t *testing.T) {
-	root := cmd.NewRootCmd()
+	root := cmd.NewRootCmd("dev")
 	flags := root.PersistentFlags()
 
 	config, err := flags.GetString("config")

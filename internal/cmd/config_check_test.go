@@ -11,7 +11,7 @@ import (
 )
 
 func TestConfigCheckCmd_ValidConfig_SilentSuccess(t *testing.T) {
-	root := cmd.NewRootCmd()
+	root := cmd.NewRootCmd("dev")
 	buf := &bytes.Buffer{}
 	root.SetOut(buf)
 	root.SetErr(&bytes.Buffer{})
@@ -28,7 +28,7 @@ func TestConfigCheckCmd_ValidConfig_SilentSuccess(t *testing.T) {
 }
 
 func TestConfigCheckCmd_MissingEnv_Errors(t *testing.T) {
-	root := cmd.NewRootCmd()
+	root := cmd.NewRootCmd("dev")
 	root.SetOut(&bytes.Buffer{})
 	root.SetErr(&bytes.Buffer{})
 	root.SetArgs([]string{
@@ -43,7 +43,7 @@ func TestConfigCheckCmd_MissingEnv_Errors(t *testing.T) {
 }
 
 func TestConfigCheckCmd_MissingApp_Errors(t *testing.T) {
-	root := cmd.NewRootCmd()
+	root := cmd.NewRootCmd("dev")
 	root.SetOut(&bytes.Buffer{})
 	root.SetErr(&bytes.Buffer{})
 	root.SetArgs([]string{
@@ -58,7 +58,7 @@ func TestConfigCheckCmd_MissingApp_Errors(t *testing.T) {
 }
 
 func TestConfigCheckCmd_MissingPaths_ExitCode2(t *testing.T) {
-	root := cmd.NewRootCmd()
+	root := cmd.NewRootCmd("dev")
 	root.SetOut(&bytes.Buffer{})
 	root.SetErr(&bytes.Buffer{})
 	root.SetArgs([]string{
@@ -76,7 +76,7 @@ func TestConfigCheckCmd_MissingPaths_ExitCode2(t *testing.T) {
 }
 
 func TestConfigCheckCmd_RequiresEnvAndApp(t *testing.T) {
-	root := cmd.NewRootCmd()
+	root := cmd.NewRootCmd("dev")
 	root.SetOut(&bytes.Buffer{})
 	root.SetErr(&bytes.Buffer{})
 	root.SetArgs([]string{
@@ -89,7 +89,7 @@ func TestConfigCheckCmd_RequiresEnvAndApp(t *testing.T) {
 }
 
 func TestConfigCheckCmd_FlatConfig_NoEnvApp(t *testing.T) {
-	root := cmd.NewRootCmd()
+	root := cmd.NewRootCmd("dev")
 	buf := &bytes.Buffer{}
 	root.SetOut(buf)
 	root.SetErr(&bytes.Buffer{})

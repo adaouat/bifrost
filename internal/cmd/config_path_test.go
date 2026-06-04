@@ -7,7 +7,7 @@ import (
 
 func TestResolveConfigPath_ExplicitFlag(t *testing.T) {
 	t.Setenv("BIFROST_FILE", "")
-	root := NewRootCmd()
+	root := NewRootCmd("dev")
 	if err := root.PersistentFlags().Set("config", "/custom/path.yml"); err != nil {
 		t.Fatalf("setting flag: %v", err)
 	}
@@ -25,7 +25,7 @@ func TestResolveConfigPath_XdgConfigExists(t *testing.T) {
 	if err := os.WriteFile(".config/bifrost.yml", []byte("x: 1\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	if got := resolveConfigPath(NewRootCmd()); got != ".config/bifrost.yml" {
+	if got := resolveConfigPath(NewRootCmd("dev")); got != ".config/bifrost.yml" {
 		t.Errorf("got %q, want .config/bifrost.yml", got)
 	}
 }
@@ -33,7 +33,7 @@ func TestResolveConfigPath_XdgConfigExists(t *testing.T) {
 func TestResolveConfigPath_FallbackToDotfile(t *testing.T) {
 	t.Chdir(t.TempDir())
 	t.Setenv("BIFROST_FILE", "")
-	if got := resolveConfigPath(NewRootCmd()); got != ".bifrost.yml" {
+	if got := resolveConfigPath(NewRootCmd("dev")); got != ".bifrost.yml" {
 		t.Errorf("got %q, want .bifrost.yml", got)
 	}
 }
