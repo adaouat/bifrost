@@ -9,7 +9,7 @@ before:
 builds:
   - id: bifrost
     main: ./cmd/bifrost/
-    binary: bifrost
+    binary: "bifrost_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     env:
       - CGO_ENABLED=0
     goos:
@@ -25,13 +25,16 @@ builds:
     ldflags:
       - -s -w -X main.Version={{ .Tag }}
 
+# Raw versioned binaries, no archive wrapper — the family-wide release model.
+# Asset name = bifrost_<version>_<os>_<arch>; checksums.txt covers the executable
+# users run. The explicit name_template (vs the format:binary default, which keys
+# off .Binary) keeps the name single across goreleaser versions. See forge
+# docs/guides/distribution.md.
 archives:
   - id: default
+    formats:
+      - binary
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    format_overrides:
-      - goos: windows
-        formats:
-          - zip
 
 checksum:
   name_template: checksums.txt
