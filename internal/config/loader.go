@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 	"io"
-	"os"
 
 	"github.com/adaouat/bifrost/internal/cmderr"
 	forgeconfig "github.com/adaouat/forge/config"
@@ -12,19 +11,15 @@ import (
 // Load reads and strictly parses a .bifrost.yml file at the given path.
 // Returns *cmderr.ExitError with code 2 if server references are invalid.
 func Load(path string) (*Config, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, fmt.Errorf("opening config file: %w", err)
-	}
-	defer func() { _ = f.Close() }()
-	cfg, err := Parse(f)
-	if err != nil {
+	var cfg Config
+	if err := forgeconfig.Load(path, &cfg); err != nil {
 		return nil, err
 	}
-	if errs := ValidateServerRefs(cfg); len(errs) > 0 {
+	applyDefaults(&cfg)
+	if errs := ValidateServerRefs(&cfg); len(errs) > 0 {
 		return nil, &cmderr.ExitError{Code: cmderr.Config, Message: errs.Error()}
 	}
-	return cfg, nil
+	return &cfg, nil
 }
 
 // IsFlat reports whether cfg has no environments defined.
@@ -78,7 +73,7 @@ func ValidateServerRefs(cfg *Config) forgeconfig.ValidationErrors {
 func Parse(r io.Reader) (*Config, error) {
 	var cfg Config
 	if err := forgeconfig.Decode(r, &cfg); err != nil {
-		return nil, fmt.Errorf("parsing config: %w", err)
+		return nil, err
 	}
 	applyDefaults(&cfg)
 	return &cfg, nil
