@@ -105,7 +105,12 @@ func TestConfigInitCmd_FlagWinsOverEnvVar(t *testing.T) {
 }
 
 func TestConfigInitCmd_AutoDestUsesConfigDir(t *testing.T) {
+	// Auto-dest discovery now uses forge's resolver (real os.Stat), so create a
+	// real .config/ dir in a temp cwd rather than injecting statFile.
+	t.Chdir(t.TempDir())
 	t.Setenv("BIFROST_FILE", "")
+	require.NoError(t, os.MkdirAll(".config", 0o755))
+
 	root := cmd.NewRootCmd()
 	root.SetOut(&bytes.Buffer{})
 	root.SetErr(&bytes.Buffer{})
@@ -116,16 +121,7 @@ func TestConfigInitCmd_AutoDestUsesConfigDir(t *testing.T) {
 		writtenPath = path
 		return nil
 	})
-	cmdutil.SetStatFile(func(name string) (os.FileInfo, error) {
-		if name == ".config" {
-			return nil, nil // directory exists
-		}
-		return nil, os.ErrNotExist
-	})
-	defer func() {
-		configcmd.SetInitWrite(nil)
-		cmdutil.SetStatFile(nil)
-	}()
+	defer configcmd.SetInitWrite(nil)
 
 	err := root.Execute()
 	require.NoError(t, err)

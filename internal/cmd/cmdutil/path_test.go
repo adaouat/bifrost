@@ -1,156 +1,70 @@
 package cmdutil
 
 import (
-	"errors"
 	"os"
 	"testing"
 )
 
-func TestResolvePath_ExplicitFlag(t *testing.T) {
-	t.Setenv("BIFROST_FILE", "")
-	orig := statFile
-	defer func() { statFile = orig }()
-	statFile = func(string) (os.FileInfo, error) {
-		t.Fatal("statFile must not be called when explicit path is given")
-		return nil, nil
-	}
-
-	got := ResolvePath("/custom/bifrost.yml")
-	if got != "/custom/bifrost.yml" {
-		t.Errorf("got %q, want /custom/bifrost.yml", got)
-	}
-}
-
-func TestResolvePath_EnvVarUsedWhenNoFlag(t *testing.T) {
+func TestResolvePath_FlagWins(t *testing.T) {
 	t.Setenv("BIFROST_FILE", "/env/bifrost.yml")
-	orig := statFile
-	defer func() { statFile = orig }()
-	statFile = func(string) (os.FileInfo, error) {
-		t.Fatal("statFile must not be called when BIFROST_FILE is set")
-		return nil, nil
-	}
-
-	got := ResolvePath("")
-	if got != "/env/bifrost.yml" {
-		t.Errorf("got %q, want /env/bifrost.yml", got)
-	}
-}
-
-func TestResolvePath_FlagWinsOverEnvVar(t *testing.T) {
-	t.Setenv("BIFROST_FILE", "/env/bifrost.yml")
-
-	got := ResolvePath("/flag/bifrost.yml")
-	if got != "/flag/bifrost.yml" {
+	if got := ResolvePath("/flag/bifrost.yml"); got != "/flag/bifrost.yml" {
 		t.Errorf("got %q, want /flag/bifrost.yml", got)
 	}
 }
 
-func TestResolvePath_EnvVarWinsOverAutoDiscovery(t *testing.T) {
+func TestResolvePath_EnvVar(t *testing.T) {
+	t.Chdir(t.TempDir())
 	t.Setenv("BIFROST_FILE", "/env/bifrost.yml")
-	orig := statFile
-	defer func() { statFile = orig }()
-	statFile = func(string) (os.FileInfo, error) {
-		t.Fatal("statFile must not be called when BIFROST_FILE is set")
-		return nil, nil
-	}
-
-	got := ResolvePath("")
-	if got != "/env/bifrost.yml" {
+	if got := ResolvePath(""); got != "/env/bifrost.yml" {
 		t.Errorf("got %q, want /env/bifrost.yml", got)
 	}
 }
 
-func TestResolvePath_EmptyEnvVarFallsThrough(t *testing.T) {
+func TestResolvePath_XdgDiscovered(t *testing.T) {
+	t.Chdir(t.TempDir())
 	t.Setenv("BIFROST_FILE", "")
-	orig := statFile
-	defer func() { statFile = orig }()
-	statFile = func(string) (os.FileInfo, error) { return nil, errors.New("not found") }
-
-	got := ResolvePath("")
-	if got != ".bifrost.yml" {
-		t.Errorf("got %q, want .bifrost.yml", got)
+	if err := os.MkdirAll(".config", 0o755); err != nil {
+		t.Fatal(err)
 	}
-}
-
-func TestResolvePath_WhitespaceOnlyEnvVarFallsThrough(t *testing.T) {
-	t.Setenv("BIFROST_FILE", "   ")
-	orig := statFile
-	defer func() { statFile = orig }()
-	statFile = func(string) (os.FileInfo, error) { return nil, errors.New("not found") }
-
-	got := ResolvePath("")
-	if got != ".bifrost.yml" {
-		t.Errorf("got %q, want .bifrost.yml", got)
+	if err := os.WriteFile(".config/bifrost.yml", []byte("x: 1\n"), 0o600); err != nil {
+		t.Fatal(err)
 	}
-}
-
-func TestResolvePath_XdgConfigUsedWhenExists(t *testing.T) {
-	t.Setenv("BIFROST_FILE", "")
-	orig := statFile
-	defer func() { statFile = orig }()
-	statFile = func(name string) (os.FileInfo, error) {
-		if name == ".config/bifrost.yml" {
-			return nil, nil
-		}
-		return nil, errors.New("not found")
-	}
-
-	got := ResolvePath("")
-	if got != ".config/bifrost.yml" {
+	if got := ResolvePath(""); got != ".config/bifrost.yml" {
 		t.Errorf("got %q, want .config/bifrost.yml", got)
 	}
 }
 
 func TestResolvePath_DotfileFallback(t *testing.T) {
+	t.Chdir(t.TempDir())
 	t.Setenv("BIFROST_FILE", "")
-	orig := statFile
-	defer func() { statFile = orig }()
-	statFile = func(string) (os.FileInfo, error) { return nil, errors.New("not found") }
-
-	got := ResolvePath("")
-	if got != ".bifrost.yml" {
+	if got := ResolvePath(""); got != ".bifrost.yml" {
 		t.Errorf("got %q, want .bifrost.yml", got)
 	}
 }
 
-func TestResolvePath_XdgWinsWhenBothFilesPresent(t *testing.T) {
+func TestResolveInitDest_EnvWins(t *testing.T) {
+	t.Chdir(t.TempDir())
+	t.Setenv("BIFROST_FILE", "/env/bifrost.yml")
+	if got := ResolveInitDest(); got != "/env/bifrost.yml" {
+		t.Errorf("got %q, want /env/bifrost.yml", got)
+	}
+}
+
+func TestResolveInitDest_ConfigDir(t *testing.T) {
+	t.Chdir(t.TempDir())
 	t.Setenv("BIFROST_FILE", "")
-	orig := statFile
-	defer func() { statFile = orig }()
-	statFile = func(name string) (os.FileInfo, error) {
-		// both files "exist"
-		return nil, nil
+	if err := os.MkdirAll(".config", 0o755); err != nil {
+		t.Fatal(err)
 	}
-
-	got := ResolvePath("")
-	if got != ".config/bifrost.yml" {
+	if got := ResolveInitDest(); got != ".config/bifrost.yml" {
 		t.Errorf("got %q, want .config/bifrost.yml", got)
 	}
 }
 
-func TestInitDest_ConfigDirExists(t *testing.T) {
-	orig := statFile
-	defer func() { statFile = orig }()
-	statFile = func(name string) (os.FileInfo, error) {
-		if name == ".config" {
-			return nil, nil
-		}
-		return nil, errors.New("not found")
-	}
-
-	got := InitDest()
-	if got != ".config/bifrost.yml" {
-		t.Errorf("got %q, want .config/bifrost.yml", got)
-	}
-}
-
-func TestInitDest_ConfigDirMissing(t *testing.T) {
-	orig := statFile
-	defer func() { statFile = orig }()
-	statFile = func(string) (os.FileInfo, error) { return nil, errors.New("not found") }
-
-	got := InitDest()
-	if got != ".bifrost.yml" {
-		t.Errorf("got %q, want .bifrost.yml", got)
+func TestStatFile_Injectable(t *testing.T) {
+	SetStatFile(func(string) (os.FileInfo, error) { return nil, os.ErrNotExist })
+	defer SetStatFile(nil)
+	if _, err := StatFile("anything"); err == nil {
+		t.Error("expected injected statFile to return its error")
 	}
 }

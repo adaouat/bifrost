@@ -3,12 +3,14 @@ package cmdutil
 import (
 	"os"
 	"strings"
+
+	forgeconfig "github.com/adaouat/forge/config"
 )
 
 var statFile = os.Stat
 
-// StatFile calls the current stat function. Callers outside the package use this
-// so the injectable statFile variable remains unexported.
+// StatFile calls the current stat function. config init uses it to check whether
+// the target file already exists; the injectable statFile keeps that testable.
 func StatFile(path string) (os.FileInfo, error) {
 	return statFile(path)
 }
@@ -23,23 +25,17 @@ func SetStatFile(fn func(string) (os.FileInfo, error)) {
 	}
 }
 
-// ResolvePath returns the config file path to use for reading.
-// Priority: explicit arg → BIFROST_FILE env var → .config/bifrost.yml → .bifrost.yml
+func resolver() forgeconfig.Resolver { return forgeconfig.Resolver{App: "bifrost"} }
+
+// ResolvePath returns the config file path to use for reading, via forge's
+// resolver: explicit arg → BIFROST_FILE → .config/bifrost.yml → .bifrost.yml.
 func ResolvePath(explicit string) string {
-	if explicit != "" {
-		return explicit
-	}
-	if env := strings.TrimSpace(os.Getenv("BIFROST_FILE")); env != "" {
-		return env
-	}
-	if _, err := statFile(".config/bifrost.yml"); err == nil {
-		return ".config/bifrost.yml"
-	}
-	return ".bifrost.yml"
+	path, _ := resolver().Resolve(explicit)
+	return path
 }
 
-// ResolveInitDest returns the write destination for config init when no --config flag is set.
-// Priority: BIFROST_FILE env var → InitDest (checks .config/ dir)
+// ResolveInitDest returns the write destination for config init when no --config
+// flag is set: BIFROST_FILE env var → InitDest.
 func ResolveInitDest() string {
 	if env := strings.TrimSpace(os.Getenv("BIFROST_FILE")); env != "" {
 		return env
@@ -47,11 +43,8 @@ func ResolveInitDest() string {
 	return InitDest()
 }
 
-// InitDest returns the path to write a new config file.
-// Checks for the .config/ directory (not the file) so it works before the file exists.
+// InitDest returns the path to write a new config file: .config/bifrost.yml if a
+// .config/ directory exists, else .bifrost.yml.
 func InitDest() string {
-	if _, err := statFile(".config"); err == nil {
-		return ".config/bifrost.yml"
-	}
-	return ".bifrost.yml"
+	return resolver().InitDest()
 }
