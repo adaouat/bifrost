@@ -156,6 +156,7 @@ func interactiveConfirm() func(cmd string) bool {
 			Title("Run interactive hook?").
 			Description(hookCmd).
 			Value(&ok).
+			WithTheme(tui.HuhTheme()).
 			Run(); err != nil {
 			return false
 		}

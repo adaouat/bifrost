@@ -81,6 +81,7 @@ func newActivateCmd() *cobra.Command {
 				if err := huh.NewConfirm().
 					Title(fmt.Sprintf("Release %q is already current. Re-activate?", releaseName)).
 					Value(&ok).
+					WithTheme(tui.HuhTheme()).
 					Run(); err != nil || !ok {
 					return fmt.Errorf("re-activation cancelled")
 				}
@@ -162,6 +163,7 @@ func selectRelease(releasesRoot string) (string, error) {
 		Title("Which release would you like to activate?").
 		Options(options...).
 		Value(&selected).
+		WithTheme(tui.HuhTheme()).
 		Run(); err != nil {
 		return "", fmt.Errorf("release selection: %w", err)
 	}
@@ -179,6 +181,7 @@ func releaseInteractiveConfirm() func(cmd string) bool {
 			Title("Run interactive hook?").
 			Description(hookCmd).
 			Value(&ok).
+			WithTheme(tui.HuhTheme()).
 			Run(); err != nil {
 			return false
 		}
