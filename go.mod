@@ -4,7 +4,6 @@ go 1.26.4
 
 require (
 	charm.land/bubbles/v2 v2.1.0
-	charm.land/fang/v2 v2.0.1
 	charm.land/huh/v2 v2.0.3
 	charm.land/lipgloss/v2 v2.0.2
 	charm.land/log/v2 v2.0.0
@@ -19,6 +18,7 @@ require (
 )
 
 require (
+	charm.land/fang/v2 v2.0.1 // indirect
 	github.com/charmbracelet/x/term v0.2.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
@@ -29,7 +29,7 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/STARRY-S/zip v0.2.3 // indirect
-	github.com/adaouat/forge v0.7.0
+	github.com/adaouat/forge v0.8.0
 	github.com/andybalholm/brotli v1.2.0 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/bodgit/plumbing v1.3.0 // indirect

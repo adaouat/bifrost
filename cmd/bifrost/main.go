@@ -4,9 +4,9 @@ import (
 	"context"
 	"os"
 
-	"charm.land/fang/v2"
-
 	"github.com/adaouat/bifrost/internal/cmd"
+	"github.com/adaouat/bifrost/internal/tui"
+	"github.com/adaouat/forge/cli"
 	forgeexit "github.com/adaouat/forge/exitcode"
 )
 
@@ -14,7 +14,6 @@ import (
 var Version = "dev"
 
 func main() {
-	err := fang.Execute(context.Background(), cmd.NewRootCmd(Version),
-		fang.WithVersion(Version), fang.WithColorSchemeFunc(colorScheme))
+	err := cli.Run(context.Background(), cmd.NewRootCmd(Version), Version, tui.Accent())
 	os.Exit(forgeexit.Resolve(err))
 }
