@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.12.0](https://github.com/adaouat/bifrost/compare/v0.11.0..v0.12.0) - 2026-06-05
+
+### 🚀 Features
+
+- *(cmd)* Apply the Aurora fang theme (forge v0.7.0) - ([9f88bff](https://github.com/adaouat/bifrost/commit/9f88bff9559ec0ac5a1831fd2c8737f8395d4120)) by @bchatard
+
+
+### 💼 Other
+
+- *(deps)* Align cobra to 1.10.2 - ([6288d98](https://github.com/adaouat/bifrost/commit/6288d987a69fc7b4501193918eaf077b189bb4b9)) by @bchatard
+
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Use forge's release-setup composite action - ([973d533](https://github.com/adaouat/bifrost/commit/973d5332428912163e3f250bfbf45dc35810beab)) by @bchatard
+
 ## [0.11.0](https://github.com/adaouat/bifrost/compare/v0.10.0..v0.11.0) - 2026-06-04
 
 ### 🚀 Features
