@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.13.0](https://github.com/adaouat/bifrost/compare/v0.12.0..v0.13.0) - 2026-06-05
+
+### 🚀 Features
+
+- *(cmd)* Adopt forge cli.Run + theme (drop direct fang) - ([de721ec](https://github.com/adaouat/bifrost/commit/de721ec7e6f7f17c1a77ee2bf2a2aa85e865b1a5)) by @bchatard
+
+- *(cmd)* Brand huh prompts with the Aurora theme - ([0669ca5](https://github.com/adaouat/bifrost/commit/0669ca5e85c080d0b02bee83ae27ef97ab2e97b8)) by @bchatard
+
 ## [0.12.0](https://github.com/adaouat/bifrost/compare/v0.11.0..v0.12.0) - 2026-06-05
 
 ### 🚀 Features
