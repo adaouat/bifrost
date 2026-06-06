@@ -167,11 +167,14 @@ func loadKey(path string) (ssh.Signer, error) {
 }
 
 func knownHostsCallback() (ssh.HostKeyCallback, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return nil, err
+	path := os.Getenv("BIFROST_KNOWN_HOSTS")
+	if path == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return nil, err
+		}
+		path = filepath.Join(home, ".ssh", "known_hosts")
 	}
-	path := filepath.Join(home, ".ssh", "known_hosts")
 	cb, err := knownhosts.New(path)
 	if err != nil {
 		return nil, fmt.Errorf("loading known_hosts %s: %w", path, err)

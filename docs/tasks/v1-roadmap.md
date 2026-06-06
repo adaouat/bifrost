@@ -74,15 +74,15 @@ Deliverable: transport package compiles and unit tests pass. No integration yet.
 
 Wire the transport layer into the `deploy` command for the single-server case.
 
-- [ ] `internal/config/flatgen.go` — flat config generator: merge global < env < app,
+- [x] `internal/config/flatgen.go` — flat config generator: merge global < env < app,
   strip `environments:` and `servers:` keys, write YAML
-- [ ] `internal/cmd/deploy.go` — client mode branch:
+- [x] `internal/cmd/deploy.go` — client mode branch:
   - Generate release name once (before server loop)
   - For each server: upload staging dir, exec agent, stream JSON → render, cleanup
-- [ ] JSON event stream reader: read agent stdout line by line, decode events, forward to
+- [x] JSON event stream reader: read agent stdout line by line, decode events, forward to
   existing TUI renderer with server header prefix
-- [ ] `--output json` re-emit with added `"server"` field
-- [ ] Integration test: testcontainers Linux container with OpenSSH server, deploy via
+- [x] `--output json` re-emit with added `"server"` field
+- [x] Integration test: testcontainers Linux container with OpenSSH server, deploy via
   client mode, assert filesystem state
 
 Spec references: [Spec 07](../specs/07-ssh-transport.md),

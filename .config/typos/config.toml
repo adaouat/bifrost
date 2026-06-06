@@ -1,6 +1,6 @@
 [files]
 ignore-vcs = true
-extend-exclude = ["CHANGELOG.md"]
+extend-exclude = ["CHANGELOG.md", "testdata/ssh/*"]
 
 [default.extend-words]
 Ratatui = "Ratatui"

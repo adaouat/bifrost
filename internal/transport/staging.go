@@ -1,6 +1,7 @@
 package transport
 
 import (
+	"bytes"
 	"fmt"
 	"path"
 
@@ -37,6 +38,16 @@ func NewStaging(client *Client, base string) (*Staging, error) {
 func (s *Staging) Upload(localPath, remoteName string) (string, error) {
 	remotePath := path.Join(s.Dir, remoteName)
 	if err := s.sftp.Upload(localPath, remotePath); err != nil {
+		return "", err
+	}
+	return remotePath, nil
+}
+
+// UploadBytes writes data into the staging directory under remoteName without
+// requiring a local file on disk. Returns the full remote path.
+func (s *Staging) UploadBytes(data []byte, remoteName string) (string, error) {
+	remotePath := path.Join(s.Dir, remoteName)
+	if err := s.sftp.UploadReader(bytes.NewReader(data), remotePath); err != nil {
 		return "", err
 	}
 	return remotePath, nil

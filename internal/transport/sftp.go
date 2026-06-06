@@ -22,6 +22,19 @@ func (c *Client) NewSFTP() (*SFTP, error) {
 	return &SFTP{client: s}, nil
 }
 
+// UploadReader copies r to remotePath on the server.
+func (s *SFTP) UploadReader(r io.Reader, remotePath string) error {
+	dst, err := s.client.Create(remotePath)
+	if err != nil {
+		return fmt.Errorf("creating remote %s: %w", remotePath, err)
+	}
+	defer func() { _ = dst.Close() }()
+	if _, err := io.Copy(dst, r); err != nil {
+		return fmt.Errorf("uploading to %s: %w", remotePath, err)
+	}
+	return nil
+}
+
 // Upload copies a local file to remotePath on the server.
 func (s *SFTP) Upload(localPath, remotePath string) error {
 	src, err := os.Open(localPath)
