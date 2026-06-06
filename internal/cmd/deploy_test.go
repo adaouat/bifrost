@@ -24,7 +24,10 @@ func TestDeployCmd_HasAgentBinaryFlag(t *testing.T) {
 	assert.NotNil(t, deploy.Flags().Lookup("agent-binary"))
 }
 
-func TestDeployCmd_ClientMode_NotYetImplemented(t *testing.T) {
+func TestDeployCmd_ClientMode_AttemptsSSHConnection(t *testing.T) {
+	// Client mode is now implemented: it tries to SSH to the configured server.
+	// With no real server at 192.168.1.10, it fails with a Runtime (exit code 3)
+	// SSH connection error rather than the old Usage (exit code 1) stub error.
 	root := cmd.NewRootCmd("dev")
 	root.SetOut(&bytes.Buffer{})
 	root.SetErr(&bytes.Buffer{})
@@ -41,8 +44,7 @@ func TestDeployCmd_ClientMode_NotYetImplemented(t *testing.T) {
 
 	var exitErr *cmderr.ExitError
 	require.ErrorAs(t, err, &exitErr)
-	assert.Equal(t, 1, exitErr.Code)
-	assert.Contains(t, exitErr.Message, "client mode")
+	assert.Equal(t, 3, exitErr.Code)
 }
 
 func TestDeployCmd_FlatConfig_RequiresNoEnvApp(t *testing.T) {

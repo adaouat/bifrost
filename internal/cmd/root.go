@@ -81,7 +81,7 @@ func NewRootCmd(version string) *cobra.Command {
 	root.SetVersionTemplate(tui.VersionTemplate())
 
 	root.AddCommand(config.NewConfigCmd())
-	root.AddCommand(newDeployCmd())
+	root.AddCommand(newDeployCmd(version))
 	root.AddCommand(release.NewReleaseCmd())
 
 	f := root.PersistentFlags()

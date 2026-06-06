@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"charm.land/huh/v2"
 	"github.com/spf13/cobra"
@@ -17,7 +18,7 @@ import (
 	forgeui "github.com/adaouat/forge/ui"
 )
 
-func newDeployCmd() *cobra.Command {
+func newDeployCmd(version string) *cobra.Command {
 	var env, app, artifact, releaseName, agentBinary string
 	var init_ bool
 
@@ -55,7 +56,10 @@ func newDeployCmd() *cobra.Command {
 			}
 
 			if len(merged.Servers) > 0 {
-				return &ExitError{Code: Usage, Message: "client mode not yet implemented (servers configured)"}
+				if releaseName == "" {
+					releaseName = time.Now().UTC().Format("20060102-150405")
+				}
+				return runClientDeploy(cmd, version, merged, cfg, env, app, artifact, releaseName, agentBinary)
 			}
 
 			if err := ensureRoots(merged.ReleasesRoot, merged.SharedRoot, init_); err != nil {

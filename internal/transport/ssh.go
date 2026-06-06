@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"path/filepath"
@@ -77,6 +78,32 @@ func (c *Client) Exec(cmd string) (*ExecResult, error) {
 
 	runErr := session.Run(cmd)
 	res := &ExecResult{Stdout: &stdout, Stderr: &stderr}
+	if runErr == nil {
+		return res, nil
+	}
+	if exitErr, ok := errors.AsType[*ssh.ExitError](runErr); ok {
+		res.ExitCode = exitErr.ExitStatus()
+		return res, nil
+	}
+	return res, fmt.Errorf("running %q: %w", cmd, runErr)
+}
+
+// ExecStream runs cmd on the remote host, streaming stdout to out as data
+// arrives. Stderr is captured and returned in the ExecResult. ExecStream
+// blocks until the remote command exits.
+func (c *Client) ExecStream(cmd string, stdout io.Writer) (*ExecResult, error) {
+	session, err := c.conn.NewSession()
+	if err != nil {
+		return nil, fmt.Errorf("opening ssh session: %w", err)
+	}
+	defer func() { _ = session.Close() }()
+
+	var stderr bytes.Buffer
+	session.Stdout = stdout
+	session.Stderr = &stderr
+
+	runErr := session.Run(cmd)
+	res := &ExecResult{Stdout: &bytes.Buffer{}, Stderr: &stderr}
 	if runErr == nil {
 		return res, nil
 	}
