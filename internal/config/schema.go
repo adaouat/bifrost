@@ -69,10 +69,10 @@ type ServerConfig struct {
 // Config is the top-level structure parsed from a .bifrost.yml file.
 type Config struct {
 	Strategy     string                  `yaml:"strategy"     json:"strategy"`
-	Servers      map[string]ServerConfig `yaml:"servers"     json:"servers,omitempty"`
+	Servers      map[string]ServerConfig `yaml:"servers,omitempty"     json:"servers,omitempty"`
 	Paths        Paths                   `yaml:"paths"        json:"paths"`
 	Settings     Settings                `yaml:"settings"     json:"settings"`
 	Variables    map[string]string       `yaml:"variables"    json:"variables,omitempty"`
 	Hooks        Hooks                   `yaml:"hooks"        json:"hooks,omitempty"`
-	Environments map[string]Environment  `yaml:"environments" json:"environments,omitempty"`
+	Environments map[string]Environment  `yaml:"environments,omitempty" json:"environments,omitempty"`
 }

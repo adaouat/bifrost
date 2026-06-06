@@ -15,12 +15,12 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.42.0
 	golang.org/x/crypto v0.52.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
 	charm.land/fang/v2 v2.0.1 // indirect
 	github.com/charmbracelet/x/term v0.2.2 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 require (
