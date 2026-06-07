@@ -97,8 +97,8 @@ over SSH to a single server.
 
 Extend M14 to the multi-server sequential loop.
 
-- [ ] Server loop in `deploy` iterates over all resolved servers sequentially
-- [ ] Failure on any server skips remaining servers; exits with agent's exit code
+- [x] Server loop in `deploy` iterates over all resolved servers sequentially
+- [x] Failure on any server skips remaining servers; exits with agent's exit code
 - [ ] Human / plain mode: server header line before each server's output block
 - [ ] Integration test: two containers, sequential deploy, assert both filesystems
 

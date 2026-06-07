@@ -15,15 +15,21 @@ import (
 	forgeui "github.com/adaouat/forge/ui"
 )
 
+// deployToServerFn is the per-server deploy step, replaced in tests to verify
+// the loop's sequencing and failure handling without a real SSH connection.
+var deployToServerFn = deployToServer
+
 // runClientDeploy executes a deploy in client mode: for each resolved server,
 // it uploads the agent binary, flat config, and artifact via SFTP, execs the
 // agent with --output json, streams the event output back, then cleans up.
+// Servers are processed sequentially; a failure on any server skips the
+// remaining ones and the failure is returned as-is, preserving the agent's exit code.
 func runClientDeploy(cmd *cobra.Command, version string, merged *config.MergedConfig, cfg *config.Config, env, app, artifact, releaseName, agentBinary string) error {
 	out := cmd.OutOrStdout()
 	mode := forgeui.ParseMode(outputMode(cmd))
 
 	for _, srv := range merged.Servers {
-		if err := deployToServer(version, merged, cfg, env, app, artifact, releaseName, agentBinary, srv, mode, out); err != nil {
+		if err := deployToServerFn(version, merged, cfg, env, app, artifact, releaseName, agentBinary, srv, mode, out); err != nil {
 			return err
 		}
 	}
