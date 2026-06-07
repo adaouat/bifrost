@@ -21,6 +21,20 @@ func TestDeployHeader(t *testing.T) {
 	assert.Contains(t, result, "└")
 }
 
+func TestServerHeader(t *testing.T) {
+	result := tui.ServerHeader(forgeui.Human, "web-01", "192.168.1.10")
+
+	assert.Contains(t, result, "web-01")
+	assert.Contains(t, result, "192.168.1.10")
+	assert.Contains(t, result, "──")
+}
+
+func TestServerHeader_Plain(t *testing.T) {
+	result := tui.ServerHeader(forgeui.Plain, "web-01", "192.168.1.10")
+
+	assert.Contains(t, result, "── web-01 (192.168.1.10) ──")
+}
+
 func TestPrintSummary(t *testing.T) {
 	var buf bytes.Buffer
 	tui.PrintSummary(forgeui.Human, &buf, 4300*time.Millisecond, "20260520-141500")

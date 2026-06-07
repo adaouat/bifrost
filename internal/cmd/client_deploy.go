@@ -28,6 +28,10 @@ func runClientDeploy(cmd *cobra.Command, version string, merged *config.MergedCo
 	out := cmd.OutOrStdout()
 	mode := forgeui.ParseMode(outputMode(cmd))
 
+	if mode != forgeui.JSON {
+		_, _ = fmt.Fprint(out, tui.DeployHeader(mode, env, app, releaseName))
+	}
+
 	for _, srv := range merged.Servers {
 		if err := deployToServerFn(version, merged, cfg, env, app, artifact, releaseName, agentBinary, srv, mode, out); err != nil {
 			return err
@@ -38,7 +42,7 @@ func runClientDeploy(cmd *cobra.Command, version string, merged *config.MergedCo
 
 func deployToServer(version string, _ *config.MergedConfig, cfg *config.Config, env, app, artifact, releaseName, agentBinary string, srv config.ResolvedServer, mode forgeui.Mode, out io.Writer) error {
 	if mode != forgeui.JSON {
-		_, _ = fmt.Fprint(out, tui.DeployHeader(mode, env, app, releaseName))
+		_, _ = fmt.Fprint(out, tui.ServerHeader(mode, srv.Name, srv.Host))
 	}
 
 	client, err := transport.Connect(srv)

@@ -3,6 +3,7 @@ package cmd
 import (
 	"bytes"
 	"io"
+	"strings"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -34,6 +35,7 @@ func TestRunClientDeploy_SequentialLoop(t *testing.T) {
 	err := runClientDeploy(root, "dev", merged, &config.Config{}, "prod", "web", "artifact.tar.gz", "20260601-120000", "")
 	require.NoError(t, err)
 	assert.Equal(t, []string{"web-01", "web-02", "web-03"}, called, "servers must be deployed in resolved order")
+	assert.Equal(t, 1, strings.Count(out.String(), "Environment"), "deploy header must be printed once, not per server")
 }
 
 func TestRunClientDeploy_FailureSkipsRemainingServers(t *testing.T) {
