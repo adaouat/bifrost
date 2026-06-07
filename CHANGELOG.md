@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.14.0](https://github.com/adaouat/bifrost/compare/v0.13.0..v0.14.0) - 2026-06-07
+
+### 🚀 Features
+
+- *(cmd)* Implement SSH client mode deploy - ([65e37c3](https://github.com/adaouat/bifrost/commit/65e37c3fd714fa843c530b3b97392a7dacc7e2bb)) by @bchatard
+
+- *(cmd)* M14 — integration test for SSH client mode deploy - ([2c3c6d7](https://github.com/adaouat/bifrost/commit/2c3c6d781a12b48a299ea96f77a4af5321055179)) by @bchatard
+
+- *(config)* Add flat config generator for SSH client mode - ([660adf2](https://github.com/adaouat/bifrost/commit/660adf29c4bdc12d028f7e39638b4874034b3cc6)) by @bchatard
+
+
+### 🐛 Bug Fixes
+
+- Readable --help usage block (bump forge to v0.9.0) - ([674f9ef](https://github.com/adaouat/bifrost/commit/674f9eff6c99d3e1b523908e8a93c402e19cfdcd)) by @bchatard
+
 ## [0.13.0](https://github.com/adaouat/bifrost/compare/v0.12.0..v0.13.0) - 2026-06-05
 
 ### 🚀 Features
