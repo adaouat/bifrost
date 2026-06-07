@@ -100,7 +100,7 @@ Extend M14 to the multi-server sequential loop.
 - [x] Server loop in `deploy` iterates over all resolved servers sequentially
 - [x] Failure on any server skips remaining servers; exits with agent's exit code
 - [x] Human / plain mode: server header line before each server's output block
-- [ ] Integration test: two containers, sequential deploy, assert both filesystems
+- [x] Integration test: two containers, sequential deploy, assert both filesystems
 
 Spec references: [Spec 08](../specs/08-multi-server.md).
 

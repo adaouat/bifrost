@@ -122,21 +122,36 @@ func (s *SSHContainer) Exec(ctx context.Context, cmd []string) (ExecResult, erro
 // WriteKnownHosts generates a known_hosts file for this container using the
 // given host public key and writes it to /tmp. Returns the file path.
 func (s *SSHContainer) WriteKnownHosts(hostPubKeyPath string) (string, error) {
-	pubKeyBytes, err := os.ReadFile(hostPubKeyPath)
-	if err != nil {
-		return "", fmt.Errorf("reading host public key: %w", err)
+	return WriteKnownHosts([]*SSHContainer{s}, []string{hostPubKeyPath})
+}
+
+// WriteKnownHosts builds a known_hosts file covering each given SSH
+// container, matched by index with hostPubKeyPaths, and writes it to /tmp.
+// Returns the file path. Used by tests connecting to multiple containers
+// over a single BIFROST_KNOWN_HOSTS file.
+func WriteKnownHosts(containers []*SSHContainer, hostPubKeyPaths []string) (string, error) {
+	if len(containers) != len(hostPubKeyPaths) {
+		return "", fmt.Errorf("containers and host public keys must have the same length")
 	}
 
-	pk, _, _, _, err := ssh.ParseAuthorizedKey(pubKeyBytes)
-	if err != nil {
-		return "", fmt.Errorf("parsing host public key: %w", err)
-	}
+	var buf bytes.Buffer
+	for i, c := range containers {
+		pubKeyBytes, err := os.ReadFile(hostPubKeyPaths[i])
+		if err != nil {
+			return "", fmt.Errorf("reading host public key: %w", err)
+		}
 
-	addr := fmt.Sprintf("[%s]:%s", s.Host, s.Port)
-	line := knownhosts.Line([]string{addr}, pk)
+		pk, _, _, _, err := ssh.ParseAuthorizedKey(pubKeyBytes)
+		if err != nil {
+			return "", fmt.Errorf("parsing host public key: %w", err)
+		}
+
+		addr := fmt.Sprintf("[%s]:%s", c.Host, c.Port)
+		buf.WriteString(knownhosts.Line([]string{addr}, pk) + "\n")
+	}
 
 	path := filepath.Join("/tmp", "bifrost-test-known-hosts")
-	if err := os.WriteFile(path, []byte(line+"\n"), 0o600); err != nil {
+	if err := os.WriteFile(path, buf.Bytes(), 0o600); err != nil {
 		return "", fmt.Errorf("writing known_hosts: %w", err)
 	}
 	return path, nil
