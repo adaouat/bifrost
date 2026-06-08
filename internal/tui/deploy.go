@@ -49,6 +49,26 @@ func PrintDetail(mode forgeui.Mode, out io.Writer, label string) {
 	_, _ = fmt.Fprintf(out, "      %s %s\n", dash, label)
 }
 
+// PrintActionHeader writes a section title for a multi-server release action,
+// e.g. "\n  Rolling back prod › web\n\n" (spec 08).
+func PrintActionHeader(mode forgeui.Mode, out io.Writer, action, env, app string) {
+	title := fmt.Sprintf("%s %s › %s", action, env, app)
+	if mode.IsHuman() {
+		title = PrimaryStyle.Render(title)
+	}
+	_, _ = fmt.Fprintf(out, "\n  %s\n\n", title)
+}
+
+// PrintServerResult writes a one-line per-server result for activate/rollback
+// summaries, e.g. "  web-01  ✔  Activated 20260601-120000" (spec 08).
+func PrintServerResult(mode forgeui.Mode, out io.Writer, name, message string) {
+	check := "✔"
+	if mode.IsHuman() {
+		check = PrimaryStyle.Render(check)
+	}
+	_, _ = fmt.Fprintf(out, "  %s  %s  %s\n", name, check, message)
+}
+
 // PrintSummary writes the final deploy summary line to out.
 func PrintSummary(mode forgeui.Mode, out io.Writer, elapsed time.Duration, release string) {
 	rel := release

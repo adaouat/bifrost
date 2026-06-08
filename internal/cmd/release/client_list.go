@@ -40,30 +40,9 @@ func releaseListOnServer(version string, cfg *config.Config, env, app, agentBina
 		_, _ = fmt.Fprint(out, tui.ServerHeader(mode, srv.Name, srv.Host))
 	}
 
-	client, remoteAgent, remoteConfig, cleanup, err := stageAgentSession(version, cfg, env, app, agentBinary, srv)
+	entries, err := fetchReleaseEntries(version, cfg, env, app, agentBinary, srv)
 	if err != nil {
 		return err
-	}
-	defer cleanup()
-
-	agentCmd := fmt.Sprintf("%s release list --output json --config %s --env %s --app %s",
-		remoteAgent, remoteConfig, env, app)
-
-	res, err := client.Exec(agentCmd)
-	if err != nil {
-		return fmt.Errorf("agent exec on %s: %w", srv.Name, err)
-	}
-	if res.ExitCode != 0 {
-		msg := res.Stderr.String()
-		if msg == "" {
-			msg = fmt.Sprintf("agent exited with code %d on %s", res.ExitCode, srv.Name)
-		}
-		return &cmderr.ExitError{Code: res.ExitCode, Message: msg}
-	}
-
-	var entries []releaseEntry
-	if err := json.Unmarshal(res.Stdout.Bytes(), &entries); err != nil {
-		return fmt.Errorf("parsing release list from %s: %w", srv.Name, err)
 	}
 
 	if mode == forgeui.JSON {
@@ -82,6 +61,37 @@ func releaseListOnServer(version string, cfg *config.Config, env, app, agentBina
 	}
 	renderReleaseList(out, env, app, releases, active)
 	return nil
+}
+
+// fetchReleaseEntries stages the agent on srv, runs `release list --output json`,
+// and returns the parsed release entries.
+func fetchReleaseEntries(version string, cfg *config.Config, env, app, agentBinary string, srv config.ResolvedServer) ([]releaseEntry, error) {
+	client, remoteAgent, remoteConfig, cleanup, err := stageAgentSession(version, cfg, env, app, agentBinary, srv)
+	if err != nil {
+		return nil, err
+	}
+	defer cleanup()
+
+	agentCmd := fmt.Sprintf("%s release list --output json --config %s --env %s --app %s",
+		remoteAgent, remoteConfig, env, app)
+
+	res, err := client.Exec(agentCmd)
+	if err != nil {
+		return nil, fmt.Errorf("agent exec on %s: %w", srv.Name, err)
+	}
+	if res.ExitCode != 0 {
+		msg := res.Stderr.String()
+		if msg == "" {
+			msg = fmt.Sprintf("agent exited with code %d on %s", res.ExitCode, srv.Name)
+		}
+		return nil, &cmderr.ExitError{Code: res.ExitCode, Message: msg}
+	}
+
+	var entries []releaseEntry
+	if err := json.Unmarshal(res.Stdout.Bytes(), &entries); err != nil {
+		return nil, fmt.Errorf("parsing release list from %s: %w", srv.Name, err)
+	}
+	return entries, nil
 }
 
 // stageAgentSession connects to srv, resolves and uploads the agent binary and

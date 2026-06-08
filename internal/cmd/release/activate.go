@@ -19,7 +19,7 @@ import (
 	"github.com/adaouat/bifrost/internal/tui"
 )
 
-func newActivateCmd() *cobra.Command {
+func newActivateCmd(version string) *cobra.Command {
 	var env, app, releaseName, agentBinary string
 	var noConfirm bool
 
@@ -44,6 +44,10 @@ func newActivateCmd() *cobra.Command {
 			}
 			if errs := config.Validate(merged); len(errs) > 0 {
 				return &cmderr.ExitError{Code: cmderr.Config, Message: errs.Error()}
+			}
+
+			if len(merged.Servers) > 0 {
+				return runClientReleaseActivate(cmd, version, merged, cfg, env, app, releaseName, agentBinary)
 			}
 
 			if releaseName == "" {

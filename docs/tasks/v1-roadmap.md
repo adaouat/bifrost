@@ -114,11 +114,11 @@ Port `release list`, `release activate`, and `release rollback` to client mode.
 
 - [x] `release list` — SSH to each server, render per-server section (human) or events
   with `"server"` field (JSON)
-- [ ] `release activate` — non-interactive path: `--release <name>` runs activate on all
+- [x] `release activate` — non-interactive path: `--release <name>` runs activate on all
   servers; interactive path: query release lists → local huh multi-select form (one select
   per server) → run activate per selection
 - [ ] `release rollback` — SSH to each server, run rollback, render per-server result
-- [ ] Non-TTY guard for `release activate` without `--release` (exit code 1)
+- [x] Non-TTY guard for `release activate` without `--release` (exit code 1)
 - [ ] Integration tests for each command (single-server and multi-server)
 
 Spec references: [Spec 08](../specs/08-multi-server.md).

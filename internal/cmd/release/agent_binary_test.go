@@ -10,7 +10,7 @@ import (
 func TestSSHCapableCommands_HaveAgentBinaryFlag(t *testing.T) {
 	cmds := map[string]*cobra.Command{
 		"list":     newListCmd("dev"),
-		"activate": newActivateCmd(),
+		"activate": newActivateCmd("dev"),
 		"rollback": newRollbackCmd(),
 	}
 	for name, c := range cmds {
