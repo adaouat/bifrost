@@ -41,8 +41,8 @@ github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERo
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
 github.com/STARRY-S/zip v0.2.3 h1:luE4dMvRPDOWQdeDdUxUoZkzUIpTccdKdhHHsQJ1fm4=
 github.com/STARRY-S/zip v0.2.3/go.mod h1:lqJ9JdeRipyOQJrYSOtpNAiaesFO6zVDsE8GIGFaoSk=
-github.com/adaouat/forge v0.9.0 h1:R3c7MXU6DyVPD81dlVDHYijYeNAdMfBjNY8I6P1iAJM=
-github.com/adaouat/forge v0.9.0/go.mod h1:WO06OURgXqbbKgbsVHyjumWtdJf8B3hooUsEEC4/oPE=
+github.com/adaouat/forge v0.11.0 h1:0exAxCcXV0h1m3bIr/uNKgDIpO9XoLecdwGGdhmr6h4=
+github.com/adaouat/forge v0.11.0/go.mod h1:zTeKnXtW0ynb9UP1kD0zWm1AxAvhFJo5L47ICWEsPKo=
 github.com/andybalholm/brotli v1.2.0 h1:ukwgCxwYrmACq68yiUqwIWnGY0cTPox/M94sVwToPjQ=
 github.com/andybalholm/brotli v1.2.0/go.mod h1:rzTDkvFWvIrjDXZHkuS16NPggd91W3kUSvPlQ1pLaKY=
 github.com/atotto/clipboard v0.1.4 h1:EH0zSVneZPSuFR11BlR9YppQTVDbh5+16AmcJi4g1z4=
