@@ -11,7 +11,7 @@ func TestSSHCapableCommands_HaveAgentBinaryFlag(t *testing.T) {
 	cmds := map[string]*cobra.Command{
 		"list":     newListCmd("dev"),
 		"activate": newActivateCmd("dev"),
-		"rollback": newRollbackCmd(),
+		"rollback": newRollbackCmd("dev"),
 	}
 	for name, c := range cmds {
 		assert.NotNilf(t, c.Flags().Lookup("agent-binary"), "%s release command missing --agent-binary flag", name)

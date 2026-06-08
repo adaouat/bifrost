@@ -117,7 +117,7 @@ Port `release list`, `release activate`, and `release rollback` to client mode.
 - [x] `release activate` — non-interactive path: `--release <name>` runs activate on all
   servers; interactive path: query release lists → local huh multi-select form (one select
   per server) → run activate per selection
-- [ ] `release rollback` — SSH to each server, run rollback, render per-server result
+- [x] `release rollback` — SSH to each server, run rollback, render per-server result
 - [x] Non-TTY guard for `release activate` without `--release` (exit code 1)
 - [ ] Integration tests for each command (single-server and multi-server)
 

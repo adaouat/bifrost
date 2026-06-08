@@ -12,9 +12,10 @@ import (
 	"github.com/adaouat/bifrost/internal/config"
 	"github.com/adaouat/bifrost/internal/hooks"
 	"github.com/adaouat/bifrost/internal/strategy/atomic"
+	"github.com/adaouat/bifrost/internal/tui"
 )
 
-func newRollbackCmd() *cobra.Command {
+func newRollbackCmd(version string) *cobra.Command {
 	var env, app, agentBinary string
 
 	cmd := &cobra.Command{
@@ -38,6 +39,10 @@ func newRollbackCmd() *cobra.Command {
 			}
 			if errs := config.Validate(merged); len(errs) > 0 {
 				return &cmderr.ExitError{Code: cmderr.Config, Message: errs.Error()}
+			}
+
+			if len(merged.Servers) > 0 {
+				return runClientReleaseRollback(cmd, version, merged, cfg, env, app, agentBinary)
 			}
 
 			releases, active, err := listReleases(merged.ReleasesRoot)
@@ -81,6 +86,11 @@ func newRollbackCmd() *cobra.Command {
 
 			if err := hooks.RunInteractive(hookRunner, merged.Hooks.PostEnableRelease, hookData, releaseDir, cmd.OutOrStdout(), confirmFn); err != nil {
 				return fmt.Errorf("post_enable_release hooks: %w", err)
+			}
+
+			if mode, _ := cmd.Root().PersistentFlags().GetString("output"); mode == "json" {
+				emit := tui.NewJSONEmitter(cmd.OutOrStdout())
+				emit.Emit(map[string]any{"event": "rollback", "release": target, "status": "done"})
 			}
 
 			return nil

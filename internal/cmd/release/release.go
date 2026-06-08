@@ -11,7 +11,7 @@ func NewReleaseCmd(version string) *cobra.Command {
 	cmd.AddCommand(newInitCmd())
 	cmd.AddCommand(newListCmd(version))
 	cmd.AddCommand(newActivateCmd(version))
-	cmd.AddCommand(newRollbackCmd())
+	cmd.AddCommand(newRollbackCmd(version))
 
 	return cmd
 }

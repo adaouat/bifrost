@@ -146,6 +146,49 @@ func TestReleaseRollbackCmd_SwitchesToPrevious(t *testing.T) {
 	assert.Equal(t, "/var/releases/r1", res.Output, "current should point to r1 after rollback")
 }
 
+func TestReleaseRollbackCmd_JSONOutput(t *testing.T) {
+	ctx := context.Background()
+	c := testutil.NewContainer(ctx, t, bifrostBin)
+
+	cfg, err := os.ReadFile("../../testdata/bifrost-deploy-int-test.yml")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, cfg, "/tmp/bifrost.yml", 0o644))
+
+	artifact, err := os.ReadFile("../../testdata/release.tar.gz")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, artifact, "/tmp/release.tar.gz", 0o644))
+
+	for _, name := range []string{"r1", "r2"} {
+		result, err := c.RunBifrost(ctx,
+			"deploy",
+			"--config", "/tmp/bifrost.yml",
+			"--env", "test",
+			"--app", "app",
+			"--artifact", "/tmp/release.tar.gz",
+			"--release-name", name,
+			"--init",
+		)
+		require.NoError(t, err)
+		assert.Equal(t, 0, result.ExitCode, "deploy %s:\n%s", name, result.Output)
+	}
+
+	result, err := c.RunBifrost(ctx,
+		"release", "rollback",
+		"--output", "json",
+		"--config", "/tmp/bifrost.yml",
+		"--env", "test",
+		"--app", "app",
+	)
+	require.NoError(t, err)
+	assert.Equal(t, 0, result.ExitCode, "release rollback --output json:\n%s", result.Output)
+
+	var ev map[string]any
+	require.NoError(t, json.Unmarshal([]byte(result.Output), &ev), "output must be a single JSON object")
+	assert.Equal(t, "rollback", ev["event"])
+	assert.Equal(t, "r1", ev["release"])
+	assert.Equal(t, "done", ev["status"])
+}
+
 func TestReleaseRollbackCmd_NoPreviousRelease(t *testing.T) {
 	ctx := context.Background()
 	c := testutil.NewContainer(ctx, t, bifrostBin)
