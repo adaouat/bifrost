@@ -27,20 +27,25 @@ func newListCmd(version string) *cobra.Command {
 		Use:   "list",
 		Short: "List all releases for an application",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			if env == "" {
-				return fmt.Errorf("--env (or --environment) is required")
-			}
-			if app == "" {
-				return fmt.Errorf("--app (or --application) is required")
-			}
-
 			cfg, err := config.Load(releaseConfigPath(cmd))
 			if err != nil {
 				return err
 			}
-			merged, err := config.Merge(cfg, env, app)
-			if err != nil {
-				return err
+
+			var merged *config.MergedConfig
+			if config.IsFlat(cfg) {
+				merged = config.MergeFlat(cfg)
+			} else {
+				if env == "" {
+					return fmt.Errorf("--env (or --environment) is required")
+				}
+				if app == "" {
+					return fmt.Errorf("--app (or --application) is required")
+				}
+				merged, err = config.Merge(cfg, env, app)
+				if err != nil {
+					return err
+				}
 			}
 			if errs := config.Validate(merged); len(errs) > 0 {
 				return &cmderr.ExitError{Code: cmderr.Config, Message: errs.Error()}
