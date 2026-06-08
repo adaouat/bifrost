@@ -282,6 +282,10 @@ func TestDeployCmd_DryRun_SudoHook(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, c.CopyFile(ctx, cfg, "/tmp/bifrost-sudo.yml", 0o644))
 
+	artifact, err := os.ReadFile("../../testdata/release.tar.gz")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, artifact, "/tmp/release.tar.gz", 0o644))
+
 	for _, dir := range []string{"/var/releases", "/var/shared"} {
 		res, err := c.Exec(ctx, []string{"mkdir", "-p", dir})
 		require.NoError(t, err)
