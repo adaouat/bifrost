@@ -15,6 +15,7 @@ import (
 	"github.com/adaouat/bifrost/internal/strategy"
 	"github.com/adaouat/bifrost/internal/strategy/atomic"
 	"github.com/adaouat/bifrost/internal/tui"
+	forgelog "github.com/adaouat/forge/log"
 	forgeui "github.com/adaouat/forge/ui"
 )
 
@@ -78,7 +79,10 @@ func newDeployCmd(version string) *cobra.Command {
 			mode := forgeui.ParseMode(outputMode(cmd))
 			confirmFn := interactiveConfirm()
 
-			var deployer strategy.Deployer = atomic.New(out, mode, confirmFn)
+			verbose, _ := cmd.Flags().GetBool("verbose")
+			logger := forgelog.New(cmd.ErrOrStderr(), forgelog.LevelFor(verbose))
+
+			var deployer strategy.Deployer = atomic.New(out, mode, confirmFn).WithLogger(logger)
 			return deployer.Deploy(context.Background(), strategy.DeployOptions{
 				Config:      merged,
 				Artifact:    artifact,

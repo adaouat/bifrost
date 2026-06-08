@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"time"
 
-	clog "charm.land/log/v2"
 	"github.com/spf13/cobra"
 
 	"github.com/adaouat/bifrost/internal/cmd/config"
@@ -41,9 +40,6 @@ func NewRootCmd(version string) *cobra.Command {
 		Short: "Atomic deployment CLI",
 		Long:  tui.HelpLong(),
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
-			if verbose {
-				clog.SetLevel(clog.DebugLevel)
-			}
 			if err := ValidateOutputMode(output); err != nil {
 				return err
 			}

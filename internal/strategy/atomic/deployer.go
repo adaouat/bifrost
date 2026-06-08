@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -38,6 +39,7 @@ type Deployer struct {
 	mode      forgeui.Mode
 	confirmFn func(string) bool
 	runner    forgeexec.Runner
+	logger    *slog.Logger
 }
 
 var _ strategy.Deployer = (*Deployer)(nil)
@@ -45,6 +47,20 @@ var _ strategy.Deployer = (*Deployer)(nil)
 // New creates a new atomic Deployer.
 func New(out io.Writer, mode forgeui.Mode, confirmFn func(string) bool) *Deployer {
 	return &Deployer{out: out, mode: mode, confirmFn: confirmFn, runner: forgeexec.New(false, false)}
+}
+
+// WithLogger sets the operator-debug diagnostic logger and returns d for chaining.
+// When unset, diagnostics are discarded. See forge ADR-0011.
+func (d *Deployer) WithLogger(l *slog.Logger) *Deployer {
+	d.logger = l
+	return d
+}
+
+// debug emits an operator-debug log line when a logger is set.
+func (d *Deployer) debug(msg string, args ...any) {
+	if d.logger != nil {
+		d.logger.Debug(msg, args...)
+	}
 }
 
 func (d *Deployer) jsonMode() bool { return d.mode == forgeui.JSON }
@@ -57,6 +73,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 	if err != nil {
 		return err
 	}
+	d.debug("release dir created", "path", releaseDir, "env", opts.Env, "app", opts.App)
 
 	// One spinner numbers every human-mode step line [N/total]; JSON mode emits
 	// events instead and never touches it.
@@ -78,6 +95,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 		if d.jsonMode() {
 			emit.Emit(map[string]any{"event": "start", "step": step})
 		}
+		d.debug("step started", "step", step)
 		start := time.Now()
 		extras, err := fn()
 		if err != nil {
@@ -90,6 +108,11 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 			}
 			emit.Emit(ev)
 		}
+		args := []any{"step", step, "duration_ms", time.Since(start).Milliseconds()}
+		for k, v := range extras {
+			args = append(args, k, v)
+		}
+		d.debug("step completed", args...)
 		return nil
 	}
 
@@ -133,6 +156,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 		return emitError("extract", fmt.Errorf("extracting artifact: %w", err))
 	}
 	doneProgress()
+	d.debug("artifact extracted", "artifact", opts.Artifact, "bytes", info.Size())
 	if d.jsonMode() {
 		emit.Emit(map[string]any{"event": "done", "step": "extract", "duration_ms": time.Since(extractStart).Milliseconds()})
 	}
