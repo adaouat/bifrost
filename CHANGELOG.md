@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.15.0](https://github.com/adaouat/bifrost/compare/v0.14.0..v0.15.0) - 2026-06-08
+
+### 🚀 Features
+
+- *(cmd)* M15 — verify sequential multi-server deploy loop - ([b43f2ba](https://github.com/adaouat/bifrost/commit/b43f2babd2ba4110403b57dd20066c12eb40256e)) by @bchatard
+
+- *(tui)* Per-server header line for multi-server deploy output - ([1048acc](https://github.com/adaouat/bifrost/commit/1048acc332e0b0c499281350e9d34b433678438f)) by @bchatard
+
+
+### 🐛 Bug Fixes
+
+- *(cmd)* Copy artifact in dry-run sudo hook integration test - ([188cfb6](https://github.com/adaouat/bifrost/commit/188cfb68083e6ece3a4a59561e1cdc2a7fdb573f)) by @bchatard
+
+
+### 🧪 Testing
+
+- *(cmd)* M15 — two-container sequential multi-server deploy E2E - ([fe2a352](https://github.com/adaouat/bifrost/commit/fe2a352ea7a2d5bc932abaa0b1b8062380690e7a)) by @bchatard
+
 ## [0.14.0](https://github.com/adaouat/bifrost/compare/v0.13.0..v0.14.0) - 2026-06-07
 
 ### 🚀 Features
