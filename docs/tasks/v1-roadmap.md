@@ -112,7 +112,7 @@ Deliverable: `bifrost deploy` works against multiple servers; output has per-ser
 
 Port `release list`, `release activate`, and `release rollback` to client mode.
 
-- [ ] `release list` — SSH to each server, render per-server section (human) or events
+- [x] `release list` — SSH to each server, render per-server section (human) or events
   with `"server"` field (JSON)
 - [ ] `release activate` — non-interactive path: `--release <name>` runs activate on all
   servers; interactive path: query release lists → local huh multi-select form (one select

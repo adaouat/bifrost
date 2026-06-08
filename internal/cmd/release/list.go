@@ -14,7 +14,13 @@ import (
 	"github.com/adaouat/bifrost/internal/config"
 )
 
-func newListCmd() *cobra.Command {
+// releaseEntry is the JSON shape of a single release in `release list --output json`.
+type releaseEntry struct {
+	Name   string `json:"name"`
+	Active bool   `json:"active"`
+}
+
+func newListCmd(version string) *cobra.Command {
 	var env, app, agentBinary string
 
 	cmd := &cobra.Command{
@@ -40,6 +46,10 @@ func newListCmd() *cobra.Command {
 				return &cmderr.ExitError{Code: cmderr.Config, Message: errs.Error()}
 			}
 
+			if len(merged.Servers) > 0 {
+				return runClientReleaseList(cmd, version, merged, cfg, env, app, agentBinary)
+			}
+
 			releases, active, err := listReleases(merged.ReleasesRoot)
 			if err != nil {
 				return err
@@ -49,10 +59,6 @@ func newListCmd() *cobra.Command {
 			mode, _ := cmd.Root().PersistentFlags().GetString("output")
 
 			if mode == "json" {
-				type releaseEntry struct {
-					Name   string `json:"name"`
-					Active bool   `json:"active"`
-				}
 				entries := make([]releaseEntry, len(releases))
 				for i, r := range releases {
 					entries[i] = releaseEntry{Name: r, Active: r == active}

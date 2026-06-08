@@ -82,7 +82,7 @@ func NewRootCmd(version string) *cobra.Command {
 
 	root.AddCommand(config.NewConfigCmd())
 	root.AddCommand(newDeployCmd(version))
-	root.AddCommand(release.NewReleaseCmd())
+	root.AddCommand(release.NewReleaseCmd(version))
 
 	f := root.PersistentFlags()
 	f.StringVar(&cfgFile, "config", "", "config file (default: .config/bifrost.yml, then .bifrost.yml)")
