@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.16.0](https://github.com/adaouat/bifrost/compare/v0.15.0..v0.16.0) - 2026-06-09
+
+### 🚀 Features
+
+- *(cmd)* M16 — release list over SSH - ([ebe03f0](https://github.com/adaouat/bifrost/commit/ebe03f00eed34ed7a390993be17f32c0243774d2)) by @bchatard
+
+- *(cmd)* M16 — release activate over SSH - ([506fc37](https://github.com/adaouat/bifrost/commit/506fc373cebf56dfb2ccf85fe86a0f8d71607cd2)) by @bchatard
+
+- *(cmd)* M16 — release rollback over SSH - ([10beaf1](https://github.com/adaouat/bifrost/commit/10beaf1c9b56817226680447a88b694444ad0366)) by @bchatard
+
+- *(deploy)* Add operator-debugging diagnostics to the atomic deploy path - ([d3d4c52](https://github.com/adaouat/bifrost/commit/d3d4c52a5919045597ea347f56efd169b14a439b)) by @bchatard
+
+
+### 💼 Other
+
+- *(deps)* Bump forge to v0.11.0 - ([c32844d](https://github.com/adaouat/bifrost/commit/c32844d8b5d36d02275d34cc5f19e9a81e293192)) by @bchatard
+
+- *(deps)* Bump forge to v0.11.1 - ([0d50b76](https://github.com/adaouat/bifrost/commit/0d50b76a86a8ceea539d6ff5e4c41834a36a4d4e)) by @bchatard
+
+
+### 🧪 Testing
+
+- *(cmd)* M16 — integration tests for release commands over SSH - ([32a7774](https://github.com/adaouat/bifrost/commit/32a7774af67da38c8eff0248886f52c2a35bc29e)) by @bchatard
+
 ## [0.15.0](https://github.com/adaouat/bifrost/compare/v0.14.0..v0.15.0) - 2026-06-08
 
 ### 🚀 Features
