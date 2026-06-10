@@ -53,3 +53,12 @@ func TestValidateOutputMode(t *testing.T) {
 		})
 	}
 }
+
+func TestRootRegistersWhatsNew(t *testing.T) {
+	root := cmd.NewRootCmd("v1.0.0")
+	names := make([]string, 0, len(root.Commands()))
+	for _, c := range root.Commands() {
+		names = append(names, c.Name())
+	}
+	assert.Contains(t, names, "whatsnew")
+}

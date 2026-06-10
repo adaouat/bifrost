@@ -1,11 +1,8 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"os"
-	"path/filepath"
-	"time"
 
 	"github.com/spf13/cobra"
 
@@ -50,28 +47,6 @@ func NewRootCmd(version string) *cobra.Command {
 			}
 			return nil
 		},
-		// After each command, print a one-line update hint if a newer release
-		// exists (cached 24h, errors swallowed). Skipped for dev builds, the
-		// opt-out env var, and non-human output modes.
-		PersistentPostRunE: func(c *cobra.Command, _ []string) error {
-			if version == "dev" || output != "human" || os.Getenv("BIFROST_CHECK_UPDATE") == "false" {
-				return nil
-			}
-			ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
-			defer cancel()
-			cacheFile := ""
-			if dir, err := os.UserCacheDir(); err == nil {
-				cacheFile = filepath.Join(dir, "bifrost", "update-check.json")
-			}
-			updatecheck.Hinter{
-				Repo:      "adaouat/bifrost",
-				Bin:       "bifrost",
-				Module:    "github.com/adaouat/bifrost/cmd/bifrost",
-				Current:   version,
-				CacheFile: cacheFile,
-			}.Print(ctx, c.ErrOrStderr())
-			return nil
-		},
 	}
 
 	root.SetVersionTemplate(tui.VersionTemplate())
@@ -79,6 +54,24 @@ func NewRootCmd(version string) *cobra.Command {
 	root.AddCommand(config.NewConfigCmd())
 	root.AddCommand(newDeployCmd(version))
 	root.AddCommand(release.NewReleaseCmd(version))
+	root.AddCommand(updatecheck.WhatsNewCommand(updatecheck.WhatsNewConfig{
+		Repo:      "adaouat/bifrost",
+		Current:   version,
+		CacheFile: updatecheck.CacheFile("bifrost"),
+	}))
+
+	// After each command, print a one-line update hint if a newer release exists
+	// (cached 24h, errors swallowed). Skipped for dev builds, the opt-out env
+	// var, and non-human output modes.
+	root.PersistentPostRunE = updatecheck.Hinter{
+		Repo:      "adaouat/bifrost",
+		Bin:       "bifrost",
+		Module:    "github.com/adaouat/bifrost/cmd/bifrost",
+		Current:   version,
+		CacheFile: updatecheck.CacheFile("bifrost"),
+		OptOutEnv: "BIFROST_CHECK_UPDATE",
+		Skip:      func() bool { return output != "human" },
+	}.PostRun()
 
 	f := root.PersistentFlags()
 	f.StringVar(&cfgFile, "config", "", "config file (default: .config/bifrost.yml, then .bifrost.yml)")
