@@ -19,8 +19,18 @@ require (
 
 require (
 	charm.land/fang/v2 v2.0.1 // indirect
+	charm.land/glamour/v2 v2.0.0 // indirect
 	charm.land/log/v2 v2.0.0 // indirect
+	github.com/alecthomas/chroma/v2 v2.14.0 // indirect
+	github.com/aymerick/douceur v0.2.0 // indirect
+	github.com/charmbracelet/x/exp/slice v0.0.0-20250327172914-2fdc97757edf // indirect
 	github.com/charmbracelet/x/term v0.2.2 // indirect
+	github.com/dlclark/regexp2 v1.11.0 // indirect
+	github.com/gorilla/css v1.0.1 // indirect
+	github.com/microcosm-cc/bluemonday v1.0.27 // indirect
+	github.com/yuin/goldmark v1.7.8 // indirect
+	github.com/yuin/goldmark-emoji v1.0.5 // indirect
+	golang.org/x/net v0.54.0 // indirect
 )
 
 require (
@@ -29,7 +39,7 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/STARRY-S/zip v0.2.3 // indirect
-	github.com/adaouat/forge v0.11.1
+	github.com/adaouat/forge v0.14.0
 	github.com/andybalholm/brotli v1.2.0 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/bodgit/plumbing v1.3.0 // indirect
