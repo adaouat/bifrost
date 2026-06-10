@@ -132,7 +132,7 @@ renders correctly.
 
 Fill test gaps and harden edge cases introduced by v1.
 
-- [ ] Unit tests for flat config generator (various merge scenarios)
+- [x] Unit tests for flat config generator (various merge scenarios)
 - [ ] Unit tests for server resolution (app overrides env, nil inheritance)
 - [ ] Unit tests for staging dir path construction
 - [ ] Integration test: `--agent-binary` flag with a pre-built binary (no download)

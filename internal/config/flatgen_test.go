@@ -156,3 +156,139 @@ func TestGenerateFlatConfig_UnknownEnv(t *testing.T) {
 		t.Error("expected error for unknown environment, got nil")
 	}
 }
+
+// flatgenLayered populates every mergeable field at all three levels (global,
+// env, app) so precedence can be verified end-to-end through the generator.
+func flatgenLayered() *config.Config {
+	p := func(n int) *int { return &n }
+	return &config.Config{
+		Strategy: "atomic",
+		Paths: config.Paths{
+			ReleasesRoot: "/global/releases",
+			SharedRoot:   "/global/shared",
+			Shared: config.SharedPaths{
+				Directories: []string{"var/log"},
+				Files:       []string{".env"},
+			},
+		},
+		Settings:  config.Settings{ReleasesToKeep: 10},
+		Variables: map[string]string{"a": "global-a", "b": "global-b"},
+		Hooks: config.Hooks{
+			PostEnableRelease: []config.HookEntry{
+				{Cmd: "global-reload", Priority: p(20)},
+			},
+		},
+		Environments: map[string]config.Environment{
+			"prod": {
+				Paths: config.Paths{
+					ReleasesRoot: "/env/releases",
+					Shared:       config.SharedPaths{Directories: []string{"var/cache"}},
+				},
+				Settings:  config.Settings{ReleasesToKeep: 7},
+				Variables: map[string]string{"b": "env-b", "c": "env-c"},
+				Hooks: config.Hooks{
+					PostEnableRelease: []config.HookEntry{
+						{Cmd: "env-notify", Priority: p(30)},
+					},
+				},
+				Applications: map[string]config.Application{
+					"web": {
+						Paths: config.Paths{
+							SharedRoot: "/app/shared",
+							Shared:     config.SharedPaths{Files: []string{"config/secrets.yml"}},
+						},
+						Variables: map[string]string{"c": "app-c", "d": "app-d"},
+						Hooks: config.Hooks{
+							PostEnableRelease: []config.HookEntry{
+								{Cmd: "app-cache", Priority: p(10)},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func flatten(t *testing.T, cfg *config.Config) *config.Config {
+	t.Helper()
+	var buf bytes.Buffer
+	if err := config.GenerateFlatConfig(cfg, "prod", "web", &buf); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	parsed, err := config.Parse(&buf)
+	if err != nil {
+		t.Fatalf("parsing flat config: %v", err)
+	}
+	return parsed
+}
+
+func TestGenerateFlatConfig_ScalarOverridePrecedence(t *testing.T) {
+	flat := flatten(t, flatgenLayered())
+
+	if flat.Paths.ReleasesRoot != "/env/releases" {
+		t.Errorf("releases_root: got %q, want /env/releases (env overrides global)", flat.Paths.ReleasesRoot)
+	}
+	if flat.Paths.SharedRoot != "/app/shared" {
+		t.Errorf("shared_root: got %q, want /app/shared (app overrides global)", flat.Paths.SharedRoot)
+	}
+	if flat.Settings.ReleasesToKeep != 7 {
+		t.Errorf("releases_to_keep: got %d, want 7 (env overrides global)", flat.Settings.ReleasesToKeep)
+	}
+}
+
+func TestGenerateFlatConfig_VariablesPrecedence(t *testing.T) {
+	flat := flatten(t, flatgenLayered())
+
+	cases := map[string]string{
+		"a": "global-a", // only in global
+		"b": "env-b",    // env overrides global
+		"c": "app-c",    // app overrides env
+		"d": "app-d",    // only in app
+	}
+	for k, want := range cases {
+		if got := flat.Variables[k]; got != want {
+			t.Errorf("variables[%q]: got %q, want %q", k, got, want)
+		}
+	}
+}
+
+func TestGenerateFlatConfig_SharedPathsConcatAllLevels(t *testing.T) {
+	flat := flatten(t, flatgenLayered())
+
+	wantDirs := []string{"var/log", "var/cache"}
+	if len(flat.Paths.Shared.Directories) != len(wantDirs) {
+		t.Fatalf("shared.directories: got %v, want %v", flat.Paths.Shared.Directories, wantDirs)
+	}
+	for i, d := range wantDirs {
+		if flat.Paths.Shared.Directories[i] != d {
+			t.Errorf("shared.directories[%d]: got %q, want %q", i, flat.Paths.Shared.Directories[i], d)
+		}
+	}
+
+	wantFiles := []string{".env", "config/secrets.yml"}
+	if len(flat.Paths.Shared.Files) != len(wantFiles) {
+		t.Fatalf("shared.files: got %v, want %v", flat.Paths.Shared.Files, wantFiles)
+	}
+	for i, f := range wantFiles {
+		if flat.Paths.Shared.Files[i] != f {
+			t.Errorf("shared.files[%d]: got %q, want %q", i, flat.Paths.Shared.Files[i], f)
+		}
+	}
+}
+
+func TestGenerateFlatConfig_HooksSortedAcrossLevels(t *testing.T) {
+	flat := flatten(t, flatgenLayered())
+
+	hooks := flat.Hooks.PostEnableRelease
+	if len(hooks) != 3 {
+		t.Fatalf("post_enable_release: got %d hooks, want 3", len(hooks))
+	}
+	// sorted by priority: app(10) < global(20) < env(30)
+	want := []string{"app-cache", "global-reload", "env-notify"}
+	for i, h := range hooks {
+		if h.Cmd != want[i] {
+			t.Errorf("hooks[%d].cmd: got %q, want %q", i, h.Cmd, want[i])
+		}
+	}
+}
