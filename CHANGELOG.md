@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.18.0](https://github.com/adaouat/bifrost/compare/v0.17.0..v0.18.0) - 2026-06-10
+
+### 🚀 Features
+
+- *(whatsnew)* Embed CHANGELOG.md as the offline fallback - ([8893019](https://github.com/adaouat/bifrost/commit/8893019e4d0c5010fa174c62dd5aea5adbf38136)) by @bchatard
+
+
+### 💼 Other
+
+- *(deps)* Bump forge to v0.15.0 - ([8eeded6](https://github.com/adaouat/bifrost/commit/8eeded6a3f532c0937177e2c041c329283dd8537)) by @bchatard
+
 ## [0.17.0](https://github.com/adaouat/bifrost/compare/v0.16.0..v0.17.0) - 2026-06-10
 
 ### 🚀 Features
