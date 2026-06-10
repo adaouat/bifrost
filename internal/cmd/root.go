@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/adaouat/bifrost"
 	"github.com/adaouat/bifrost/internal/cmd/config"
 	"github.com/adaouat/bifrost/internal/cmd/release"
 	"github.com/adaouat/bifrost/internal/tui"
@@ -58,6 +59,7 @@ func NewRootCmd(version string) *cobra.Command {
 		Repo:      "adaouat/bifrost",
 		Current:   version,
 		CacheFile: updatecheck.CacheFile("bifrost"),
+		Changelog: bifrost.Changelog,
 	}))
 
 	// After each command, print a one-line update hint if a newer release exists
