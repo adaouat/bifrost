@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.17.0](https://github.com/adaouat/bifrost/compare/v0.16.0..v0.17.0) - 2026-06-10
+
+### 🚀 Features
+
+- *(cmd)* Add whatsnew command, adopt forge's shared hint wiring - ([3ddd3bf](https://github.com/adaouat/bifrost/commit/3ddd3bf77857c677ce446f7d21b717baee700a39)) by @bchatard
+
+
+### 💼 Other
+
+- *(deps)* Bump forge to v0.14.0 - ([8e10aa1](https://github.com/adaouat/bifrost/commit/8e10aa12e94260b9568d498f8073b71527620786)) by @bchatard
+
 ## [0.16.0](https://github.com/adaouat/bifrost/compare/v0.15.0..v0.16.0) - 2026-06-09
 
 ### 🚀 Features
