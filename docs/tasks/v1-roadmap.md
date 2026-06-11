@@ -135,7 +135,7 @@ Fill test gaps and harden edge cases introduced by v1.
 - [x] Unit tests for flat config generator (various merge scenarios)
 - [x] Unit tests for server resolution (app overrides env, nil inheritance) — covered by `merge_test.go` (M12 TDD)
 - [x] Unit tests for staging dir path construction — covered by `staging_test.go` (M13 TDD)
-- [ ] Integration test: `--agent-binary` flag with a pre-built binary (no download)
+- [x] Integration test: `--agent-binary` flag with a pre-built binary (no download)
 - [ ] Integration test: SSH auth failure → clean error message, exit code 3
 - [ ] Integration test: unknown remote arch → clean error message, exit code 3
 - [ ] Integration test: agent exits non-zero mid-deploy → cleanup still runs
