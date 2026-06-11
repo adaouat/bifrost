@@ -10,7 +10,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const scaffold = `# bifrost configuration
+const scaffold = `# yaml-language-server: $schema=https://raw.githubusercontent.com/adaouat/bifrost/main/bifrost.schema.json
+# bifrost configuration
 # Reference: https://github.com/adaouat/bifrost/blob/main/docs/specs/02-configuration.md
 
 # ── Strategy ───────────────────────────────────────────────────────────────────

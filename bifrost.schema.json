@@ -1,0 +1,143 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/adaouat/bifrost/main/bifrost.schema.json",
+  "title": "Bifrost configuration",
+  "description": "Schema for .bifrost.yml — see docs/specs/02-configuration.md",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "strategy": {
+      "type": "string",
+      "enum": ["atomic"],
+      "description": "Deployment strategy. v0/v1 valid value: atomic."
+    },
+    "servers": {
+      "type": "object",
+      "description": "Named SSH target servers, referenced by name from environments and applications.",
+      "additionalProperties": { "$ref": "#/definitions/server" }
+    },
+    "paths": { "$ref": "#/definitions/paths" },
+    "settings": { "$ref": "#/definitions/settings" },
+    "variables": { "$ref": "#/definitions/variables" },
+    "hooks": { "$ref": "#/definitions/hooks" },
+    "environments": {
+      "type": "object",
+      "description": "Per-environment overrides; each environment holds one or more applications.",
+      "additionalProperties": { "$ref": "#/definitions/environment" }
+    }
+  },
+  "definitions": {
+    "server": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["host", "user"],
+      "properties": {
+        "host": { "type": "string", "description": "Hostname or IP address." },
+        "port": { "type": "integer", "default": 22, "description": "SSH port." },
+        "user": { "type": "string", "description": "SSH username." },
+        "key_file": { "type": "string", "description": "Private key path. ~ is expanded." },
+        "staging_dir": { "type": "string", "default": "/tmp", "description": "Base dir for the remote staging folder." }
+      }
+    },
+    "sharedPaths": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "directories": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Relative paths symlinked into each release."
+        },
+        "files": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Relative paths symlinked into each release."
+        }
+      }
+    },
+    "paths": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "releases_root": { "type": "string", "description": "Root directory for release directories. Required after merge." },
+        "shared_root": { "type": "string", "description": "Root directory for shared resources. Required after merge." },
+        "shared": { "$ref": "#/definitions/sharedPaths" }
+      }
+    },
+    "settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "releases_to_keep": { "type": "integer", "default": 10, "description": "Number of old releases to retain." }
+      }
+    },
+    "variables": {
+      "type": "object",
+      "description": "String key-value pairs available in hook templates via {{ .Variables.key }}.",
+      "additionalProperties": { "type": "string" }
+    },
+    "hookEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cmd"],
+      "properties": {
+        "cmd": { "type": "string", "description": "Shell command. Supports Go text/template syntax." },
+        "priority": { "type": "integer", "default": 99999, "description": "Execution order, ascending." },
+        "sudo": { "type": "boolean", "default": false, "description": "Wrap the command in sudo sh -c." },
+        "cmd_dir": { "type": "string", "description": "Working directory. Default: release directory." },
+        "allow_fail": { "type": "boolean", "default": false, "description": "Continue deployment on non-zero exit code." },
+        "interactive": { "type": "boolean", "default": false, "description": "Prompt for confirmation before running." }
+      }
+    },
+    "hookList": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/hookEntry" }
+    },
+    "hooks": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "post_extract": { "$ref": "#/definitions/hookList" },
+        "pre_link": { "$ref": "#/definitions/hookList" },
+        "pre_enable_release": { "$ref": "#/definitions/hookList" },
+        "post_enable_release": { "$ref": "#/definitions/hookList" }
+      }
+    },
+    "application": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "servers": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Server names; overrides the environment-level servers list."
+        },
+        "paths": { "$ref": "#/definitions/paths" },
+        "settings": { "$ref": "#/definitions/settings" },
+        "variables": { "$ref": "#/definitions/variables" },
+        "hooks": { "$ref": "#/definitions/hooks" }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "servers": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Default server names for all applications in this environment."
+        },
+        "paths": { "$ref": "#/definitions/paths" },
+        "settings": { "$ref": "#/definitions/settings" },
+        "variables": { "$ref": "#/definitions/variables" },
+        "hooks": { "$ref": "#/definitions/hooks" },
+        "applications": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/definitions/application" }
+        }
+      }
+    }
+  }
+}
