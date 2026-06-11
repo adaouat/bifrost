@@ -139,7 +139,7 @@ Fill test gaps and harden edge cases introduced by v1.
 - [x] Integration test: SSH auth failure → clean error message, exit code 3
 - [x] Integration test: unknown remote arch → clean error message, exit code 3
 - [x] Integration test: agent exits non-zero mid-deploy → cleanup still runs
-- [ ] Review and update specs 01, 02, 03, 07, 08 for any gaps found during implementation
+- [x] Review and update specs 01, 02, 03, 07, 08 for any gaps found during implementation
 - [ ] `bifrost.schema.json` — JSON Schema for `.bifrost.yml` (full v1 schema); update
   `config init` template to include `# yaml-language-server: $schema=` comment for IDE validation
 

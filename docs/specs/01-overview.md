@@ -26,7 +26,7 @@ previous release.
 │   ├── var/
 │   │   └── log -> {shared_root}/var/log    ← shared dir symlink
 │   └── .env -> {shared_root}/.env          ← shared file symlink
-└── current -> 20260520-141500              ← active release symlink
+└── current -> {releases_root}/20260520-141500   ← active release symlink
 
 {shared_root}/
 ├── var/
@@ -39,7 +39,7 @@ previous release.
 **Release** — A directory named `YYYYMMDD-HHMMSS` (UTC) containing the extracted artifact.
 Its name is lexicographically sortable, making "most recent" trivial to compute.
 
-**current** — A symlink at `{releases_root}/current` pointing to the active release directory name (not an absolute path). Switching releases = updating this symlink.
+**current** — A symlink at `{releases_root}/current` pointing to the absolute path of the active release directory. Switching releases = updating this symlink (atomically, via a temp symlink + rename).
 
 **Shared resource** — A file or directory that must persist across releases (logs, secrets,
 uploaded files). Stored in `{shared_root}` and symlinked into each release at deploy time.

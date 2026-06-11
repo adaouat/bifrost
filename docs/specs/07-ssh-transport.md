@@ -38,8 +38,10 @@ Attempted in this order; the first to succeed is used:
 2. SSH agent via `SSH_AUTH_SOCK` socket
 3. `BIFROST_SSH_PASSWORD` environment variable (password auth, all servers)
 
-Host key verification uses the system `~/.ssh/known_hosts`. Unknown hosts cause an
-immediate failure with exit code 3. There is no `--insecure` bypass.
+Host key verification uses the `BIFROST_KNOWN_HOSTS` environment variable when set,
+otherwise the system `~/.ssh/known_hosts`. Strict verification applies either way:
+unknown hosts cause an immediate failure with exit code 3, and there is no `--insecure`
+bypass.
 
 ## Agent binary resolution
 

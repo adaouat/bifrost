@@ -15,10 +15,15 @@ Available on all commands:
 
 ## `config`
 
-Display and validate the effective configuration after merging.
+Parent command for inspecting, validating, and scaffolding configuration. Running
+`bifrost config` with no subcommand prints help listing the three subcommands below.
+
+### `config show`
+
+Display the effective configuration after merging, as JSON.
 
 ```
-bifrost config [--environment/--env <env>] [--application/--app <app>]
+bifrost config show [--environment/--env <env>] [--application/--app <app>]
 ```
 
 | Flag | Aliases | Required | Description |
@@ -26,14 +31,39 @@ bifrost config [--environment/--env <env>] [--application/--app <app>]
 | `--environment` | `--env` | No | Target environment key |
 | `--application` | `--app` | No | Target application key |
 
-| Behavior | Condition |
-|---|---|
-| Print full merged config as JSON | No `--env` or `--app` |
-| Print merged app config + validate required fields | Both flags provided |
+With no flags, prints the full merged config. When `--env` and `--app` are given
+(they must be used together), prints the resolved config for that target.
 
-Exits non-zero (code 2) with a specific message for each missing required field.
-With `--env` + `--app`, validates all environments/applications
-in a single pass and reports all errors before exiting.
+### `config check`
+
+Validate required fields for a deployment target.
+
+```
+bifrost config check --environment/--env <env> --application/--app <app>
+```
+
+| Flag | Aliases | Required | Description |
+|---|---|---|---|
+| `--environment` | `--env` | Yes | Target environment key |
+| `--application` | `--app` | Yes | Target application key |
+
+Validates the merged config and reports every missing required field in a single pass.
+Exits with code 2 if any field is missing.
+
+### `config init`
+
+Scaffold a default `.bifrost.yml` with inline comments covering every field.
+
+```
+bifrost config init [--force]
+```
+
+| Flag | Required | Description |
+|---|---|---|
+| `--force` | No | Overwrite an existing config file (otherwise init refuses) |
+
+The write destination follows the config-path chain from [Spec 02](02-configuration.md):
+`--config` → `BIFROST_FILE` → `.config/` directory → `.bifrost.yml`.
 
 ---
 
@@ -47,7 +77,8 @@ bifrost deploy \
   --application/--app <app> \
   --artifact <path> \
   [--release-name <name>] \
-  [--init]
+  [--init] \
+  [--agent-binary <path>]
 ```
 
 | Flag | Aliases | Required | Description |
@@ -57,8 +88,14 @@ bifrost deploy \
 | `--artifact` | | Yes | Path to artifact file (`.tar.gz`, `.zip`, etc.) |
 | `--release-name` | | No | Override auto-generated timestamp name (e.g. `v2.1.3`) |
 | `--init` | | No | Create `releases_root` and `shared_root` if they do not exist |
+| `--agent-binary` | | No | Path to a prebuilt agent binary; skips download in client mode (v1) |
 
-**Deployment flow:**
+If the resolved config references one or more `servers`, `deploy` runs in **client mode**
+over SSH instead of locally. See [Spec 07](07-ssh-transport.md) and
+[Spec 08](08-multi-server.md) for the transport, agent, and multi-server flow. The
+local flow below is what the agent runs on each target server.
+
+**Deployment flow (local / per-server):**
 
 1. Load and validate config → exit 2 on error
 2. Verify `releases_root` and `shared_root` exist → create if `--init`, else exit 3
@@ -87,6 +124,7 @@ bifrost release list --environment/--env <env> --application/--app <app>
 |---|---|---|---|
 | `--environment` | `--env` | Yes | Target environment key |
 | `--application` | `--app` | Yes | Target application key |
+| `--agent-binary` | | No | Path to a prebuilt agent binary; skips download in client mode (v1) |
 
 Output: list of release directory names sorted newest-first. The active release is shown
 with a `← current` suffix. Excludes the `current` symlink itself.
@@ -111,6 +149,7 @@ bifrost release activate \
 | `--environment` | `--env` | Yes | Target environment key |
 | `--application` | `--app` | Yes | Target application key |
 | `--release` | | No | Release name to activate. If omitted, shows interactive selector. |
+| `--agent-binary` | | No | Path to a prebuilt agent binary; skips download in client mode (v1) |
 
 If `--release` is omitted and stdout is a TTY, presents an interactive list (huh select)
 showing all releases with the current one highlighted. If not a TTY, exits with code 1
@@ -140,18 +179,20 @@ bifrost release rollback --environment/--env <env> --application/--app <app>
 |---|---|---|---|
 | `--environment` | `--env` | Yes | Target environment key |
 | `--application` | `--app` | Yes | Target application key |
+| `--agent-binary` | | No | Path to a prebuilt agent binary; skips download in client mode (v1) |
 
 Equivalent to `release activate` with the second-most-recent release. Exits with code 3
 if there is no previous release to roll back to.
 
 ---
 
-## `init` (planned — M4)
+## `release init`
 
-First-time setup of a deployment target.
+First-time setup of a deployment target. (The top-level `init` command from M4 was
+removed in M5 in favour of this subcommand under the `release` group.)
 
 ```
-bifrost init --environment/--env <env> --application/--app <app>
+bifrost release init --environment/--env <env> --application/--app <app>
 ```
 
 | Flag | Aliases | Required | Description |
@@ -160,4 +201,5 @@ bifrost init --environment/--env <env> --application/--app <app>
 | `--application` | `--app` | Yes | Target application key |
 
 Creates `releases_root` and `shared_root` directories. Validates config. Does not deploy.
-Equivalent to `deploy --init` without the artifact.
+Equivalent to `deploy --init` without the artifact. This command is local-only and takes
+no `--agent-binary` flag.

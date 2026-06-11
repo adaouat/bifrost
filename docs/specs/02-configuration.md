@@ -111,7 +111,8 @@ interactive: false               # Prompt user for confirmation before running.
 
 | List | When it runs |
 |---|---|
-| `pre_artifact` | After artifact extraction, before shared resource linking |
+| `post_extract` | After artifact extraction, before `pre_link` — raw release dir available |
+| `pre_link` | After `post_extract`, before shared resource linking |
 | `pre_enable_release` | After shared linking, before `current` symlink update |
 | `post_enable_release` | After `current` symlink update |
 
