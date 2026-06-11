@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.19.0](https://github.com/adaouat/bifrost/compare/v0.18.0..v0.19.0) - 2026-06-11
+
+### 🚀 Features
+
+- *(config)* Add JSON Schema and wire it into config init - ([c96bc6f](https://github.com/adaouat/bifrost/commit/c96bc6fa96570ec6b227c8a852e3730111194039)) by @bchatard
+
+
+### 📚 Documentation
+
+- *(roadmap)* Mark M17 server-resolution and staging-path tests done - ([2baff8b](https://github.com/adaouat/bifrost/commit/2baff8b4b4b7178475cd0c799cc86a154cbdcb67)) by @bchatard
+
+- *(specs)* Reconcile specs 01-03,07 with shipped implementation - ([cc7ecaa](https://github.com/adaouat/bifrost/commit/cc7ecaad009cde875d8f27a4f0104ebed3e8b676)) by @bchatard
+
+
+### 🧪 Testing
+
+- *(cmd)* Integration test for --agent-binary download bypass - ([eee82d5](https://github.com/adaouat/bifrost/commit/eee82d5276f6ee0f9b49f45970617eb6de3b8100)) by @bchatard
+
+- *(cmd)* Integration test for SSH auth failure exit code - ([dba401c](https://github.com/adaouat/bifrost/commit/dba401cc3f8b0b202a754cbbd9394df9258531ac)) by @bchatard
+
+- *(cmd)* Integration test for unknown remote arch exit code - ([9d31be2](https://github.com/adaouat/bifrost/commit/9d31be2d83695e549f8eec8ea14e93d00e35dad4)) by @bchatard
+
+- *(cmd)* Integration test for staging cleanup on agent failure - ([a7101b8](https://github.com/adaouat/bifrost/commit/a7101b858e17a0b54f4746097629764e0003a1fa)) by @bchatard
+
+- *(config)* Cover flat config generator merge precedence - ([d92beac](https://github.com/adaouat/bifrost/commit/d92beac2bd6f758e44a144b17885d83d726abd1d)) by @bchatard
+
 ## [0.18.0](https://github.com/adaouat/bifrost/compare/v0.17.0..v0.18.0) - 2026-06-10
 
 ### 🚀 Features
