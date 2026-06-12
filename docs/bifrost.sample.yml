@@ -101,6 +101,9 @@ variables: {}
 #   {{ .Env.DB_HOST }}            # OS environment variables
 
 hooks:
+  # pre_extract — runs before artifact extraction.
+  pre_extract: []
+
   # post_extract — runs after artifact extraction, before pre_link.
   # The raw release directory is available.
   post_extract: []
@@ -108,12 +111,23 @@ hooks:
   # pre_link — runs after post_extract, before shared resource linking.
   pre_link: []
 
-  # pre_enable_release — runs after shared linking, before the current
-  # symlink is updated.
-  pre_enable_release: []
+  # post_link — runs after shared resource linking. Shared dirs/files
+  # (var/log, .env, etc.) are in place — use this for DB migrations,
+  # cache warming, anything that needs shared config.
+  post_link: []
 
-  # post_enable_release — runs after the current symlink is updated.
-  post_enable_release: []
+  # pre_activate — runs after post_link, before the current symlink
+  # is updated.
+  pre_activate: []
+
+  # post_activate — runs after the current symlink is updated.
+  post_activate: []
+
+  # pre_purge — runs before old releases are purged.
+  pre_purge: []
+
+  # post_purge — runs after old releases are purged.
+  post_purge: []
 
 # ── environments ────────────────────────────────────────────────────────────
 #
@@ -163,7 +177,7 @@ environments:
           post_extract:
             - cmd: "composer install --no-dev --optimize-autoloader"
               cmd_dir: "{{ .Directories.Working }}"
-          post_enable_release:
+          post_activate:
             - cmd: "systemctl reload php-fpm"
               sudo: true
               priority: 10
