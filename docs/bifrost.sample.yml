@@ -1,0 +1,172 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# bifrost — annotated sample configuration
+#
+# This file documents every supported field. Copy the blocks you need into
+# .bifrost.yml (or .config/bifrost.yml) and delete the rest.
+#
+# Full field reference: docs/specs/02-configuration.md
+# Strategy architecture: docs/adr/0006-strategy-architecture.md
+# ─────────────────────────────────────────────────────────────────────────────
+
+# yaml-language-server: $schema=https://raw.githubusercontent.com/adaouat/bifrost/main/bifrost.schema.json
+
+# strategy — deployment strategy. Default: atomic.
+# v0/v1 valid value: atomic. v4/v5 add: docker, k8s. See ADR-0006.
+strategy: atomic
+
+# ── servers ──────────────────────────────────────────────────────────────────
+#
+# Named SSH target servers (v1), referenced by name from the `servers:` lists
+# in environments and applications below. If no servers are referenced
+# anywhere, bifrost runs in local mode (v0 behaviour).
+
+# servers:
+#   web-1:
+#     # host — required. Hostname or IP address.
+#     host: 192.168.1.10
+#
+#     # port — SSH port. Default: 22.
+#     port: 22
+#
+#     # user — required. SSH username.
+#     user: deploy
+#
+#     # key_file — private key path. ~ is expanded. Falls back to the SSH
+#     # agent (SSH_AUTH_SOCK) if omitted.
+#     # key_file: ~/.ssh/id_rsa
+#
+#     # staging_dir — base dir for the remote staging folder. Default: /tmp.
+#     # Full staging path is {staging_dir}/bifrost-{uuid}/.
+#     # staging_dir: /tmp
+
+# ── paths ────────────────────────────────────────────────────────────────────
+#
+# Global defaults, merged with environment- and application-level paths.
+# releases_root and shared_root are REQUIRED after merge — every application
+# must resolve both, either here or via overrides below.
+
+paths:
+  # releases_root — REQUIRED after merge. Root directory for release directories.
+  releases_root: /var/www/releases
+
+  # shared_root — REQUIRED after merge. Root directory for shared resources
+  # (persisted across deployments via symlinks).
+  shared_root: /var/www/shared
+
+  shared:
+    # directories — relative paths symlinked from shared_root into each release.
+    directories: []
+
+    # files — relative paths symlinked from shared_root into each release.
+    files: []
+
+# ── settings ─────────────────────────────────────────────────────────────────
+
+settings:
+  # releases_to_keep — number of old releases to retain after purge. Default: 10.
+  releases_to_keep: 10
+
+# ── variables ────────────────────────────────────────────────────────────────
+#
+# String key-value pairs available in hook command templates via
+# {{ .Variables.key }}. Values must be strings — quote non-string YAML scalars.
+
+variables: {}
+# variables:
+#   app_env: production
+
+# ── hooks ────────────────────────────────────────────────────────────────────
+#
+# Ordered lifecycle hooks. Each list is concatenated across the global,
+# environment, and application levels, then sorted by priority ascending,
+# before running.
+#
+# Each entry supports:
+#
+#   cmd: "systemctl restart nginx"  # REQUIRED. Go text/template syntax supported.
+#   priority: 99999                 # Execution order, ascending. Default: 99999.
+#   sudo: false                     # Wrap command in: sudo sh -c "<cmd>"
+#   cmd_dir: ~                      # Working directory. Default: release directory.
+#   allow_fail: false               # Continue deployment on non-zero exit code.
+#   interactive: false              # Prompt for confirmation before running.
+#
+# Template variables available to cmd and cmd_dir:
+#
+#   {{ .Directories.Working }}    # current release directory
+#   {{ .Directories.Current }}    # path to the current symlink
+#   {{ .Directories.Releases }}   # releases root
+#   {{ .Directories.Shared }}     # shared root
+#   {{ .Variables.key }}          # user-defined variables
+#   {{ .Settings.ReleasesToKeep }}
+#   {{ .Env.DB_HOST }}            # OS environment variables
+
+hooks:
+  # post_extract — runs after artifact extraction, before pre_link.
+  # The raw release directory is available.
+  post_extract: []
+
+  # pre_link — runs after post_extract, before shared resource linking.
+  pre_link: []
+
+  # pre_enable_release — runs after shared linking, before the current
+  # symlink is updated.
+  pre_enable_release: []
+
+  # post_enable_release — runs after the current symlink is updated.
+  post_enable_release: []
+
+# ── environments ────────────────────────────────────────────────────────────
+#
+# Per-environment overrides. Configuration merges:
+#
+#   Global (root of this file) < Environment < Application
+#
+# Maps deep-merge (child keys win on conflict), hook lists concatenate across
+# all three levels and are then sorted by priority, and scalars are overridden
+# by the more specific level.
+
+environments:
+  production:
+    # name — optional human-readable label.
+    name: "Production"
+
+    # servers — optional (v1). Default server list for all applications in
+    # this environment. Overridden per-application by applications.<name>.servers.
+    # servers: [web-1]
+
+    # paths, settings, variables, hooks — same shape as the global blocks
+    # above. Override or extend the global defaults for this environment.
+    # paths: { ... }
+    # settings: { ... }
+    # variables: { ... }
+    # hooks: { ... }
+
+    # applications — REQUIRED, at least one entry.
+    applications:
+      web:
+        # name — optional human-readable label.
+        name: "Web Application"
+
+        # servers — optional (v1). Overrides environment-level servers for
+        # this application only.
+        # servers: [web-1]
+
+        paths:
+          shared:
+            directories:
+              - var/log
+              - var/cache
+            files:
+              - .env
+
+        hooks:
+          post_extract:
+            - cmd: "composer install --no-dev --optimize-autoloader"
+              cmd_dir: "{{ .Directories.Working }}"
+          post_enable_release:
+            - cmd: "systemctl reload php-fpm"
+              sudo: true
+              priority: 10
+            - cmd: "systemctl reload nginx"
+              sudo: true
+              priority: 20
