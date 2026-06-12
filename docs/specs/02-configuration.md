@@ -72,10 +72,14 @@ variables:                         # String key-value pairs available in hook te
   key: value                       # Values must be strings (quote non-string YAML scalars)
 
 hooks:
-  post_extract: []        # Runs after extraction, before pre_link — raw release dir available
-  pre_link: []            # Runs before shared resource linking
-  pre_enable_release: []  # Runs before current symlink is updated
-  post_enable_release: [] # Runs after current symlink is updated
+  pre_extract: []    # Runs before artifact extraction
+  post_extract: []   # Runs after extraction, before pre_link — raw release dir available
+  pre_link: []       # Runs before shared resource linking
+  post_link: []      # Runs after shared resource linking
+  pre_activate: []   # Runs before current symlink is updated
+  post_activate: []  # Runs after current symlink is updated
+  pre_purge: []      # Runs before old-release purge
+  post_purge: []     # Runs after old-release purge
 
 # ── Environments ───────────────────────────────────────────────────────────────
 environments:
@@ -109,12 +113,29 @@ interactive: false               # Prompt user for confirmation before running.
 
 ## Hook lifecycle
 
+The `deploy` pipeline fires all 8 hooks, in this order:
+
+```
+pre_extract → [extract]      → post_extract
+pre_link    → [link shared]  → post_link
+pre_activate → [switch current] → post_activate
+pre_purge   → [purge]        → post_purge
+```
+
 | List | When it runs |
 |---|---|
+| `pre_extract` | Before artifact extraction |
 | `post_extract` | After artifact extraction, before `pre_link` — raw release dir available |
 | `pre_link` | After `post_extract`, before shared resource linking |
-| `pre_enable_release` | After shared linking, before `current` symlink update |
-| `post_enable_release` | After `current` symlink update |
+| `post_link` | After shared resource linking |
+| `pre_activate` | After `post_link`, before `current` symlink update |
+| `post_activate` | After `current` symlink update |
+| `pre_purge` | Before old-release purge |
+| `post_purge` | After old-release purge |
+
+`release activate` and `release rollback` only fire `pre_activate` / `post_activate`,
+around their existing `current` symlink update — they don't extract or purge, so the
+other six hooks don't apply to those commands.
 
 ## Example config
 
@@ -147,7 +168,7 @@ environments:
           post_extract:
             - cmd: "composer install --no-dev --optimize-autoloader"
               cmd_dir: "{{ .Directories.Working }}"
-          post_enable_release:
+          post_activate:
             - cmd: "systemctl reload php-fpm"
               sudo: true
               priority: 10
