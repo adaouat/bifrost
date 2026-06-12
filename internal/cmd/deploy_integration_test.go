@@ -331,16 +331,13 @@ func TestDeployCmd_Hooks(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 0, result.ExitCode, "deploy output:\n%s", result.Output)
 
-	for _, marker := range []string{
-		"/tmp/post_extract_ran",
-		"/tmp/pre_link_ran",
-		"/tmp/pre_enable_ran",
-		"/tmp/post_enable_ran",
-	} {
-		res, err := c.Exec(ctx, []string{"test", "-f", marker})
-		require.NoError(t, err)
-		assert.Equal(t, 0, res.ExitCode, "hook marker should exist: %s", marker)
-	}
+	// All 8 hooks must have fired, in pipeline order.
+	res, err := c.Exec(ctx, []string{"cat", "/tmp/hook_order.log"})
+	require.NoError(t, err)
+	assert.Equal(t, 0, res.ExitCode, "hook order log should exist")
+
+	want := "pre_extract\npost_extract\npre_link\npost_link\npre_activate\npost_activate\npre_purge\npost_purge"
+	assert.Equal(t, want, strings.TrimSpace(res.Output), "hooks must fire in pipeline order")
 }
 
 func TestDeployCmd_Purge(t *testing.T) {

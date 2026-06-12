@@ -9,6 +9,6 @@ environments:
     applications:
       app:
         hooks:
-          post_enable_release:
+          post_activate:
             - cmd: systemctl reload nginx
               sudo: true

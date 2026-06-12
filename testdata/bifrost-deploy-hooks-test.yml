@@ -5,14 +5,22 @@ paths:
 settings:
   releases_to_keep: 5
 hooks:
+  pre_extract:
+    - cmd: "echo pre_extract >> /tmp/hook_order.log"
   post_extract:
-    - cmd: "touch /tmp/post_extract_ran"
+    - cmd: "echo post_extract >> /tmp/hook_order.log"
   pre_link:
-    - cmd: "touch /tmp/pre_link_ran"
-  pre_enable_release:
-    - cmd: "touch /tmp/pre_enable_ran"
-  post_enable_release:
-    - cmd: "touch /tmp/post_enable_ran"
+    - cmd: "echo pre_link >> /tmp/hook_order.log"
+  post_link:
+    - cmd: "echo post_link >> /tmp/hook_order.log"
+  pre_activate:
+    - cmd: "echo pre_activate >> /tmp/hook_order.log"
+  post_activate:
+    - cmd: "echo post_activate >> /tmp/hook_order.log"
+  pre_purge:
+    - cmd: "echo pre_purge >> /tmp/hook_order.log"
+  post_purge:
+    - cmd: "echo post_purge >> /tmp/hook_order.log"
 environments:
   test:
     applications:
