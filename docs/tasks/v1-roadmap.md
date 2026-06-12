@@ -144,3 +144,38 @@ Fill test gaps and harden edge cases introduced by v1.
   `config init` template to include `# yaml-language-server: $schema=` comment for IDE validation
 
 Deliverable: CI passes on all v1 integration tests; no known edge cases unhandled.
+
+---
+
+## M18 — Hook lifecycle granularity
+
+Replace the 4-hook lifecycle (`post_extract`, `pre_link`, `pre_enable_release`,
+`post_enable_release`) with 8 symmetric `pre_<stage>`/`post_<stage>` hooks covering
+the full `deploy` pipeline, and rename the activation pair to align with the
+`activate` verb used by `release activate`/`release rollback`.
+
+- [x] `internal/config/schema.go` — `Hooks` struct: rename `pre_enable_release` →
+  `pre_activate`, `post_enable_release` → `post_activate`; add `pre_extract`,
+  `post_link`, `pre_purge`, `post_purge`
+- [x] `internal/config/loader.go` — `applyHookDefaults` sets default priority for all
+  8 hook fields
+- [x] `internal/config/merge.go` — `Merge()` threads all 8 hook fields through
+  `sortedHooks(...)`
+- [x] `internal/strategy/atomic/deployer.go` — fire all 8 hooks around the `deploy`
+  pipeline stages (extract, link, activate, purge); update `deployStepTotal`
+- [x] `internal/cmd/deploy.go` — `--dry-run` preview reflects all 8 hooks
+- [x] `internal/cmd/release/activate.go`, `rollback.go` — rename
+  `PreEnableRelease`/`PostEnableRelease` → `PreActivate`/`PostActivate`
+- [x] Integration test: all 8 hooks fire in pipeline order for `deploy`
+- [x] `bifrost.schema.json`, `config init` scaffold, `docs/specs/02-configuration.md`,
+  `docs/specs/05-hooks.md`, `docs/bifrost.sample.yml` updated for the new 8-hook
+  shape
+- [x] ADR-0012 records the naming and coverage decision
+
+Spec references: [ADR-0012](../adr/0012-hook-lifecycle-granularity.md),
+[design spec](../specs/2026-06-12-hook-lifecycle-design.md), [Spec 02](../specs/02-configuration.md),
+[Spec 05](../specs/05-hooks.md).
+
+Deliverable: `bifrost deploy` fires all 8 hooks in pipeline order; `release
+activate`/`rollback` use the renamed `pre_activate`/`post_activate`; old hook names
+are rejected with a clear config error.
