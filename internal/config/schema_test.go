@@ -38,10 +38,14 @@ func TestHookEntry_Fields(t *testing.T) {
 
 func TestHooks_AllLifecyclePoints(t *testing.T) {
 	h := config.Hooks{}
+	_ = h.PreExtract
 	_ = h.PostExtract
 	_ = h.PreLink
-	_ = h.PreEnableRelease
-	_ = h.PostEnableRelease
+	_ = h.PostLink
+	_ = h.PreActivate
+	_ = h.PostActivate
+	_ = h.PrePurge
+	_ = h.PostPurge
 }
 
 func TestPaths_FlatRoots(t *testing.T) {

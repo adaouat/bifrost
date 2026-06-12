@@ -35,7 +35,7 @@ func flatgenBase() *config.Config {
 							},
 						},
 						Hooks: config.Hooks{
-							PostEnableRelease: []config.HookEntry{
+							PostActivate: []config.HookEntry{
 								{Cmd: "systemctl reload nginx", Sudo: true, Priority: &p},
 							},
 						},
@@ -120,13 +120,13 @@ func TestGenerateFlatConfig_HooksMerged(t *testing.T) {
 		t.Fatalf("parsing flat config: %v", err)
 	}
 
-	if len(parsed.Hooks.PostEnableRelease) != 1 {
-		t.Fatalf("post_enable_release: got %d hooks, want 1", len(parsed.Hooks.PostEnableRelease))
+	if len(parsed.Hooks.PostActivate) != 1 {
+		t.Fatalf("post_activate: got %d hooks, want 1", len(parsed.Hooks.PostActivate))
 	}
-	if parsed.Hooks.PostEnableRelease[0].Cmd != "systemctl reload nginx" {
-		t.Errorf("hook cmd: got %q, want systemctl reload nginx", parsed.Hooks.PostEnableRelease[0].Cmd)
+	if parsed.Hooks.PostActivate[0].Cmd != "systemctl reload nginx" {
+		t.Errorf("hook cmd: got %q, want systemctl reload nginx", parsed.Hooks.PostActivate[0].Cmd)
 	}
-	if !parsed.Hooks.PostEnableRelease[0].Sudo {
+	if !parsed.Hooks.PostActivate[0].Sudo {
 		t.Error("hook sudo: got false, want true")
 	}
 }
@@ -174,7 +174,7 @@ func flatgenLayered() *config.Config {
 		Settings:  config.Settings{ReleasesToKeep: 10},
 		Variables: map[string]string{"a": "global-a", "b": "global-b"},
 		Hooks: config.Hooks{
-			PostEnableRelease: []config.HookEntry{
+			PostActivate: []config.HookEntry{
 				{Cmd: "global-reload", Priority: p(20)},
 			},
 		},
@@ -187,7 +187,7 @@ func flatgenLayered() *config.Config {
 				Settings:  config.Settings{ReleasesToKeep: 7},
 				Variables: map[string]string{"b": "env-b", "c": "env-c"},
 				Hooks: config.Hooks{
-					PostEnableRelease: []config.HookEntry{
+					PostActivate: []config.HookEntry{
 						{Cmd: "env-notify", Priority: p(30)},
 					},
 				},
@@ -199,7 +199,7 @@ func flatgenLayered() *config.Config {
 						},
 						Variables: map[string]string{"c": "app-c", "d": "app-d"},
 						Hooks: config.Hooks{
-							PostEnableRelease: []config.HookEntry{
+							PostActivate: []config.HookEntry{
 								{Cmd: "app-cache", Priority: p(10)},
 							},
 						},
@@ -280,9 +280,9 @@ func TestGenerateFlatConfig_SharedPathsConcatAllLevels(t *testing.T) {
 func TestGenerateFlatConfig_HooksSortedAcrossLevels(t *testing.T) {
 	flat := flatten(t, flatgenLayered())
 
-	hooks := flat.Hooks.PostEnableRelease
+	hooks := flat.Hooks.PostActivate
 	if len(hooks) != 3 {
-		t.Fatalf("post_enable_release: got %d hooks, want 3", len(hooks))
+		t.Fatalf("post_activate: got %d hooks, want 3", len(hooks))
 	}
 	// sorted by priority: app(10) < global(20) < env(30)
 	want := []string{"app-cache", "global-reload", "env-notify"}

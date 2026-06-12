@@ -28,7 +28,7 @@ environments:
           post_extract:
             - cmd: "composer install --no-dev --optimize-autoloader"
               cmd_dir: "{{ .Directories.Working }}"
-          post_enable_release:
+          post_activate:
             - cmd: "systemctl reload php-fpm"
               sudo: true
               priority: 10

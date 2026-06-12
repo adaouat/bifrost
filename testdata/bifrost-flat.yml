@@ -6,6 +6,6 @@ settings:
   releases_to_keep: 5
 
 hooks:
-  post_enable_release:
+  post_activate:
     - cmd: "systemctl reload nginx"
       sudo: true

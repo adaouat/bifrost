@@ -51,10 +51,10 @@ func TestLoad_FullFile(t *testing.T) {
 	if h.Priority == nil || *h.Priority != 99999 {
 		t.Errorf("hook priority default: want 99999, got %v", h.Priority)
 	}
-	if len(web.Hooks.PostEnableRelease) != 2 {
-		t.Errorf("post_enable_release hooks: got %d, want 2", len(web.Hooks.PostEnableRelease))
+	if len(web.Hooks.PostActivate) != 2 {
+		t.Errorf("post_activate hooks: got %d, want 2", len(web.Hooks.PostActivate))
 	}
-	if p := web.Hooks.PostEnableRelease[0].Priority; p == nil || *p != 10 {
+	if p := web.Hooks.PostActivate[0].Priority; p == nil || *p != 10 {
 		t.Errorf("first hook priority: want 10, got %v", p)
 	}
 }
@@ -355,13 +355,13 @@ environments:
     applications:
       web:
         hooks:
-          pre_enable_release:
+          pre_activate:
             - cmd: "echo migrate"
 `))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	h := cfg.Environments["prod"].Applications["web"].Hooks.PreEnableRelease[0]
+	h := cfg.Environments["prod"].Applications["web"].Hooks.PreActivate[0]
 	if h.Priority == nil || *h.Priority != 99999 {
 		t.Errorf("nested hook priority default: want 99999, got %v", h.Priority)
 	}

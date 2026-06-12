@@ -12,10 +12,14 @@ type HookEntry struct {
 
 // Hooks groups shell commands by deployment lifecycle point.
 type Hooks struct {
-	PostExtract       []HookEntry `yaml:"post_extract"        json:"post_extract,omitempty"`
-	PreLink           []HookEntry `yaml:"pre_link"            json:"pre_link,omitempty"`
-	PreEnableRelease  []HookEntry `yaml:"pre_enable_release"  json:"pre_enable_release,omitempty"`
-	PostEnableRelease []HookEntry `yaml:"post_enable_release" json:"post_enable_release,omitempty"`
+	PreExtract   []HookEntry `yaml:"pre_extract"   json:"pre_extract,omitempty"`
+	PostExtract  []HookEntry `yaml:"post_extract"  json:"post_extract,omitempty"`
+	PreLink      []HookEntry `yaml:"pre_link"      json:"pre_link,omitempty"`
+	PostLink     []HookEntry `yaml:"post_link"     json:"post_link,omitempty"`
+	PreActivate  []HookEntry `yaml:"pre_activate"  json:"pre_activate,omitempty"`
+	PostActivate []HookEntry `yaml:"post_activate" json:"post_activate,omitempty"`
+	PrePurge     []HookEntry `yaml:"pre_purge"     json:"pre_purge,omitempty"`
+	PostPurge    []HookEntry `yaml:"post_purge"    json:"post_purge,omitempty"`
 }
 
 // SharedPaths lists relative paths symlinked from shared_root into each release.

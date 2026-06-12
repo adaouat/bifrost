@@ -59,10 +59,14 @@ func Merge(cfg *Config, envName, appName string) (*MergedConfig, error) {
 		},
 		Variables: mergeMaps(cfg.Variables, env.Variables, app.Variables),
 		Hooks: Hooks{
-			PostExtract:       sortedHooks(cfg.Hooks.PostExtract, env.Hooks.PostExtract, app.Hooks.PostExtract),
-			PreLink:           sortedHooks(cfg.Hooks.PreLink, env.Hooks.PreLink, app.Hooks.PreLink),
-			PreEnableRelease:  sortedHooks(cfg.Hooks.PreEnableRelease, env.Hooks.PreEnableRelease, app.Hooks.PreEnableRelease),
-			PostEnableRelease: sortedHooks(cfg.Hooks.PostEnableRelease, env.Hooks.PostEnableRelease, app.Hooks.PostEnableRelease),
+			PreExtract:   sortedHooks(cfg.Hooks.PreExtract, env.Hooks.PreExtract, app.Hooks.PreExtract),
+			PostExtract:  sortedHooks(cfg.Hooks.PostExtract, env.Hooks.PostExtract, app.Hooks.PostExtract),
+			PreLink:      sortedHooks(cfg.Hooks.PreLink, env.Hooks.PreLink, app.Hooks.PreLink),
+			PostLink:     sortedHooks(cfg.Hooks.PostLink, env.Hooks.PostLink, app.Hooks.PostLink),
+			PreActivate:  sortedHooks(cfg.Hooks.PreActivate, env.Hooks.PreActivate, app.Hooks.PreActivate),
+			PostActivate: sortedHooks(cfg.Hooks.PostActivate, env.Hooks.PostActivate, app.Hooks.PostActivate),
+			PrePurge:     sortedHooks(cfg.Hooks.PrePurge, env.Hooks.PrePurge, app.Hooks.PrePurge),
+			PostPurge:    sortedHooks(cfg.Hooks.PostPurge, env.Hooks.PostPurge, app.Hooks.PostPurge),
 		},
 		Servers: resolveServers(cfg.Servers, serverNames),
 	}

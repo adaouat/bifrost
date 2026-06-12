@@ -81,16 +81,16 @@ func newRollbackCmd(version string) *cobra.Command {
 			confirmFn := releaseInteractiveConfirm()
 			hookRunner := forgeexec.New(false, false)
 
-			if err := hooks.RunInteractive(hookRunner, merged.Hooks.PreEnableRelease, hookData, releaseDir, cmd.OutOrStdout(), confirmFn); err != nil {
-				return fmt.Errorf("pre_enable_release hooks: %w", err)
+			if err := hooks.RunInteractive(hookRunner, merged.Hooks.PreActivate, hookData, releaseDir, cmd.OutOrStdout(), confirmFn); err != nil {
+				return fmt.Errorf("pre_activate hooks: %w", err)
 			}
 
 			if err := atomic.SetCurrent(merged.ReleasesRoot, releaseDir); err != nil {
 				return fmt.Errorf("updating current symlink: %w", err)
 			}
 
-			if err := hooks.RunInteractive(hookRunner, merged.Hooks.PostEnableRelease, hookData, releaseDir, cmd.OutOrStdout(), confirmFn); err != nil {
-				return fmt.Errorf("post_enable_release hooks: %w", err)
+			if err := hooks.RunInteractive(hookRunner, merged.Hooks.PostActivate, hookData, releaseDir, cmd.OutOrStdout(), confirmFn); err != nil {
+				return fmt.Errorf("post_activate hooks: %w", err)
 			}
 
 			if mode, _ := cmd.Root().PersistentFlags().GetString("output"); mode == "json" {

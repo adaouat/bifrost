@@ -111,10 +111,14 @@ func applyServerDefaults(cfg *Config) {
 }
 
 func applyHookDefaults(h *Hooks) {
+	setDefaultPriority(h.PreExtract)
 	setDefaultPriority(h.PostExtract)
 	setDefaultPriority(h.PreLink)
-	setDefaultPriority(h.PreEnableRelease)
-	setDefaultPriority(h.PostEnableRelease)
+	setDefaultPriority(h.PostLink)
+	setDefaultPriority(h.PreActivate)
+	setDefaultPriority(h.PostActivate)
+	setDefaultPriority(h.PrePurge)
+	setDefaultPriority(h.PostPurge)
 }
 
 func setDefaultPriority(hooks []HookEntry) {

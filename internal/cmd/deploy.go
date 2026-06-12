@@ -124,6 +124,9 @@ func deployDryRun(cmd *cobra.Command, merged *config.MergedConfig, artifact, rel
 	_, _ = fmt.Fprintln(out, "DRY RUN — no changes will be made")
 	_, _ = fmt.Fprintln(out)
 	_, _ = fmt.Fprintf(out, "  Would create   %s\n", releaseDir)
+	for _, h := range merged.Hooks.PreExtract {
+		hookLine("pre_extract", h)
+	}
 	_, _ = fmt.Fprintf(out, "  Would extract  %s  →  %s\n", artifact, releaseDir)
 	for _, h := range merged.Hooks.PostExtract {
 		hookLine("post_extract", h)
@@ -139,15 +142,24 @@ func deployDryRun(cmd *cobra.Command, merged *config.MergedConfig, artifact, rel
 		_, _ = fmt.Fprintf(out, "  Would link     %s  →  %s\n",
 			filepath.Join(releaseDir, rel), filepath.Join(merged.SharedRoot, rel))
 	}
-	for _, h := range merged.Hooks.PreEnableRelease {
-		hookLine("pre_enable_release", h)
+	for _, h := range merged.Hooks.PostLink {
+		hookLine("post_link", h)
+	}
+	for _, h := range merged.Hooks.PreActivate {
+		hookLine("pre_activate", h)
 	}
 	_, _ = fmt.Fprintf(out, "  Would update   %s  →  %s\n", currentLink, relBase)
-	for _, h := range merged.Hooks.PostEnableRelease {
-		hookLine("post_enable_release", h)
+	for _, h := range merged.Hooks.PostActivate {
+		hookLine("post_activate", h)
+	}
+	for _, h := range merged.Hooks.PrePurge {
+		hookLine("pre_purge", h)
 	}
 	if candidates, err := atomic.PurgePlan(merged.ReleasesRoot, relBase, merged.Settings.ReleasesToKeep); err == nil && len(candidates) > 0 {
 		_, _ = fmt.Fprintf(out, "  Would purge    %s  (keeping %d)\n", strings.Join(candidates, ", "), merged.Settings.ReleasesToKeep)
+	}
+	for _, h := range merged.Hooks.PostPurge {
+		hookLine("post_purge", h)
 	}
 	return nil
 }

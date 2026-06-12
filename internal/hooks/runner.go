@@ -46,7 +46,7 @@ func RunInteractive(runner forgeexec.Runner, hooks []config.HookEntry, data Hook
 }
 
 // RunWithEvents is like RunInteractive but calls eventFn after each hook executes.
-// lifecycle is the name of the hook group (e.g. "pre_enable_release"). eventFn may be nil.
+// lifecycle is the name of the hook group (e.g. "pre_activate"). eventFn may be nil.
 func RunWithEvents(runner forgeexec.Runner, hooks []config.HookEntry, data HookData, workingDir string, out io.Writer, confirmFn func(cmd string) bool, lifecycle string, eventFn HookEventFn) error {
 	for i, h := range hooks {
 		exitCode, err := runOne(runner, h, data, workingDir, out, confirmFn)

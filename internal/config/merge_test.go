@@ -113,16 +113,16 @@ func TestMerge_VariablesDeepMerge(t *testing.T) {
 func TestMerge_HooksConcatAndSort(t *testing.T) {
 	p := func(n int) *int { return &n }
 	cfg := base()
-	cfg.Hooks.PostEnableRelease = []config.HookEntry{
+	cfg.Hooks.PostActivate = []config.HookEntry{
 		{Cmd: "global-reload", Priority: p(20)},
 	}
 	env := cfg.Environments["prod"]
-	env.Hooks.PostEnableRelease = []config.HookEntry{
+	env.Hooks.PostActivate = []config.HookEntry{
 		{Cmd: "env-notify", Priority: p(30)},
 	}
 	env.Applications = map[string]config.Application{
 		"web": {Hooks: config.Hooks{
-			PostEnableRelease: []config.HookEntry{
+			PostActivate: []config.HookEntry{
 				{Cmd: "app-cache", Priority: p(10)},
 			},
 		}},
@@ -133,7 +133,7 @@ func TestMerge_HooksConcatAndSort(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	hooks := m.Hooks.PostEnableRelease
+	hooks := m.Hooks.PostActivate
 	if len(hooks) != 3 {
 		t.Fatalf("hook count: got %d, want 3", len(hooks))
 	}
@@ -262,14 +262,21 @@ func TestMerge_StrategyPassthrough(t *testing.T) {
 func TestMerge_AllHookTypesPopulated(t *testing.T) {
 	p := func(n int) *int { return &n }
 	cfg := base()
+	cfg.Hooks.PreExtract = []config.HookEntry{{Cmd: "pre-extract", Priority: p(10)}}
 	cfg.Hooks.PostExtract = []config.HookEntry{{Cmd: "post-extract", Priority: p(10)}}
 	cfg.Hooks.PreLink = []config.HookEntry{{Cmd: "pre-link", Priority: p(10)}}
-	cfg.Hooks.PreEnableRelease = []config.HookEntry{{Cmd: "pre-enable", Priority: p(10)}}
-	cfg.Hooks.PostEnableRelease = []config.HookEntry{{Cmd: "post-enable", Priority: p(10)}}
+	cfg.Hooks.PostLink = []config.HookEntry{{Cmd: "post-link", Priority: p(10)}}
+	cfg.Hooks.PreActivate = []config.HookEntry{{Cmd: "pre-activate", Priority: p(10)}}
+	cfg.Hooks.PostActivate = []config.HookEntry{{Cmd: "post-activate", Priority: p(10)}}
+	cfg.Hooks.PrePurge = []config.HookEntry{{Cmd: "pre-purge", Priority: p(10)}}
+	cfg.Hooks.PostPurge = []config.HookEntry{{Cmd: "post-purge", Priority: p(10)}}
 
 	m, err := config.Merge(cfg, "prod", "web")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(m.Hooks.PreExtract) != 1 || m.Hooks.PreExtract[0].Cmd != "pre-extract" {
+		t.Error("PreExtract not populated correctly")
 	}
 	if len(m.Hooks.PostExtract) != 1 || m.Hooks.PostExtract[0].Cmd != "post-extract" {
 		t.Error("PostExtract not populated correctly")
@@ -277,11 +284,20 @@ func TestMerge_AllHookTypesPopulated(t *testing.T) {
 	if len(m.Hooks.PreLink) != 1 || m.Hooks.PreLink[0].Cmd != "pre-link" {
 		t.Error("PreLink not populated correctly")
 	}
-	if len(m.Hooks.PreEnableRelease) != 1 || m.Hooks.PreEnableRelease[0].Cmd != "pre-enable" {
-		t.Error("PreEnableRelease not populated correctly")
+	if len(m.Hooks.PostLink) != 1 || m.Hooks.PostLink[0].Cmd != "post-link" {
+		t.Error("PostLink not populated correctly")
 	}
-	if len(m.Hooks.PostEnableRelease) != 1 || m.Hooks.PostEnableRelease[0].Cmd != "post-enable" {
-		t.Error("PostEnableRelease not populated correctly")
+	if len(m.Hooks.PreActivate) != 1 || m.Hooks.PreActivate[0].Cmd != "pre-activate" {
+		t.Error("PreActivate not populated correctly")
+	}
+	if len(m.Hooks.PostActivate) != 1 || m.Hooks.PostActivate[0].Cmd != "post-activate" {
+		t.Error("PostActivate not populated correctly")
+	}
+	if len(m.Hooks.PrePurge) != 1 || m.Hooks.PrePurge[0].Cmd != "pre-purge" {
+		t.Error("PrePurge not populated correctly")
+	}
+	if len(m.Hooks.PostPurge) != 1 || m.Hooks.PostPurge[0].Cmd != "post-purge" {
+		t.Error("PostPurge not populated correctly")
 	}
 }
 
