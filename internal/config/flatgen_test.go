@@ -12,7 +12,7 @@ func flatgenBase() *config.Config {
 	p := 10
 	return &config.Config{
 		Strategy: "atomic",
-		Servers: map[string]config.ServerConfig{
+		Servers: map[string]config.Server{
 			"web-01": {Host: "192.168.1.10", Port: 22, User: "deploy"},
 		},
 		Paths: config.Paths{

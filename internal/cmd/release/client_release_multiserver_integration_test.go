@@ -34,11 +34,11 @@ func TestReleaseCommands_ClientMode_MultiServer_E2E(t *testing.T) {
 	absKeyFile, err := filepath.Abs(keyFile)
 	require.NoError(t, err)
 
-	servers := make(map[string]config.ServerConfig, len(containers))
+	servers := make(map[string]config.Server, len(containers))
 	for name, c := range containers {
 		port, err := strconv.Atoi(c.Port)
 		require.NoError(t, err)
-		servers[name] = config.ServerConfig{
+		servers[name] = config.Server{
 			Host:       c.Host,
 			Port:       port,
 			User:       "deploy",

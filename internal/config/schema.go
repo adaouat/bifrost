@@ -57,8 +57,8 @@ type Environment struct {
 	Applications map[string]Application `yaml:"applications" json:"applications,omitempty"`
 }
 
-// ServerConfig holds SSH connection details for a named target server.
-type ServerConfig struct {
+// Server holds SSH connection details for a named target server.
+type Server struct {
 	Host       string `yaml:"host"        json:"host"`
 	Port       int    `yaml:"port"        json:"port,omitempty"`
 	User       string `yaml:"user"        json:"user"`
@@ -68,11 +68,11 @@ type ServerConfig struct {
 
 // Config is the top-level structure parsed from a .bifrost.yml file.
 type Config struct {
-	Strategy     string                  `yaml:"strategy"     json:"strategy"`
-	Servers      map[string]ServerConfig `yaml:"servers,omitempty"     json:"servers,omitempty"`
-	Paths        Paths                   `yaml:"paths"        json:"paths"`
-	Settings     Settings                `yaml:"settings"     json:"settings"`
-	Variables    map[string]string       `yaml:"variables"    json:"variables,omitempty"`
-	Hooks        Hooks                   `yaml:"hooks"        json:"hooks,omitempty"`
-	Environments map[string]Environment  `yaml:"environments,omitempty" json:"environments,omitempty"`
+	Strategy     string                 `yaml:"strategy"     json:"strategy"`
+	Servers      map[string]Server      `yaml:"servers,omitempty"     json:"servers,omitempty"`
+	Paths        Paths                  `yaml:"paths"        json:"paths"`
+	Settings     Settings               `yaml:"settings"     json:"settings"`
+	Variables    map[string]string      `yaml:"variables"    json:"variables,omitempty"`
+	Hooks        Hooks                  `yaml:"hooks"        json:"hooks,omitempty"`
+	Environments map[string]Environment `yaml:"environments,omitempty" json:"environments,omitempty"`
 }

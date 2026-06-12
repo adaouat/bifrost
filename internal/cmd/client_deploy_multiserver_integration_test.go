@@ -21,7 +21,7 @@ import (
 // multiServerTestConfig builds an in-memory bifrost config referencing the
 // given named servers, mirroring sshTestConfig in client_deploy_integration_test.go
 // but for a fleet of more than one server.
-func multiServerTestConfig(servers map[string]config.ServerConfig, order []string) *config.Config {
+func multiServerTestConfig(servers map[string]config.Server, order []string) *config.Config {
 	return &config.Config{
 		Strategy: "atomic",
 		Servers:  servers,
@@ -67,11 +67,11 @@ func TestRunClientDeploy_MultiServer_E2E(t *testing.T) {
 	absKeyFile, err := filepath.Abs(keyFile)
 	require.NoError(t, err)
 
-	servers := make(map[string]config.ServerConfig, len(containers))
+	servers := make(map[string]config.Server, len(containers))
 	for name, c := range containers {
 		port, err := strconv.Atoi(c.Port)
 		require.NoError(t, err)
-		servers[name] = config.ServerConfig{
+		servers[name] = config.Server{
 			Host:       c.Host,
 			Port:       port,
 			User:       "deploy",

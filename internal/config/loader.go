@@ -29,7 +29,7 @@ func IsFlat(cfg *Config) bool {
 }
 
 // ValidateServerRefs checks that:
-//   - every ServerConfig in cfg.Servers has a non-empty Host and User
+//   - every Server in cfg.Servers has a non-empty Host and User
 //   - every name in env/app Servers lists exists in cfg.Servers
 //
 // Returns a slice of human-readable error messages; empty means valid.

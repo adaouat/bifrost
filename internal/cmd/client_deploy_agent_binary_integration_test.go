@@ -37,7 +37,7 @@ func TestRunClientDeploy_AgentBinaryFlag_SkipsDownload(t *testing.T) {
 
 	port, err := strconv.Atoi(sshC.Port)
 	require.NoError(t, err)
-	servers := map[string]config.ServerConfig{
+	servers := map[string]config.Server{
 		"web-01": {Host: sshC.Host, Port: port, User: "deploy", KeyFile: absKeyFile, StagingDir: "/tmp"},
 	}
 

@@ -29,7 +29,7 @@ func sshTestConfig(host, port string, keyFile string) *config.Config {
 	p, _ := strconv.Atoi(port)
 	return &config.Config{
 		Strategy: "atomic",
-		Servers: map[string]config.ServerConfig{
+		Servers: map[string]config.Server{
 			"ssh-test": {
 				Host:       host,
 				Port:       p,

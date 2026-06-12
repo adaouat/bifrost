@@ -308,7 +308,7 @@ func TestMerge_ServersNilBothLevels(t *testing.T) {
 
 func TestMerge_ServersEnvLevel(t *testing.T) {
 	cfg := base()
-	cfg.Servers = map[string]config.ServerConfig{
+	cfg.Servers = map[string]config.Server{
 		"web-01": {Host: "1.2.3.4", Port: 22, User: "deploy"},
 	}
 	env := cfg.Environments["prod"]
@@ -332,7 +332,7 @@ func TestMerge_ServersEnvLevel(t *testing.T) {
 
 func TestMerge_ServersAppOverridesEnv(t *testing.T) {
 	cfg := base()
-	cfg.Servers = map[string]config.ServerConfig{
+	cfg.Servers = map[string]config.Server{
 		"web-01": {Host: "1.2.3.4", Port: 22, User: "deploy"},
 		"web-02": {Host: "1.2.3.5", Port: 22, User: "deploy"},
 	}
@@ -357,7 +357,7 @@ func TestMerge_ServersAppOverridesEnv(t *testing.T) {
 
 func TestMerge_ServersNilAppInheritsEnv(t *testing.T) {
 	cfg := base()
-	cfg.Servers = map[string]config.ServerConfig{
+	cfg.Servers = map[string]config.Server{
 		"web-01": {Host: "1.2.3.4", Port: 22, User: "deploy"},
 		"web-02": {Host: "1.2.3.5", Port: 22, User: "deploy"},
 	}

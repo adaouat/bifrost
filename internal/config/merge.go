@@ -86,7 +86,7 @@ func MergeFlat(cfg *Config) *MergedConfig {
 }
 
 // resolveServers returns a ResolvedServer slice for the given server names.
-func resolveServers(serverMap map[string]ServerConfig, names []string) []ResolvedServer {
+func resolveServers(serverMap map[string]Server, names []string) []ResolvedServer {
 	if len(names) == 0 {
 		return nil
 	}

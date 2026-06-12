@@ -44,7 +44,7 @@ func TestRunClientDeploy_SSHAuthFailure_ExitCode3(t *testing.T) {
 
 	port, err := strconv.Atoi(sshC.Port)
 	require.NoError(t, err)
-	servers := map[string]config.ServerConfig{
+	servers := map[string]config.Server{
 		"web-01": {Host: sshC.Host, Port: port, User: "deploy", KeyFile: unauthorizedKey, StagingDir: "/tmp"},
 	}
 

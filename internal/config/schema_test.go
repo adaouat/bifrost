@@ -103,8 +103,8 @@ func TestApplication_InheritsCommonFields(t *testing.T) {
 	_ = a.Hooks
 }
 
-func TestServerConfig_Fields(t *testing.T) {
-	s := config.ServerConfig{
+func TestServer_Fields(t *testing.T) {
+	s := config.Server{
 		Host:       "192.168.1.1",
 		Port:       22,
 		User:       "deploy",
@@ -130,7 +130,7 @@ func TestServerConfig_Fields(t *testing.T) {
 
 func TestConfig_ServersMap(t *testing.T) {
 	c := config.Config{
-		Servers: map[string]config.ServerConfig{
+		Servers: map[string]config.Server{
 			"web-01": {Host: "1.2.3.4", Port: 22, User: "deploy"},
 		},
 	}

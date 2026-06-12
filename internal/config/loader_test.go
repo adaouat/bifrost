@@ -202,7 +202,7 @@ paths:
 
 func TestValidateServerRefs_Valid(t *testing.T) {
 	cfg := &config.Config{
-		Servers: map[string]config.ServerConfig{
+		Servers: map[string]config.Server{
 			"web-01": {Host: "1.2.3.4", User: "deploy"},
 		},
 		Environments: map[string]config.Environment{
@@ -239,7 +239,7 @@ func TestValidateServerRefs_UnknownRef(t *testing.T) {
 
 func TestValidateServerRefs_AppUnknownRef(t *testing.T) {
 	cfg := &config.Config{
-		Servers: map[string]config.ServerConfig{
+		Servers: map[string]config.Server{
 			"web-01": {Host: "1.2.3.4", User: "deploy"},
 		},
 		Environments: map[string]config.Environment{
@@ -258,7 +258,7 @@ func TestValidateServerRefs_AppUnknownRef(t *testing.T) {
 
 func TestValidateServerRefs_MissingHost(t *testing.T) {
 	cfg := &config.Config{
-		Servers: map[string]config.ServerConfig{
+		Servers: map[string]config.Server{
 			"web-01": {User: "deploy"},
 		},
 	}
@@ -270,7 +270,7 @@ func TestValidateServerRefs_MissingHost(t *testing.T) {
 
 func TestValidateServerRefs_MissingUser(t *testing.T) {
 	cfg := &config.Config{
-		Servers: map[string]config.ServerConfig{
+		Servers: map[string]config.Server{
 			"web-01": {Host: "1.2.3.4"},
 		},
 	}

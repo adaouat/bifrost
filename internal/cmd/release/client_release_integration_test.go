@@ -33,7 +33,7 @@ func TestMain(m *testing.M) {
 // releaseSSHTestConfig builds an in-memory bifrost config for SSH-based release
 // command tests: a single named server, no shared dirs/files (kept minimal —
 // these tests exercise release management, not shared resource linking).
-func releaseSSHTestConfig(servers map[string]config.ServerConfig, order []string) *config.Config {
+func releaseSSHTestConfig(servers map[string]config.Server, order []string) *config.Config {
 	return &config.Config{
 		Strategy: "atomic",
 		Servers:  servers,
@@ -119,7 +119,7 @@ func TestReleaseCommands_ClientMode_SingleServer_E2E(t *testing.T) {
 	port, err := strconv.Atoi(c.Port)
 	require.NoError(t, err)
 
-	cfg := releaseSSHTestConfig(map[string]config.ServerConfig{
+	cfg := releaseSSHTestConfig(map[string]config.Server{
 		"ssh-test": {Host: c.Host, Port: port, User: "deploy", KeyFile: absKeyFile, StagingDir: "/tmp"},
 	}, []string{"ssh-test"})
 
