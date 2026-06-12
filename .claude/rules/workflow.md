@@ -24,7 +24,7 @@ Never skip pre-commit hooks (`--no-verify` is forbidden).
 Run `hk check` before every commit. All issues must be resolved first.
 
 For targeted auto-fixes:
-- `hk fix -S <linter>` — fix one linter (e.g. `hk fix -S golangci-lint`, `hk fix -S yamlfmt`)
+- `hk fix -S <linter>` — fix one linter (e.g. `hk fix -S golangci_lint`, `hk fix -S yamlfmt`)
 - `hk fix` — fix everything at once
 
 Never commit code that does not pass `hk check`.

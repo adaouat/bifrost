@@ -54,6 +54,7 @@ Directory layout on the target server:
 | **yaml.v3** | YAML config parsing |
 | **text/template** | Hook command templating |
 | **mholt/archives** | In-process archive extraction (tar.gz, zip) |
+| **adaouat/forge** | Shared exit-code vocabulary & error handling across the adaouat CLI family |
 | **testcontainers-go** | Linux containers for integration tests |
 | **goreleaser** | Cross-platform release builds and GitHub release automation |
 | **git-cliff** | Changelog and release notes generation from conventional commits |
@@ -88,6 +89,7 @@ internal/
       deploy.go               # Full deploy flow
       release.go              # Release directory creation, current symlink, purge
       shared.go               # Shared dir/file linking
+  transport/                  # SSH/SFTP client + agent staging/upload (ADR-0009, ADR-0011)
   hooks/                      # Hook execution — shared across all strategies
     runner.go                 # sh -c, sudo, template rendering, priority sort
   tui/
@@ -121,6 +123,6 @@ Integration tests (requires Docker):
 go test -tags integration ./...
 ```
 
-For targeted lint fixes: `hk fix -S <linter>` (e.g. `hk fix -S golangci-lint`, `hk fix -S yamlfmt`).
+For targeted lint fixes: `hk fix -S <linter>` (e.g. `hk fix -S golangci_lint`, `hk fix -S yamlfmt`).
 
 Go, golangci-lint, and git-cliff are installed via mise (see `.config/mise/config.toml`).
