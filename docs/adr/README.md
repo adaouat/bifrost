@@ -15,3 +15,4 @@ ADRs document significant architectural choices: what was decided, why, and what
 | [0009](0009-agent-model.md) | Self-agent model for SSH transport | Accepted |
 | [0010](0010-server-config-schema.md) | Server configuration schema | Accepted |
 | [0011](0011-agent-binary-distribution.md) | Agent binary distribution via GitHub Releases | Accepted |
+| [0012](0012-hook-lifecycle-granularity.md) | Hook lifecycle granularity — 8 symmetric pre/post stages | Accepted |
