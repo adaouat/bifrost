@@ -4,17 +4,32 @@ Hooks are shell commands that run at defined points in the deployment lifecycle.
 
 ## Lifecycle points
 
+The `deploy` command fires all 8 hooks below, in order. `release activate` and
+`release rollback` only fire `pre_activate` / `post_activate`, around their existing
+`current` symlink update.
+
+```
+pre_extract → [extract]      → post_extract
+pre_link    → [link shared]  → post_link
+pre_activate → [switch current] → post_activate
+pre_purge   → [purge]        → post_purge
+```
+
 | Hook list | Shared symlinks present? | `current` updated? | Typical use |
 |---|---|---|---|
+| `pre_extract` | No | No | Prepare the empty release directory before extraction |
 | `post_extract` | No | No | Compile assets, modify extracted files |
 | `pre_link` | No | No | Remove dirs that will be replaced by symlinks, create placeholder subdirs |
-| `pre_enable_release` | **Yes** | No | DB migrations, config cache — needs shared files, must run before traffic hits release |
-| `post_enable_release` | Yes | **Yes** | Reload services, notify monitoring |
+| `post_link` | **Yes** | No | DB migrations, config cache — needs shared files, must run before traffic hits release |
+| `pre_activate` | Yes | No | Final checks immediately before the symlink switch |
+| `post_activate` | Yes | **Yes** | Reload services, notify monitoring |
+| `pre_purge` | Yes | Yes | Snapshot or archive a release directory before it may be purged |
+| `post_purge` | Yes | Yes | Cleanup or notification after old releases are removed |
 
-`pre_link` and `pre_enable_release` differ in one critical way: shared dirs/files
-(`var/log`, `.env`, etc.) are **not yet symlinked** at `pre_link` time, but are
-**fully in place** by `pre_enable_release`. Run anything that requires shared config
-files (migrations, cache warming) in `pre_enable_release`, not `pre_link`.
+`pre_link` and `post_link` differ in one critical way: shared dirs/files (`var/log`,
+`.env`, etc.) are **not yet symlinked** at `pre_link` time, but are **fully in place**
+by `post_link`. Run anything that requires shared config files (migrations, cache
+warming) in `post_link`, not `pre_link`.
 
 ## Execution
 
