@@ -31,10 +31,14 @@ settings:
 variables: {} # String key-value pairs for hook templates: {{ .Variables.key }}
 
 hooks:
+  pre_extract: [] # Before artifact extraction
   post_extract: [] # After extraction, before shared linking
   pre_link: [] # Before shared resource linking
-  pre_enable_release: [] # Before current symlink update
-  post_enable_release: [] # After current symlink update
+  post_link: [] # After shared resource linking
+  pre_activate: [] # Before current symlink update
+  post_activate: [] # After current symlink update
+  pre_purge: [] # Before old-release purge
+  post_purge: [] # After old-release purge
 
 # ── Environments ───────────────────────────────────────────────────────────────
 environments:
@@ -51,7 +55,7 @@ environments:
             files:
               - .env
         hooks:
-          post_enable_release:
+          post_activate:
             - cmd: "systemctl reload php-fpm"
               sudo: true
               priority: 10
