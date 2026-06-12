@@ -97,10 +97,14 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "pre_extract": { "$ref": "#/definitions/hookList" },
         "post_extract": { "$ref": "#/definitions/hookList" },
         "pre_link": { "$ref": "#/definitions/hookList" },
-        "pre_enable_release": { "$ref": "#/definitions/hookList" },
-        "post_enable_release": { "$ref": "#/definitions/hookList" }
+        "post_link": { "$ref": "#/definitions/hookList" },
+        "pre_activate": { "$ref": "#/definitions/hookList" },
+        "post_activate": { "$ref": "#/definitions/hookList" },
+        "pre_purge": { "$ref": "#/definitions/hookList" },
+        "post_purge": { "$ref": "#/definitions/hookList" }
       }
     },
     "application": {
