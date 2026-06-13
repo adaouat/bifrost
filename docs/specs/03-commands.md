@@ -101,14 +101,18 @@ local flow below is what the agent runs on each target server.
 2. Verify `releases_root` and `shared_root` exist → create if `--init`, else exit 3
 3. Verify artifact file exists and is readable → exit 3
 4. Create release directory: `{releases_root}/{YYYYMMDD-HHMMSS}` (or `--release-name`)
-5. Extract artifact into release directory (spinner + progress bar)
-6. Run `post_extract` hooks
-7. Run `pre_link` hooks
-8. Link shared directories and files (see spec 04)
-9. Run `pre_enable_release` hooks
-10. Update `{releases_root}/current` symlink → new release directory
-11. Run `post_enable_release` hooks
-12. Purge old releases, keeping `settings.releases_to_keep` most recent
+5. Run `pre_extract` hooks
+6. Extract artifact into release directory (spinner + progress bar)
+7. Run `post_extract` hooks
+8. Run `pre_link` hooks
+9. Link shared directories and files (see spec 04)
+10. Run `post_link` hooks
+11. Run `pre_activate` hooks
+12. Update `{releases_root}/current` symlink → new release directory
+13. Run `post_activate` hooks
+14. Run `pre_purge` hooks
+15. Purge old releases, keeping `settings.releases_to_keep` most recent
+16. Run `post_purge` hooks
 
 ---
 
@@ -161,9 +165,9 @@ and an error asking for `--release`.
 2. Verify release directory exists
 3. If release is already `current`: prompt for confirmation (interactive) or exit 3 (non-interactive with `--no-confirm`)
 4. Link shared directories and files
-5. Run `pre_enable_release` hooks
+5. Run `pre_activate` hooks
 6. Update `current` symlink
-7. Run `post_enable_release` hooks
+7. Run `post_activate` hooks
 
 ---
 
