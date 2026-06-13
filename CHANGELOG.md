@@ -1,5 +1,55 @@
 # Changelog
 
+## [0.20.0](https://github.com/adaouat/bifrost/compare/v0.19.1..v0.20.0) - 2026-06-13
+
+### 🚀 Features
+
+- *(config)* Update config init scaffold for 8-hook lifecycle - ([2b7260e](https://github.com/adaouat/bifrost/commit/2b7260eed0922a38ee4be88430ea1fa48723bd9d)) by @bchatard
+
+- *(hooks)* Expand hook lifecycle to 8 symmetric pre/post stages - ([3f298ae](https://github.com/adaouat/bifrost/commit/3f298ae3db8952436075fcb43e7835c92e797c80)) by @bchatard
+
+
+### 🐛 Bug Fixes
+
+- *(heraut)* Update config to add new required field - ([ede8b33](https://github.com/adaouat/bifrost/commit/ede8b33b7c193bb5772a129f89ae0ae74a1c2c3c)) by @bchatard
+
+
+### 🚜 Refactor
+
+- *(config)* Rename ServerConfig to Server - ([9357cef](https://github.com/adaouat/bifrost/commit/9357cefc868cd678431288cc1157b8f77414f13d)) by @bchatard
+
+
+### 📚 Documentation
+
+- *(adr)* Record hook lifecycle granularity decision (ADR-0012) - ([1b9faf7](https://github.com/adaouat/bifrost/commit/1b9faf70a2e9d6cc328c6393acf24732aab1fbb4)) by @bchatard
+
+- *(claude)* Document transport package and fix lint command name - ([bdc57e4](https://github.com/adaouat/bifrost/commit/bdc57e4b11ccbfae29b4a58d48f064d4af830b96)) by @bchatard
+
+- *(config)* Add annotated sample .bifrost.yml - ([3887416](https://github.com/adaouat/bifrost/commit/3887416b913253f7af1fe548ff479ef02f1eaea4)) by @bchatard
+
+- *(plans)* Record hook lifecycle granularity implementation plan - ([fd32c1e](https://github.com/adaouat/bifrost/commit/fd32c1eaecfa6abf576a4d19480f4b3aaeacaccc)) by @bchatard
+
+- *(schema)* Update bifrost.schema.json for 8-hook lifecycle - ([685d2fe](https://github.com/adaouat/bifrost/commit/685d2fe798d3f2f9684d04ebb94175c953472829)) by @bchatard
+
+- *(specs)* Add hook lifecycle redesign spec - ([fa6df86](https://github.com/adaouat/bifrost/commit/fa6df86df816b449285e319de4705660d8451255)) by @bchatard
+
+- *(specs)* Update spec 02 for 8-hook lifecycle - ([19f21ed](https://github.com/adaouat/bifrost/commit/19f21ed29317848b029c3618f186b031ac7e2b76)) by @bchatard
+
+- *(specs)* Rewrite spec 05 hook lifecycle table for 8 hooks - ([56f0d69](https://github.com/adaouat/bifrost/commit/56f0d6979dd3a52b6f4eff630b4559d069b94fac)) by @bchatard
+
+- *(specs)* Update specs 03 and 06 for 8-hook lifecycle - ([9d56f37](https://github.com/adaouat/bifrost/commit/9d56f373d7c1887cb8720eea9357f45428d66f71)) by @bchatard
+
+- *(tasks)* Mark M18 hook lifecycle granularity complete - ([5619cf4](https://github.com/adaouat/bifrost/commit/5619cf472f2e89eb17253eed53e0a0105af4f19c)) by @bchatard
+
+- Update bifrost.sample.yml for 8-hook lifecycle - ([30786d6](https://github.com/adaouat/bifrost/commit/30786d65827c67ccf1e7cd34b6b25801b9cbd809)) by @bchatard
+
+
+### 🧪 Testing
+
+- *(cmd)* Cover all 8 hook lifecycle points and verify deploy ordering - ([1cc766c](https://github.com/adaouat/bifrost/commit/1cc766c079e27480ee5e56dce5b9d16cb7c5ef19)) by @bchatard
+
+- *(config)* Assert old hook key names are rejected by strict YAML - ([6711c1d](https://github.com/adaouat/bifrost/commit/6711c1dee0790108e32fd6dd939e27450b64cb76)) by @bchatard
+
 ## [0.19.1](https://github.com/adaouat/bifrost/compare/v0.19.0..v0.19.1) - 2026-06-12
 
 ### 🐛 Bug Fixes
