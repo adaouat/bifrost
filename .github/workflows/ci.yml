@@ -23,3 +23,14 @@ jobs:
         run: go build ./cmd/bifrost/
       - name: Check GoReleaser config
         run: goreleaser check
+
+  # Integration tests run the testcontainers suite (real Linux containers over
+  # SSH). GitHub-hosted ubuntu runners ship with Docker, so no extra setup.
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4
+      - name: Integration tests (Docker)
+        run: go test -tags integration ./...

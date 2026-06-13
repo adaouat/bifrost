@@ -234,9 +234,9 @@ The reusable `forge/go-ci.yml` runs `go test ./...` without `-tags integration`,
 bifrost's `ci.yml` only builds — so the entire testcontainers suite is unguarded (this is
 how the broken download path shipped).
 
-- [ ] `.github/workflows/ci.yml` — add a Docker-enabled job running
+- [x] `.github/workflows/ci.yml` — add a Docker-enabled job running
   `go test -tags integration ./...`
-- [ ] Pin any new action to a full commit SHA with a version comment
+- [x] Pin any new action to a full commit SHA with a version comment
 
 ### Hook output over SSH / JSON mode
 
