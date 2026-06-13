@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/adaouat/heraut/main/schema.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/adaouat/heraut/v0.31.0/schema.json
 version: "1"
 
 versioning:
@@ -15,7 +15,8 @@ release:
   notes:
     generator: git-cliff
   platforms:
-    - platform: github
+    - name: GitHub
+      platform: github
       repository: adaouat/bifrost
   assets:
     - "dist/bifrost_*_linux_amd64"
