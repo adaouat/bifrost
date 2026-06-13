@@ -85,6 +85,21 @@ paths:
 	}
 }
 
+func TestParse_RejectsOldHookKeyNames(t *testing.T) {
+	_, err := config.Parse(strings.NewReader(`
+strategy: atomic
+paths:
+  releases_root: /var/www/releases
+  shared_root: /var/www/shared
+hooks:
+  pre_enable_release:
+    - cmd: "echo old"
+`))
+	if err == nil {
+		t.Fatal("expected error for old hook key name pre_enable_release")
+	}
+}
+
 func TestParse_DefaultStrategy(t *testing.T) {
 	cfg, err := config.Parse(strings.NewReader(`
 paths:
