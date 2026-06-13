@@ -259,11 +259,14 @@ Hook, template, extraction, link, symlink, and purge failures return bare `fmt.E
 resolve to exit 1 (Usage), but specs 03/05 promise exit 3 (Runtime) for hook/template
 failures.
 
-- [ ] Classify genuine runtime failures in `internal/strategy/atomic/` and
-  `internal/hooks/` as `cmderr.Runtime` (exit 3)
-- [ ] Integration test: a failing hook (`allow_fail: false`) exits 3
-- [ ] Ensure [Spec 03](../specs/03-commands.md) and [Spec 05](../specs/05-hooks.md) match the
-  implemented codes
+- [x] Classify genuine runtime failures in `internal/strategy/atomic/` and
+  `internal/hooks/` as `cmderr.Runtime` (exit 3); `emitError` now reports the resolved code
+  in the JSON error event instead of a hardcoded 1
+- [x] Test a failing hook (`allow_fail: false`) resolves to exit 3 — unit tests in the hooks
+  runner plus a deployer test with a fake runner (local shell exec is forbidden by the test
+  rules); template errors also resolve to 3
+- [x] Specs 01/03/05 already documented exit 3 for hook/template/runtime failures; the fix
+  aligns the code to them (no spec change needed)
 
 ### Documentation reconciliation
 

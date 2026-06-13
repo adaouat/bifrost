@@ -8,6 +8,7 @@ import (
 
 	"github.com/adaouat/bifrost/internal/config"
 	"github.com/adaouat/forge/exec/exectest"
+	"github.com/adaouat/forge/exitcode"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -78,6 +79,25 @@ func TestRun_NonZeroExitReturnsError(t *testing.T) {
 	hooks := []config.HookEntry{{Cmd: "exit 1", Priority: prio(99999)}}
 	var out bytes.Buffer
 	require.Error(t, Run(mr, hooks, HookData{}, "/tmp", &out))
+}
+
+func TestRun_HookFailureCarriesRuntimeExitCode(t *testing.T) {
+	mr := exectest.NewMockRunner()
+	mr.QueueResponse("", "", errors.New("exit status 1"))
+	hooks := []config.HookEntry{{Cmd: "false", Priority: prio(99999)}}
+	var out bytes.Buffer
+	err := Run(mr, hooks, HookData{}, "/tmp", &out)
+	require.Error(t, err)
+	assert.Equal(t, exitcode.Runtime, exitcode.Resolve(err), "a failing hook must resolve to Runtime (3)")
+}
+
+func TestRun_TemplateErrorCarriesRuntimeExitCode(t *testing.T) {
+	mr := exectest.NewMockRunner()
+	hooks := []config.HookEntry{{Cmd: "{{ .Unclosed", Priority: prio(99999)}}
+	var out bytes.Buffer
+	err := Run(mr, hooks, HookData{}, "/tmp", &out)
+	require.Error(t, err)
+	assert.Equal(t, exitcode.Runtime, exitcode.Resolve(err), "a template error must resolve to Runtime (3)")
 }
 
 func TestRun_CmdDirOverridesWorkingDir(t *testing.T) {

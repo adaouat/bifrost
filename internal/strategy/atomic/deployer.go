@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/adaouat/bifrost/internal/cmderr"
 	"github.com/adaouat/bifrost/internal/config"
 	"github.com/adaouat/bifrost/internal/hooks"
 	"github.com/adaouat/bifrost/internal/strategy"
@@ -80,7 +81,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 
 	releaseDir, err := CreateReleaseDir(merged.ReleasesRoot, opts.ReleaseName)
 	if err != nil {
-		return err
+		return cmderr.Wrap(cmderr.Runtime, err)
 	}
 	d.debug("release dir created", "path", releaseDir, "env", opts.Env, "app", opts.App)
 
@@ -95,7 +96,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 
 	emitError := func(step string, err error) error {
 		if emit != nil {
-			emit.Emit(map[string]any{"event": "error", "step": step, "message": err.Error(), "exit_code": 1})
+			emit.Emit(map[string]any{"event": "error", "step": step, "message": err.Error(), "exit_code": cmderr.Resolve(err)})
 		}
 		return err
 	}
@@ -108,7 +109,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 		start := time.Now()
 		extras, err := fn()
 		if err != nil {
-			return emitError(step, err)
+			return emitError(step, cmderr.Wrap(cmderr.Runtime, err))
 		}
 		if d.jsonMode() {
 			ev := map[string]any{"event": "done", "step": step, "duration_ms": time.Since(start).Milliseconds()}
@@ -166,7 +167,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 	// Extract artifact.
 	info, err := os.Stat(opts.Artifact)
 	if err != nil {
-		return fmt.Errorf("stat artifact: %w", err)
+		return cmderr.Wrap(cmderr.Runtime, fmt.Errorf("stat artifact: %w", err))
 	}
 
 	if d.jsonMode() {
@@ -190,7 +191,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 		}
 	}
 	if err := Extract(ctx, opts.Artifact, releaseDir, progressFn); err != nil {
-		return emitError("extract", fmt.Errorf("extracting artifact: %w", err))
+		return emitError("extract", cmderr.Wrap(cmderr.Runtime, fmt.Errorf("extracting artifact: %w", err)))
 	}
 	doneProgress()
 	d.debug("artifact extracted", "artifact", opts.Artifact, "bytes", info.Size())

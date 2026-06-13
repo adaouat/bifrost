@@ -8,6 +8,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/adaouat/bifrost/internal/cmderr"
 	"github.com/adaouat/bifrost/internal/config"
 	forgeexec "github.com/adaouat/forge/exec"
 )
@@ -73,7 +74,7 @@ func runOne(runner forgeexec.Runner, h config.HookEntry, data HookData, workingD
 
 	rendered, err := renderCmd(h.Cmd, data)
 	if err != nil {
-		return -1, fmt.Errorf("hook template: %w", err)
+		return -1, cmderr.Wrap(cmderr.Runtime, fmt.Errorf("hook template: %w", err))
 	}
 
 	dir := workingDir
@@ -109,7 +110,7 @@ func runOne(runner forgeexec.Runner, h config.HookEntry, data HookData, workingD
 			_, _ = fmt.Fprintf(out, "warning: hook %q failed (allow_fail): exit status %d\n", h.Cmd, code)
 			return code, nil
 		}
-		return code, fmt.Errorf("hook %q: %w", h.Cmd, runErr)
+		return code, cmderr.Wrap(cmderr.Runtime, fmt.Errorf("hook %q: %w", h.Cmd, runErr))
 	}
 
 	return 0, nil

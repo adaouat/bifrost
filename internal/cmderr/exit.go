@@ -15,3 +15,11 @@ const (
 	Config  = forgeexit.Config  // invalid config / validation failure
 	Runtime = forgeexit.Runtime // external command, network, or IO failure
 )
+
+// Wrap annotates err with an exit code, preserving any code already in err's
+// chain (the innermost classification wins). Returns nil when err is nil.
+var Wrap = forgeexit.Wrap
+
+// Resolve maps err to its exit code: nil → 0, an error carrying a code → that
+// code, anything else → Usage.
+var Resolve = forgeexit.Resolve
