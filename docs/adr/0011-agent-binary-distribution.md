@@ -38,10 +38,15 @@ Options considered:
      {os.UserCacheDir()}/bifrost/agents/{version}/{os}_{arch}/bifrost
 4. Cache miss → download:
      https://github.com/adaouat/bifrost/releases/download/v{version}/
-       bifrost_{version}_{os}_{arch}.tar.gz
-   Extract binary, write to cache, chmod +x
+       bifrost_{version}_{os}_{arch}
+   Write to cache, chmod +x
 5. SFTP upload cached binary → /tmp/bifrost-<uuid>/bifrost-agent
 ```
+
+The release asset is a **raw binary** (goreleaser `formats: [binary]`), not an archive — it
+is cached as-is, with no extraction step. A leading `v` in the version is stripped so the
+release-tag path (`v{version}`) and the asset filename (`bifrost_{version}_…`) both match
+goreleaser's `{{ .Tag }}` / `{{ .Version }}` naming.
 
 ### Escape hatch
 

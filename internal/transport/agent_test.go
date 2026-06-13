@@ -1,6 +1,8 @@
 package transport
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"path/filepath"
 	"testing"
 
@@ -44,10 +46,47 @@ func TestCacheKey_Darwin(t *testing.T) {
 
 func TestDownloadURL(t *testing.T) {
 	url := downloadURL("0.9.0", Platform{OS: "linux", Arch: "amd64"})
-	assert.Equal(t, "https://github.com/adaouat/bifrost/releases/download/v0.9.0/bifrost_0.9.0_linux_amd64.tar.gz", url)
+	assert.Equal(t, "https://github.com/adaouat/bifrost/releases/download/v0.9.0/bifrost_0.9.0_linux_amd64", url)
 }
 
 func TestDownloadURL_Darwin(t *testing.T) {
 	url := downloadURL("1.2.3", Platform{OS: "darwin", Arch: "arm64"})
-	assert.Equal(t, "https://github.com/adaouat/bifrost/releases/download/v1.2.3/bifrost_1.2.3_darwin_arm64.tar.gz", url)
+	assert.Equal(t, "https://github.com/adaouat/bifrost/releases/download/v1.2.3/bifrost_1.2.3_darwin_arm64", url)
+}
+
+func TestDownloadURL_NormalizesLeadingV(t *testing.T) {
+	url := downloadURL("v1.2.3", Platform{OS: "linux", Arch: "amd64"})
+	assert.Equal(t, "https://github.com/adaouat/bifrost/releases/download/v1.2.3/bifrost_1.2.3_linux_amd64", url)
+}
+
+func TestDownloadAgent_ReturnsRawBinary(t *testing.T) {
+	want := []byte("\x7fELF not-an-archive")
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/v1.2.3/bifrost_1.2.3_linux_amd64", r.URL.Path)
+		_, _ = w.Write(want)
+	}))
+	defer srv.Close()
+
+	orig := downloadBaseURL
+	downloadBaseURL = srv.URL
+	defer func() { downloadBaseURL = orig }()
+
+	got, err := downloadAgent("1.2.3", Platform{OS: "linux", Arch: "amd64"})
+	require.NoError(t, err)
+	assert.Equal(t, want, got)
+}
+
+func TestDownloadAgent_NotFound(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer srv.Close()
+
+	orig := downloadBaseURL
+	downloadBaseURL = srv.URL
+	defer func() { downloadBaseURL = orig }()
+
+	_, err := downloadAgent("9.9.9", Platform{OS: "linux", Arch: "amd64"})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "--agent-binary")
 }

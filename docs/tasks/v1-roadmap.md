@@ -196,13 +196,14 @@ working process as the rest of v1: two-step commit flow, TDD (failing test first
 `.tar.gz`, untars it, and re-prefixes an already-`v`-prefixed version — so auto-download
 404s on every release and only `--agent-binary` works.
 
-- [ ] `internal/transport/agent.go` — `downloadURL` points at the raw binary asset (no
+- [x] `internal/transport/agent.go` — `downloadURL` points at the raw binary asset (no
   `.tar.gz`); remove `extractBinary`/gzip+tar; cache the downloaded bytes directly
-- [ ] `internal/transport/agent.go` — normalise the version (strip a leading `v`) so the
+- [x] `internal/transport/agent.go` — normalise the version (strip a leading `v`) so the
   release-tag path and asset filename match goreleaser's `{{ .Tag }}` / `{{ .Version }}`
-- [ ] Test the download path against a local HTTP server serving a fake asset (not the
-  `--agent-binary` bypass), asserting the cached file is the runnable binary
-- [ ] Update [ADR-0011](../adr/0011-agent-binary-distribution.md) and
+- [x] Test `downloadURL`/`downloadAgent` against a local HTTP server (no `--agent-binary`
+  bypass), asserting the raw binary bytes are returned (the cache write is a local-FS op
+  excluded by the no-write test rule)
+- [x] Update [ADR-0011](../adr/0011-agent-binary-distribution.md) and
   [Spec 07](../specs/07-ssh-transport.md) to describe raw-binary distribution
 
 ### Agent binary integrity verification

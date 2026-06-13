@@ -76,8 +76,11 @@ Cache is checked before any download. A cache hit skips the download entirely.
 
 ### Download URL
 
+The release asset is a raw binary (no archive wrapper). A leading `v` in the version is
+stripped so the release-tag path and the asset filename match goreleaser's naming:
+
 ```
-https://github.com/adaouat/bifrost/releases/download/v{version}/bifrost_{version}_{os}_{arch}.tar.gz
+https://github.com/adaouat/bifrost/releases/download/v{version}/bifrost_{version}_{os}_{arch}
 ```
 
 If the release does not exist (e.g. a development build), Bifrost fails with exit code 3

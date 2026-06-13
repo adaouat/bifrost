@@ -1,14 +1,10 @@
 package transport
 
 import (
-	"archive/tar"
-	"compress/gzip"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 )
@@ -89,11 +85,13 @@ func cachePath(version string, p Platform) (string, error) {
 	return filepath.Join(base, cacheKey(version, p)), nil
 }
 
+var downloadBaseURL = "https://github.com/adaouat/bifrost/releases/download"
+
+// downloadURL builds the raw-binary release asset URL. The leading "v" is
+// stripped so the tag path (v{ver}) and asset name ({ver}) match goreleaser.
 func downloadURL(version string, p Platform) string {
-	return fmt.Sprintf(
-		"https://github.com/adaouat/bifrost/releases/download/v%s/bifrost_%s_%s_%s.tar.gz",
-		version, version, p.OS, p.Arch,
-	)
+	v := strings.TrimPrefix(version, "v")
+	return fmt.Sprintf("%s/v%s/bifrost_%s_%s_%s", downloadBaseURL, v, v, p.OS, p.Arch)
 }
 
 func downloadAgent(version string, p Platform) ([]byte, error) {
@@ -106,33 +104,9 @@ func downloadAgent(version string, p Platform) ([]byte, error) {
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("downloading agent from %s: HTTP %d (no release for this version? use --agent-binary)", url, resp.StatusCode)
 	}
-	return extractBinary(resp.Body)
-}
-
-// extractBinary pulls the bifrost binary out of a goreleaser .tar.gz stream.
-func extractBinary(r io.Reader) ([]byte, error) {
-	gz, err := gzip.NewReader(r)
+	data, err := io.ReadAll(resp.Body) //nolint:gosec // trusted release artifact
 	if err != nil {
-		return nil, fmt.Errorf("reading agent archive: %w", err)
+		return nil, fmt.Errorf("reading agent download: %w", err)
 	}
-	defer func() { _ = gz.Close() }()
-
-	tr := tar.NewReader(gz)
-	for {
-		hdr, err := tr.Next()
-		if errors.Is(err, io.EOF) {
-			break
-		}
-		if err != nil {
-			return nil, fmt.Errorf("reading agent archive: %w", err)
-		}
-		if hdr.Typeflag == tar.TypeReg && path.Base(hdr.Name) == "bifrost" {
-			data, err := io.ReadAll(tr) //nolint:gosec // trusted release artifact
-			if err != nil {
-				return nil, fmt.Errorf("extracting agent binary: %w", err)
-			}
-			return data, nil
-		}
-	}
-	return nil, fmt.Errorf("agent binary not found in archive")
+	return data, nil
 }
