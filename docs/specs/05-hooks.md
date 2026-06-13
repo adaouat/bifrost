@@ -105,7 +105,7 @@ offending template and error displayed.
 | `sudo` | bool | false | Wrap with `sudo sh -c`. |
 | `cmd_dir` | string | release dir | Working directory for the command. |
 | `allow_fail` | bool | false | Continue deployment on non-zero exit. |
-| `interactive` | bool | false | Prompt user for confirmation before running. Not supported in v0 — deployment errors if set to `true`. |
+| `interactive` | bool | false | Prompt user for confirmation before running. Skipped with a warning in non-interactive modes (json/plain, or no TTY). |
 
 ## Error handling
 

@@ -29,7 +29,7 @@
 
 ## Config
 
-- Default config path: `./.bifrost.yml`. Always overridable with `--config <path>`.
+- Config path resolution chain: `--config` → `BIFROST_FILE` → `.config/bifrost.yml` → `.bifrost.yml`.
 - `strategy: atomic` is the default and only valid value in v0.
 
 ## Hook execution

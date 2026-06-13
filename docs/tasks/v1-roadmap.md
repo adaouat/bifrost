@@ -272,19 +272,20 @@ failures.
 
 Standalone doc drift found during the review, not tied to a code change above.
 
-- [ ] [Spec 05](../specs/05-hooks.md) — remove the stale "interactive hooks not supported in
+- [x] [Spec 05](../specs/05-hooks.md) — remove the stale "interactive hooks not supported in
   v0" claim (the code supports them)
-- [ ] [`docs/specs/README.md`](../specs/README.md) — add Spec 07 (SSH Transport) and Spec 08
+- [x] [`docs/specs/README.md`](../specs/README.md) — add Spec 07 (SSH Transport) and Spec 08
   (Multi-server) to the index
-- [ ] [Spec 03](../specs/03-commands.md) + `.claude/rules/coding.md` — correct the
+- [x] [Spec 03](../specs/03-commands.md) + `.claude/rules/coding.md` — correct the
   `--config` default to the real chain (`.config/bifrost.yml` → `.bifrost.yml`)
-- [ ] [Spec 07](../specs/07-ssh-transport.md) — align the `release list`/`activate`/`rollback`
+- [x] [Spec 07](../specs/07-ssh-transport.md) — align the `release list`/`activate`/`rollback`
   agent-invocation examples with the actual client commands
-- [ ] [`versions.md`](versions.md) — update the milestone range to include M18–M19
+- [x] [`versions.md`](versions.md) — update the milestone range to include M18–M19
+- [x] Qualify the `ADR-0018` reference in `.goreleaser.yml` as a forge ADR
 - [ ] Move working-doc artifacts out of `docs/` (the ~2,000-line
   `docs/superpowers/plans/2026-06-12-hook-lifecycle.md` and the unindexed
-  `docs/specs/2026-06-12-hook-lifecycle-design.md`); qualify the `ADR-0018` reference in
-  `.goreleaser.yml` as a forge ADR
+  `docs/specs/2026-06-12-hook-lifecycle-design.md`) — deferred: deleting/moving committed
+  files needs the destination confirmed (the M18 entry links the design doc)
 
 Spec references: full code/doc review 2026-06-13; [Spec 03](../specs/03-commands.md),
 [Spec 05](../specs/05-hooks.md), [Spec 07](../specs/07-ssh-transport.md),

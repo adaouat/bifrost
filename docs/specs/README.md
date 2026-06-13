@@ -8,3 +8,5 @@
 | [04 — Shared Resources](04-shared-resources.md) | Symlink management details |
 | [05 — Hooks](05-hooks.md) | Hook system, execution, templates |
 | [06 — TUI & UX](06-tui-ux.md) | Output modes, UX reference, interactive flows |
+| [07 — SSH Transport](07-ssh-transport.md) | Client mode, auth, agent binary, staging, flat config |
+| [08 — Multi-server commands](08-multi-server.md) | Sequential per-server execution and the release TUI |

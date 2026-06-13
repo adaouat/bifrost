@@ -62,7 +62,7 @@ v0 local mode is preserved: no `servers:` config = runs on the server as before.
 - `strategy.go` interface formalized — atomic strategy becomes the first typed implementation
 - `release list` / `activate` / `rollback` work over SSH
 
-**Implementation milestones:** see [`v1-roadmap.md`](v1-roadmap.md) (M11–M17).
+**Implementation milestones:** see [`v1-roadmap.md`](v1-roadmap.md) (M11–M19).
 
 **Known limitation carried forward:**
 - Windows: `sh -c` in hooks requires Git Bash or WSL in PATH; symlinks require Developer

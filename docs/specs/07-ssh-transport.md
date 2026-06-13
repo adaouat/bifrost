@@ -127,8 +127,9 @@ Before uploading, the client generates a flat config for the agent:
 3. Write the merged top-level fields to `bifrost.yml` in the staging directory.
 
 The agent receives a config with no `environments:` section. The config loader detects
-this and operates in flat mode: all required fields are read directly from the top level;
-`--env` and `--app` flags are neither required nor accepted.
+this and operates in flat mode: required fields are read directly from the top level and
+`--env`/`--app` are not required. The client still passes `--env`/`--app` on the release
+commands below for symmetry with local invocation; a flat-mode agent ignores them.
 
 ## Agent invocation
 
@@ -149,26 +150,29 @@ this and operates in flat mode: all required fields are read directly from the t
 ```
 {staging_dir}/bifrost-{uuid}/bifrost-agent release list \
   --output json \
-  --config {staging_dir}/bifrost-{uuid}/bifrost.yml
+  --config {staging_dir}/bifrost-{uuid}/bifrost.yml \
+  --env {env} --app {app}
 ```
 
 ### `release activate`
 
 ```
 {staging_dir}/bifrost-{uuid}/bifrost-agent release activate \
-  --output json \
+  --release {release-name} --no-confirm \
   --config {staging_dir}/bifrost-{uuid}/bifrost.yml \
-  --release {release-name}
+  --env {env} --app {app}
 ```
 
 `--release` is always set by the client (selected in the local TUI before the server loop).
+`--no-confirm` makes an already-current release fail fast rather than prompt on the remote.
 
 ### `release rollback`
 
 ```
 {staging_dir}/bifrost-{uuid}/bifrost-agent release rollback \
   --output json \
-  --config {staging_dir}/bifrost-{uuid}/bifrost.yml
+  --config {staging_dir}/bifrost-{uuid}/bifrost.yml \
+  --env {env} --app {app}
 ```
 
 ## JSON event stream

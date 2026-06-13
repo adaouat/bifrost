@@ -6,7 +6,7 @@ Available on all commands:
 
 | Flag | Default | Description |
 |---|---|---|
-| `--config` | `./.bifrost.yml` | Path to configuration file |
+| `--config` | `.config/bifrost.yml`, then `.bifrost.yml` | Config file path (full resolution chain in [Spec 02](02-configuration.md)) |
 | `--output` | `human` | Output mode: `human`, `json`, `plain` |
 | `--dry-run` | `false` | Show what would happen without making changes |
 | `--verbose` | `false` | Enable verbose logging |
