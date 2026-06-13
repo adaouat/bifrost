@@ -179,3 +179,139 @@ Spec references: [ADR-0012](../adr/0012-hook-lifecycle-granularity.md),
 Deliverable: `bifrost deploy` fires all 8 hooks in pipeline order; `release
 activate`/`rollback` use the renamed `pre_activate`/`post_activate`; old hook names
 are rejected with a clear config error.
+
+---
+
+## M19 — v1 hardening
+
+Close the critical and important gaps surfaced by the full code/doc review (2026-06-13).
+The defects cluster in the v1 SSH/agent path (M11–M18), which CI never exercises. Same
+working process as the rest of v1: two-step commit flow, TDD (failing test first),
+`hk check` before every commit. One task at a time.
+
+### Agent binary download (Critical)
+
+`.goreleaser.yml` ships raw binaries (`formats: [binary]`, asset
+`bifrost_{version}_{os}_{arch}`, no archive), but `internal/transport/agent.go` requests a
+`.tar.gz`, untars it, and re-prefixes an already-`v`-prefixed version — so auto-download
+404s on every release and only `--agent-binary` works.
+
+- [ ] `internal/transport/agent.go` — `downloadURL` points at the raw binary asset (no
+  `.tar.gz`); remove `extractBinary`/gzip+tar; cache the downloaded bytes directly
+- [ ] `internal/transport/agent.go` — normalise the version (strip a leading `v`) so the
+  release-tag path and asset filename match goreleaser's `{{ .Tag }}` / `{{ .Version }}`
+- [ ] Test the download path against a local HTTP server serving a fake asset (not the
+  `--agent-binary` bypass), asserting the cached file is the runnable binary
+- [ ] Update [ADR-0011](../adr/0011-agent-binary-distribution.md) and
+  [Spec 07](../specs/07-ssh-transport.md) to describe raw-binary distribution
+
+### Agent binary integrity verification
+
+The downloaded binary is cached and executed (often under `sudo`) with no integrity check;
+goreleaser already publishes `checksums.txt`.
+
+- [ ] `internal/transport/agent.go` — fetch `checksums.txt` and verify the asset's SHA-256
+  before writing it to cache; fail with a clear error on mismatch
+- [ ] Unit test: a tampered binary is rejected
+- [ ] Record the integrity decision in [ADR-0011](../adr/0011-agent-binary-distribution.md)
+
+### Quote remote command arguments
+
+Agent invocation strings interpolate `env`, `app`, `release-name`, and the artifact basename
+straight into a remote shell, unquoted — they break on spaces and are injectable.
+
+- [ ] Add a POSIX shell-quoting helper in `internal/transport`
+- [ ] Apply it to every interpolated value in `internal/cmd/client_deploy.go`,
+  `internal/cmd/release/client_activate.go`, `client_list.go`, `client_rollback.go`, and the
+  `rm -rf` / `chmod` calls in `internal/transport/staging.go`
+- [ ] Integration test: a release name and artifact filename containing a space and `;`
+  deploy correctly and do not inject
+
+### Run integration tests in CI
+
+The reusable `forge/go-ci.yml` runs `go test ./...` without `-tags integration`, and
+bifrost's `ci.yml` only builds — so the entire testcontainers suite is unguarded (this is
+how the broken download path shipped).
+
+- [ ] `.github/workflows/ci.yml` — add a Docker-enabled job running
+  `go test -tags integration ./...`
+- [ ] Pin any new action to a full commit SHA with a version comment
+
+### Hook output over SSH / JSON mode
+
+In `--output json` mode the deployer writes raw hook stdout/stderr to the same stream as the
+JSON events (`internal/strategy/atomic/deployer.go`, `internal/hooks/runner.go`); over SSH
+the client's NDJSON parser drops it (`internal/tui/stream.go`), so hook output is invisible
+remotely.
+
+- [ ] Emit hook output as JSON events (e.g. `hook_output`) instead of raw writes to the
+  protocol stream; render them in `internal/tui/stream.go`
+- [ ] Integration test: a hook that prints to stdout has its output shown in an over-SSH
+  deploy, and the JSON stream stays valid NDJSON
+
+### Exit-code classification for deployer failures
+
+Hook, template, extraction, link, symlink, and purge failures return bare `fmt.Errorf` and
+resolve to exit 1 (Usage), but specs 03/05 promise exit 3 (Runtime) for hook/template
+failures.
+
+- [ ] Classify genuine runtime failures in `internal/strategy/atomic/` and
+  `internal/hooks/` as `cmderr.Runtime` (exit 3)
+- [ ] Integration test: a failing hook (`allow_fail: false`) exits 3
+- [ ] Ensure [Spec 03](../specs/03-commands.md) and [Spec 05](../specs/05-hooks.md) match the
+  implemented codes
+
+### Documentation reconciliation
+
+Standalone doc drift found during the review, not tied to a code change above.
+
+- [ ] [Spec 05](../specs/05-hooks.md) — remove the stale "interactive hooks not supported in
+  v0" claim (the code supports them)
+- [ ] [`docs/specs/README.md`](../specs/README.md) — add Spec 07 (SSH Transport) and Spec 08
+  (Multi-server) to the index
+- [ ] [Spec 03](../specs/03-commands.md) + `.claude/rules/coding.md` — correct the
+  `--config` default to the real chain (`.config/bifrost.yml` → `.bifrost.yml`)
+- [ ] [Spec 07](../specs/07-ssh-transport.md) — align the `release list`/`activate`/`rollback`
+  agent-invocation examples with the actual client commands
+- [ ] [`versions.md`](versions.md) — update the milestone range to include M18–M19
+- [ ] Move working-doc artifacts out of `docs/` (the ~2,000-line
+  `docs/superpowers/plans/2026-06-12-hook-lifecycle.md` and the unindexed
+  `docs/specs/2026-06-12-hook-lifecycle-design.md`); qualify the `ADR-0018` reference in
+  `.goreleaser.yml` as a forge ADR
+
+Spec references: full code/doc review 2026-06-13; [Spec 03](../specs/03-commands.md),
+[Spec 05](../specs/05-hooks.md), [Spec 07](../specs/07-ssh-transport.md),
+[ADR-0011](../adr/0011-agent-binary-distribution.md).
+
+Deliverable: `bifrost deploy` to a server without `--agent-binary` downloads, verifies, and
+runs the matching agent; remote commands are injection-safe; hook output is visible over SSH;
+runtime failures exit 3; CI runs the integration suite; specs match the code.
+
+---
+
+## M20 — Cleanup
+
+Lower-priority simplifications and hardening from the 2026-06-13 review. Quality only, no
+behaviour change expected (except where noted). TDD where behaviour changes; pure refactors
+keep the existing tests green. Same two-step commit flow, one task at a time.
+
+- [ ] Deduplicate the flat-detect → merge → validate block shared by `deploy`, `release list`,
+  `release activate`, `release rollback`; share `writeTempFlatConfig`, the env-map helper, and
+  the interactive-confirm helper across the `cmd` and `release` packages (S1)
+- [ ] Collapse the 8 near-identical hook-stage blocks in
+  `internal/strategy/atomic/deployer.go` into a single `runHookStage` helper (S2)
+- [ ] `internal/cmd/deploy.go` — pass `cmd.Context()` instead of `context.Background()` so
+  SIGINT cancels the deploy (S3)
+- [ ] Pick one error-inspection idiom: `errors.AsType` (`ssh.go`) vs `errors.As`
+  (`runner.go`) (S4)
+- [ ] `internal/config` — reject `strategy` values other than `atomic` in v0 (S5)
+- [ ] `internal/config` — reject an empty hook `cmd` at load time (S6)
+- [ ] `internal/tui/stream.go` — replace the 64 KB `bufio.Scanner` with a larger buffer or
+  `bufio.Reader` so large event lines don't truncate the stream (S7)
+- [ ] Use the existing `SFTP.Chmod` instead of shelling out `chmod +x` for the agent (S8)
+- [ ] `internal/transport/agent.go` — give the download an `http.Client` with a timeout (S9)
+- [ ] `internal/strategy/atomic/deployer.go` — log `purgePlanErr` instead of silently
+  discarding it (S10)
+
+Deliverable: duplication removed, deploy honours cancellation, config rejects invalid
+strategy/empty hooks, and the remaining review nits are closed. No functional regressions.
