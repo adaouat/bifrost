@@ -48,6 +48,16 @@ is cached as-is, with no extraction step. A leading `v` in the version is stripp
 release-tag path (`v{version}`) and the asset filename (`bifrost_{version}_…`) both match
 goreleaser's `{{ .Tag }}` / `{{ .Version }}` naming.
 
+### Integrity verification
+
+Before the downloaded binary is written to the cache, its SHA-256 is verified against the
+`checksums.txt` published alongside the release
+(`…/releases/download/v{version}/checksums.txt`). A mismatch — or a missing entry for the
+platform's asset — aborts with a clear error and nothing is cached. The agent executes on
+the target (frequently via `sudo`), so an unverified binary must never run. The
+`--agent-binary` escape hatch bypasses both the download and this check: the operator
+vouches for the binary they supply.
+
 ### Escape hatch
 
 `--agent-binary <local-path>` flag on `deploy` and all `release` commands bypasses the
@@ -88,3 +98,5 @@ the OS's cache eviction policies.
   fails with a clear error message pointing to `--agent-binary`.
 - Cache is never invalidated automatically for a given version; old versions accumulate
   until the user clears `{os.UserCacheDir()}/bifrost/agents/`.
+- `agent.go` also downloads `checksums.txt` and verifies the binary's SHA-256 before
+  caching; a corrupted or substituted asset is rejected before it can run.

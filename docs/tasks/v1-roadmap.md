@@ -211,10 +211,10 @@ working process as the rest of v1: two-step commit flow, TDD (failing test first
 The downloaded binary is cached and executed (often under `sudo`) with no integrity check;
 goreleaser already publishes `checksums.txt`.
 
-- [ ] `internal/transport/agent.go` — fetch `checksums.txt` and verify the asset's SHA-256
+- [x] `internal/transport/agent.go` — fetch `checksums.txt` and verify the asset's SHA-256
   before writing it to cache; fail with a clear error on mismatch
-- [ ] Unit test: a tampered binary is rejected
-- [ ] Record the integrity decision in [ADR-0011](../adr/0011-agent-binary-distribution.md)
+- [x] Unit test: a tampered binary is rejected
+- [x] Record the integrity decision in [ADR-0011](../adr/0011-agent-binary-distribution.md)
 
 ### Quote remote command arguments
 

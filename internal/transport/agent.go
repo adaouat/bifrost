@@ -1,6 +1,8 @@
 package transport
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
@@ -44,6 +46,9 @@ func ResolveAgentBinary(version string, p Platform) (string, error) {
 
 	data, err := downloadAgent(version, p)
 	if err != nil {
+		return "", err
+	}
+	if err := verifyChecksum(version, p, data); err != nil {
 		return "", err
 	}
 	if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
@@ -90,8 +95,13 @@ var downloadBaseURL = "https://github.com/adaouat/bifrost/releases/download"
 // downloadURL builds the raw-binary release asset URL. The leading "v" is
 // stripped so the tag path (v{ver}) and asset name ({ver}) match goreleaser.
 func downloadURL(version string, p Platform) string {
+	return fmt.Sprintf("%s/v%s/%s", downloadBaseURL, strings.TrimPrefix(version, "v"), assetName(version, p))
+}
+
+// assetName is the goreleaser release asset filename for a platform.
+func assetName(version string, p Platform) string {
 	v := strings.TrimPrefix(version, "v")
-	return fmt.Sprintf("%s/v%s/bifrost_%s_%s_%s", downloadBaseURL, v, v, p.OS, p.Arch)
+	return fmt.Sprintf("bifrost_%s_%s_%s", v, p.OS, p.Arch)
 }
 
 func downloadAgent(version string, p Platform) ([]byte, error) {
@@ -109,4 +119,50 @@ func downloadAgent(version string, p Platform) ([]byte, error) {
 		return nil, fmt.Errorf("reading agent download: %w", err)
 	}
 	return data, nil
+}
+
+// verifyChecksum downloads the release checksums.txt and verifies that data's
+// SHA-256 matches the digest recorded for the platform's asset. The agent runs
+// remotely (often via sudo), so an unverified binary must never be cached.
+func verifyChecksum(version string, p Platform, data []byte) error {
+	url := checksumURL(version)
+	resp, err := http.Get(url) //nolint:gosec // release URL is built from the trusted version
+	if err != nil {
+		return fmt.Errorf("downloading checksums: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("downloading checksums from %s: HTTP %d", url, resp.StatusCode)
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("reading checksums: %w", err)
+	}
+
+	name := assetName(version, p)
+	want, err := checksumFor(string(body), name)
+	if err != nil {
+		return err
+	}
+	sum := sha256.Sum256(data)
+	if got := hex.EncodeToString(sum[:]); got != want {
+		return fmt.Errorf("agent checksum mismatch for %s: expected %s, got %s", name, want, got)
+	}
+	return nil
+}
+
+// checksumFor returns the hex SHA-256 recorded for filename in goreleaser's
+// checksums.txt ("<sha256>  <filename>" per line).
+func checksumFor(checksums, filename string) (string, error) {
+	for line := range strings.SplitSeq(checksums, "\n") {
+		fields := strings.Fields(line)
+		if len(fields) == 2 && fields[1] == filename {
+			return fields[0], nil
+		}
+	}
+	return "", fmt.Errorf("no checksum for %s in checksums.txt", filename)
+}
+
+func checksumURL(version string) string {
+	return fmt.Sprintf("%s/v%s/checksums.txt", downloadBaseURL, strings.TrimPrefix(version, "v"))
 }

@@ -1,6 +1,8 @@
 package transport
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
@@ -89,4 +91,59 @@ func TestDownloadAgent_NotFound(t *testing.T) {
 	_, err := downloadAgent("9.9.9", Platform{OS: "linux", Arch: "amd64"})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "--agent-binary")
+}
+
+func TestVerifyChecksum_Match(t *testing.T) {
+	data := []byte("agent-binary-bytes")
+	sum := sha256.Sum256(data)
+	checksums := hex.EncodeToString(sum[:]) + "  bifrost_1.2.3_linux_amd64\n"
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/v1.2.3/checksums.txt", r.URL.Path)
+		_, _ = w.Write([]byte(checksums))
+	}))
+	defer srv.Close()
+
+	orig := downloadBaseURL
+	downloadBaseURL = srv.URL
+	defer func() { downloadBaseURL = orig }()
+
+	err := verifyChecksum("1.2.3", Platform{OS: "linux", Arch: "amd64"}, data)
+	require.NoError(t, err)
+}
+
+func TestVerifyChecksum_Tampered(t *testing.T) {
+	good := sha256.Sum256([]byte("the-real-agent"))
+	checksums := hex.EncodeToString(good[:]) + "  bifrost_1.2.3_linux_amd64\n"
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(checksums))
+	}))
+	defer srv.Close()
+
+	orig := downloadBaseURL
+	downloadBaseURL = srv.URL
+	defer func() { downloadBaseURL = orig }()
+
+	err := verifyChecksum("1.2.3", Platform{OS: "linux", Arch: "amd64"}, []byte("a-tampered-agent"))
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "checksum mismatch")
+}
+
+func TestVerifyChecksum_NoEntryForPlatform(t *testing.T) {
+	sum := sha256.Sum256([]byte("data"))
+	checksums := hex.EncodeToString(sum[:]) + "  bifrost_1.2.3_linux_amd64\n"
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(checksums))
+	}))
+	defer srv.Close()
+
+	orig := downloadBaseURL
+	downloadBaseURL = srv.URL
+	defer func() { downloadBaseURL = orig }()
+
+	err := verifyChecksum("1.2.3", Platform{OS: "darwin", Arch: "arm64"}, []byte("data"))
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "no checksum")
 }
