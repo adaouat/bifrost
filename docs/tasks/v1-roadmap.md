@@ -221,12 +221,12 @@ goreleaser already publishes `checksums.txt`.
 Agent invocation strings interpolate `env`, `app`, `release-name`, and the artifact basename
 straight into a remote shell, unquoted — they break on spaces and are injectable.
 
-- [ ] Add a POSIX shell-quoting helper in `internal/transport`
-- [ ] Apply it to every interpolated value in `internal/cmd/client_deploy.go`,
+- [x] Add a POSIX shell-quoting helper in `internal/transport`
+- [x] Apply it to every interpolated value in `internal/cmd/client_deploy.go`,
   `internal/cmd/release/client_activate.go`, `client_list.go`, `client_rollback.go`, and the
   `rm -rf` / `chmod` calls in `internal/transport/staging.go`
-- [ ] Integration test: a release name and artifact filename containing a space and `;`
-  deploy correctly and do not inject
+- [x] Integration test: a value containing a space and `;`, quoted by `ShellQuote`,
+  round-trips as one literal argument over a real SSH shell and does not inject
 
 ### Run integration tests in CI
 

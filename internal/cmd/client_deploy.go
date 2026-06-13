@@ -94,7 +94,7 @@ func deployToServer(version string, _ *config.MergedConfig, cfg *config.Config, 
 		return fmt.Errorf("uploading artifact to %s: %w", srv.Name, err)
 	}
 
-	chmodRes, err := client.Exec("chmod +x " + remoteAgent)
+	chmodRes, err := client.Exec("chmod +x " + transport.ShellQuote(remoteAgent))
 	if err != nil {
 		return fmt.Errorf("chmod agent on %s: %w", srv.Name, err)
 	}
@@ -103,7 +103,8 @@ func deployToServer(version string, _ *config.MergedConfig, cfg *config.Config, 
 	}
 
 	agentCmd := fmt.Sprintf("%s deploy --output json --config %s --artifact %s --release-name %s",
-		remoteAgent, remoteConfig, remoteArtifact, releaseName)
+		transport.ShellQuote(remoteAgent), transport.ShellQuote(remoteConfig),
+		transport.ShellQuote(remoteArtifact), transport.ShellQuote(releaseName))
 
 	pr, pw := io.Pipe()
 	var execResult *transport.ExecResult

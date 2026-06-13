@@ -57,7 +57,7 @@ func (s *Staging) UploadBytes(data []byte, remoteName string) (string, error) {
 // to run after the agent exits, regardless of the deploy outcome.
 func (s *Staging) Cleanup() error {
 	_ = s.sftp.Close()
-	res, err := s.client.Exec("rm -rf " + s.Dir)
+	res, err := s.client.Exec("rm -rf " + ShellQuote(s.Dir))
 	if err != nil {
 		return fmt.Errorf("cleanup staging dir %s: %w", s.Dir, err)
 	}

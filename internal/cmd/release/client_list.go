@@ -73,7 +73,8 @@ func fetchReleaseEntries(version string, cfg *config.Config, env, app, agentBina
 	defer cleanup()
 
 	agentCmd := fmt.Sprintf("%s release list --output json --config %s --env %s --app %s",
-		remoteAgent, remoteConfig, env, app)
+		transport.ShellQuote(remoteAgent), transport.ShellQuote(remoteConfig),
+		transport.ShellQuote(env), transport.ShellQuote(app))
 
 	res, err := client.Exec(agentCmd)
 	if err != nil {
@@ -146,7 +147,7 @@ func stageAgentSession(version string, cfg *config.Config, env, app, agentBinary
 		return nil, "", "", nil, fmt.Errorf("uploading config to %s: %w", srv.Name, err)
 	}
 
-	chmodRes, err := client.Exec("chmod +x " + remoteAgent)
+	chmodRes, err := client.Exec("chmod +x " + transport.ShellQuote(remoteAgent))
 	if err != nil {
 		cleanConfig()
 		_ = staging.Cleanup()

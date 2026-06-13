@@ -9,6 +9,7 @@ import (
 
 	"github.com/adaouat/bifrost/internal/cmderr"
 	"github.com/adaouat/bifrost/internal/config"
+	"github.com/adaouat/bifrost/internal/transport"
 	"github.com/adaouat/bifrost/internal/tui"
 	forgeui "github.com/adaouat/forge/ui"
 )
@@ -47,7 +48,8 @@ func releaseRollbackOnServer(version string, cfg *config.Config, env, app, agent
 	defer cleanup()
 
 	agentCmd := fmt.Sprintf("%s release rollback --output json --config %s --env %s --app %s",
-		remoteAgent, remoteConfig, env, app)
+		transport.ShellQuote(remoteAgent), transport.ShellQuote(remoteConfig),
+		transport.ShellQuote(env), transport.ShellQuote(app))
 
 	res, err := client.Exec(agentCmd)
 	if err != nil {

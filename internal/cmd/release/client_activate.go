@@ -9,6 +9,7 @@ import (
 
 	"github.com/adaouat/bifrost/internal/cmderr"
 	"github.com/adaouat/bifrost/internal/config"
+	"github.com/adaouat/bifrost/internal/transport"
 	"github.com/adaouat/bifrost/internal/tui"
 	forgeui "github.com/adaouat/forge/ui"
 )
@@ -64,7 +65,8 @@ func releaseActivateOnServer(version string, cfg *config.Config, env, app, agent
 	defer cleanup()
 
 	agentCmd := fmt.Sprintf("%s release activate --release %s --no-confirm --config %s --env %s --app %s",
-		remoteAgent, releaseName, remoteConfig, env, app)
+		transport.ShellQuote(remoteAgent), transport.ShellQuote(releaseName),
+		transport.ShellQuote(remoteConfig), transport.ShellQuote(env), transport.ShellQuote(app))
 
 	res, err := client.Exec(agentCmd)
 	if err != nil {
