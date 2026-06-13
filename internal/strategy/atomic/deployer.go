@@ -58,6 +58,13 @@ func (d *Deployer) WithLogger(l *slog.Logger) *Deployer {
 	return d
 }
 
+// WithRunner replaces the command runner used for hook execution and returns d
+// for chaining. Tests inject a fake runner to avoid real shell execution.
+func (d *Deployer) WithRunner(r forgeexec.Runner) *Deployer {
+	d.runner = r
+	return d
+}
+
 // debug emits an operator-debug log line when a logger is set.
 func (d *Deployer) debug(msg string, args ...any) {
 	if d.logger != nil {
@@ -141,7 +148,14 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 	}
 	hookEventFn := hookEmitter(emit)
 
-	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PreExtract, hookData, releaseDir, d.out, d.confirmFn, "pre_extract", hookEventFn); err != nil {
+	// In JSON mode hook stdout/stderr must become events, not raw writes to the
+	// shared stream; otherwise they corrupt the NDJSON the client parses.
+	hookOut := d.out
+	if emit != nil {
+		hookOut = tui.NewHookOutputWriter(emit)
+	}
+
+	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PreExtract, hookData, releaseDir, hookOut, d.confirmFn, "pre_extract", hookEventFn); err != nil {
 		return emitError("pre_extract", fmt.Errorf("pre_extract hooks: %w", err))
 	}
 	if !d.jsonMode() && len(merged.Hooks.PreExtract) > 0 {
@@ -187,7 +201,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 		sp.Step("Artifact extracted", fmt.Sprintf("(%.1fs)", time.Since(extractStart).Seconds()))
 	}
 
-	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PostExtract, hookData, releaseDir, d.out, d.confirmFn, "post_extract", hookEventFn); err != nil {
+	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PostExtract, hookData, releaseDir, hookOut, d.confirmFn, "post_extract", hookEventFn); err != nil {
 		return emitError("post_extract", fmt.Errorf("post_extract hooks: %w", err))
 	}
 	if !d.jsonMode() && len(merged.Hooks.PostExtract) > 0 {
@@ -195,7 +209,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 		sp.Step("post_extract hooks", fmt.Sprintf("(%d/%d)", n, n))
 	}
 
-	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PreLink, hookData, releaseDir, d.out, d.confirmFn, "pre_link", hookEventFn); err != nil {
+	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PreLink, hookData, releaseDir, hookOut, d.confirmFn, "pre_link", hookEventFn); err != nil {
 		return emitError("pre_link", fmt.Errorf("pre_link hooks: %w", err))
 	}
 	if !d.jsonMode() && len(merged.Hooks.PreLink) > 0 {
@@ -220,7 +234,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 		}
 	}
 
-	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PostLink, hookData, releaseDir, d.out, d.confirmFn, "post_link", hookEventFn); err != nil {
+	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PostLink, hookData, releaseDir, hookOut, d.confirmFn, "post_link", hookEventFn); err != nil {
 		return emitError("post_link", fmt.Errorf("post_link hooks: %w", err))
 	}
 	if !d.jsonMode() && len(merged.Hooks.PostLink) > 0 {
@@ -228,7 +242,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 		sp.Step("post_link hooks", fmt.Sprintf("(%d/%d)", n, n))
 	}
 
-	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PreActivate, hookData, releaseDir, d.out, d.confirmFn, "pre_activate", hookEventFn); err != nil {
+	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PreActivate, hookData, releaseDir, hookOut, d.confirmFn, "pre_activate", hookEventFn); err != nil {
 		return emitError("pre_activate", fmt.Errorf("pre_activate hooks: %w", err))
 	}
 	if !d.jsonMode() && len(merged.Hooks.PreActivate) > 0 {
@@ -247,7 +261,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 		tui.PrintDetail(d.mode, d.out, releaseDir)
 	}
 
-	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PostActivate, hookData, releaseDir, d.out, d.confirmFn, "post_activate", hookEventFn); err != nil {
+	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PostActivate, hookData, releaseDir, hookOut, d.confirmFn, "post_activate", hookEventFn); err != nil {
 		return emitError("post_activate", fmt.Errorf("post_activate hooks: %w", err))
 	}
 	if !d.jsonMode() && len(merged.Hooks.PostActivate) > 0 {
@@ -255,7 +269,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 		sp.Step("post_activate hooks", fmt.Sprintf("(%d/%d)", n, n))
 	}
 
-	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PrePurge, hookData, releaseDir, d.out, d.confirmFn, "pre_purge", hookEventFn); err != nil {
+	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PrePurge, hookData, releaseDir, hookOut, d.confirmFn, "pre_purge", hookEventFn); err != nil {
 		return emitError("pre_purge", fmt.Errorf("pre_purge hooks: %w", err))
 	}
 	if !d.jsonMode() && len(merged.Hooks.PrePurge) > 0 {
@@ -287,7 +301,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 		}
 	}
 
-	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PostPurge, hookData, releaseDir, d.out, d.confirmFn, "post_purge", hookEventFn); err != nil {
+	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PostPurge, hookData, releaseDir, hookOut, d.confirmFn, "post_purge", hookEventFn); err != nil {
 		return emitError("post_purge", fmt.Errorf("post_purge hooks: %w", err))
 	}
 	if !d.jsonMode() && len(merged.Hooks.PostPurge) > 0 {

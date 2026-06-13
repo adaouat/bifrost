@@ -146,6 +146,22 @@ func TestForwardStream_DeployDone_ReturnsRelease(t *testing.T) {
 	}
 }
 
+func TestForwardStream_PlainMode_RendersHookOutput(t *testing.T) {
+	r := eventStream(
+		map[string]any{"event": "hook_output", "output": "Migrating: create_users_table\nMigrated\n"},
+		map[string]any{"event": "done", "step": "deploy", "release": "r1", "duration_ms": float64(10)},
+	)
+	var buf bytes.Buffer
+
+	_, err := tui.ForwardStream(r, "web-01", forgeui.Plain, &buf)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if out := buf.String(); !strings.Contains(out, "Migrating: create_users_table") {
+		t.Errorf("expected hook output in rendered stream, got:\n%s", out)
+	}
+}
+
 func TestForwardStream_EmptyStream(t *testing.T) {
 	r := strings.NewReader("")
 	var buf bytes.Buffer

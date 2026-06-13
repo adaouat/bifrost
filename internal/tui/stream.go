@@ -99,6 +99,11 @@ func ForwardStream(r io.Reader, serverName string, mode forgeui.Mode, out io.Wri
 			} else {
 				PrintDetail(mode, out, cmd)
 			}
+
+		case "hook_output":
+			if output, _ := ev["output"].(string); output != "" {
+				_, _ = io.WriteString(out, output)
+			}
 		}
 	}
 
