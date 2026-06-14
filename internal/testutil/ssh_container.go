@@ -61,6 +61,7 @@ chown deploy:deploy /var/releases /var/shared
 mkdir -p /run/sshd
 printf '%%s' '%s' | base64 -d > /etc/ssh/ssh_host_rsa_key
 chmod 600 /etc/ssh/ssh_host_rsa_key
+touch /tmp/.setup-complete
 exec /usr/sbin/sshd -D \
   -o HostKey=/etc/ssh/ssh_host_rsa_key \
   -o PubkeyAuthentication=yes \
@@ -73,7 +74,11 @@ exec /usr/sbin/sshd -D \
 		Image:        containerImage,
 		ExposedPorts: []string{"22/tcp"},
 		Cmd:          []string{"sh", "-c", setup},
-		WaitingFor:   wait.ForListeningPort("22/tcp").WithStartupTimeout(3 * time.Minute),
+		// ForListeningPort can pass before the setup script finishes — Docker's
+		// port proxy binds the mapped port early, so tests would run container
+		// setup (e.g. `chown deploy:deploy`) before `useradd deploy` exists. Gate
+		// on a marker the script writes only after all setup, just before sshd.
+		WaitingFor: wait.ForExec([]string{"test", "-f", "/tmp/.setup-complete"}).WithStartupTimeout(3 * time.Minute),
 	}
 
 	c, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
