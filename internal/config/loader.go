@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/adaouat/bifrost/internal/cmderr"
 	forgeconfig "github.com/adaouat/forge/config"
@@ -16,7 +17,10 @@ func Load(path string) (*Config, error) {
 		return nil, err
 	}
 	applyDefaults(&cfg)
-	if errs := ValidateServerRefs(&cfg); len(errs) > 0 {
+	var errs forgeconfig.ValidationErrors
+	errs = append(errs, ValidateServerRefs(&cfg)...)
+	errs = append(errs, ValidateHookCmds(&cfg)...)
+	if len(errs) > 0 {
 		return nil, &cmderr.ExitError{Code: cmderr.Config, Message: errs.Error()}
 	}
 	return &cfg, nil
@@ -67,6 +71,51 @@ func ValidateServerRefs(cfg *Config) forgeconfig.ValidationErrors {
 	}
 
 	return errs
+}
+
+// ValidateHookCmds reports an error for every hook entry with an empty cmd, at
+// any config level (global, environment, application).
+func ValidateHookCmds(cfg *Config) forgeconfig.ValidationErrors {
+	var errs forgeconfig.ValidationErrors
+	check := func(path string, h Hooks) {
+		for _, st := range hookStages(h) {
+			for i, e := range st.hooks {
+				if strings.TrimSpace(e.Cmd) == "" {
+					errs = append(errs, forgeconfig.ValidationError{
+						Path:    fmt.Sprintf("%s.%s[%d]", path, st.name, i),
+						Message: "cmd is required",
+					})
+				}
+			}
+		}
+	}
+	check("hooks", cfg.Hooks)
+	for name, env := range cfg.Environments {
+		check(fmt.Sprintf("environments.%s.hooks", name), env.Hooks)
+		for appName, app := range env.Applications {
+			check(fmt.Sprintf("environments.%s.applications.%s.hooks", name, appName), app.Hooks)
+		}
+	}
+	return errs
+}
+
+type namedHookList struct {
+	name  string
+	hooks []HookEntry
+}
+
+// hookStages pairs each hook list in h with its lifecycle name.
+func hookStages(h Hooks) []namedHookList {
+	return []namedHookList{
+		{"pre_extract", h.PreExtract},
+		{"post_extract", h.PostExtract},
+		{"pre_link", h.PreLink},
+		{"post_link", h.PostLink},
+		{"pre_activate", h.PreActivate},
+		{"post_activate", h.PostActivate},
+		{"pre_purge", h.PrePurge},
+		{"post_purge", h.PostPurge},
+	}
 }
 
 // Parse strictly parses .bifrost.yml content from r and applies defaults.

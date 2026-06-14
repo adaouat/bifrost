@@ -63,3 +63,48 @@ func TestValidate_AtomicStrategyOK(t *testing.T) {
 		t.Errorf("expected no errors for atomic, got: %v", errs)
 	}
 }
+
+func TestValidateHookCmds_RejectsEmptyCmd(t *testing.T) {
+	cfg := &config.Config{
+		Hooks: config.Hooks{
+			PostExtract: []config.HookEntry{{Cmd: ""}},
+		},
+	}
+	errs := config.ValidateHookCmds(cfg)
+	if len(errs) != 1 {
+		t.Fatalf("expected 1 error for empty hook cmd, got %d: %v", len(errs), errs)
+	}
+}
+
+func TestValidateHookCmds_RejectsEmptyCmdInApplication(t *testing.T) {
+	cfg := &config.Config{
+		Environments: map[string]config.Environment{
+			"prod": {
+				Applications: map[string]config.Application{
+					"web": {Hooks: config.Hooks{PostActivate: []config.HookEntry{{Cmd: "  "}}}},
+				},
+			},
+		},
+	}
+	errs := config.ValidateHookCmds(cfg)
+	if len(errs) != 1 {
+		t.Fatalf("expected 1 error for whitespace hook cmd, got %d: %v", len(errs), errs)
+	}
+}
+
+func TestValidateHookCmds_AllowsNonEmpty(t *testing.T) {
+	cfg := &config.Config{
+		Hooks: config.Hooks{PostExtract: []config.HookEntry{{Cmd: "echo hi"}}},
+		Environments: map[string]config.Environment{
+			"prod": {
+				Hooks: config.Hooks{PreActivate: []config.HookEntry{{Cmd: "migrate"}}},
+				Applications: map[string]config.Application{
+					"web": {Hooks: config.Hooks{PostActivate: []config.HookEntry{{Cmd: "reload"}}}},
+				},
+			},
+		},
+	}
+	if errs := config.ValidateHookCmds(cfg); len(errs) != 0 {
+		t.Errorf("expected no errors, got: %v", errs)
+	}
+}
