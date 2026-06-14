@@ -100,8 +100,7 @@ func runOne(runner forgeexec.Runner, h config.HookEntry, data HookData, workingD
 			_, _ = fmt.Fprint(out, stderr)
 		}
 		code := 1
-		var exitErr *exec.ExitError
-		if errors.As(runErr, &exitErr) {
+		if exitErr, ok := errors.AsType[*exec.ExitError](runErr); ok {
 			code = exitErr.ExitCode()
 		}
 		if h.AllowFail {

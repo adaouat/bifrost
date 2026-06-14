@@ -314,7 +314,7 @@ keep the existing tests green. Same two-step commit flow, one task at a time.
   `internal/strategy/atomic/deployer.go` into a single `runHookStage` helper (S2)
 - [ ] `internal/cmd/deploy.go` — pass `cmd.Context()` instead of `context.Background()` so
   SIGINT cancels the deploy (S3)
-- [ ] Pick one error-inspection idiom: `errors.AsType` (`ssh.go`) vs `errors.As`
+- [x] Pick one error-inspection idiom: `errors.AsType` (`ssh.go`) vs `errors.As`
   (`runner.go`) (S4)
 - [x] `internal/config` — reject `strategy` values other than `atomic` in v0 (S5)
 - [x] `internal/config` — reject an empty hook `cmd` at load time (S6)
