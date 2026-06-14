@@ -29,6 +29,10 @@
 - `TestMain` cross-compiles the `bifrost` binary once (`GOOS=linux GOARCH=amd64`) to `/tmp`
   and shares it across all tests in the package.
 - Container is started fresh per test (or per suite) and destroyed after.
+- Container readiness gates on a setup-complete marker the startup script writes last (e.g.
+  `/tmp/.setup-complete`), **not** `wait.ForListeningPort` — Docker's port proxy can report
+  the port open before the script finishes (e.g. `useradd`), racing test setup on CI. See
+  `internal/testutil/ssh_container.go`.
 - Assertions inspect the container filesystem state via container exec or file copy.
 
 ## TDD
