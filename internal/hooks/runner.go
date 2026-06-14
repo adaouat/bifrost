@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"strings"
 	"text/template"
@@ -125,4 +126,16 @@ func renderCmd(tmpl string, data HookData) (string, error) {
 		return "", fmt.Errorf("executing %q: %w", tmpl, err)
 	}
 	return buf.String(), nil
+}
+
+// OSEnv returns the current process environment as a key→value map, for use as
+// the Env field of HookData.
+func OSEnv() map[string]string {
+	env := os.Environ()
+	m := make(map[string]string, len(env))
+	for _, e := range env {
+		k, v, _ := strings.Cut(e, "=")
+		m[k] = v
+	}
+	return m
 }

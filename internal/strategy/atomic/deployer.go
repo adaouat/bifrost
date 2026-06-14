@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/adaouat/bifrost/internal/cmderr"
@@ -145,7 +144,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 			Releases: merged.ReleasesRoot,
 			Shared:   merged.SharedRoot,
 		},
-		Env: envMap(),
+		Env: hooks.OSEnv(),
 	}
 	hookEventFn := hookEmitter(emit)
 
@@ -320,15 +319,4 @@ func hookEmitter(emit *tui.JSONEmitter) hooks.HookEventFn {
 			"exit_code": exitCode,
 		})
 	}
-}
-
-// envMap returns the current process environment as a key→value map.
-func envMap() map[string]string {
-	env := os.Environ()
-	m := make(map[string]string, len(env))
-	for _, e := range env {
-		k, v, _ := strings.Cut(e, "=")
-		m[k] = v
-	}
-	return m
 }

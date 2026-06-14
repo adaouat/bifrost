@@ -307,7 +307,7 @@ Lower-priority simplifications and hardening from the 2026-06-13 review. Quality
 behaviour change expected (except where noted). TDD where behaviour changes; pure refactors
 keep the existing tests green. Same two-step commit flow, one task at a time.
 
-- [ ] Deduplicate the flat-detect → merge → validate block shared by `deploy`, `release list`,
+- [x] Deduplicate the flat-detect → merge → validate block shared by `deploy`, `release list`,
   `release activate`, `release rollback`; share `writeTempFlatConfig`, the env-map helper, and
   the interactive-confirm helper across the `cmd` and `release` packages (S1)
 - [x] Collapse the 8 near-identical hook-stage blocks in

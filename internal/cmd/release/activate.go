@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"charm.land/huh/v2"
 	"github.com/spf13/cobra"
@@ -32,23 +31,9 @@ func newActivateCmd(version string) *cobra.Command {
 				return err
 			}
 
-			var merged *config.MergedConfig
-			if config.IsFlat(cfg) {
-				merged = config.MergeFlat(cfg)
-			} else {
-				if env == "" {
-					return fmt.Errorf("--env (or --environment) is required")
-				}
-				if app == "" {
-					return fmt.Errorf("--app (or --application) is required")
-				}
-				merged, err = config.Merge(cfg, env, app)
-				if err != nil {
-					return err
-				}
-			}
-			if errs := config.Validate(merged); len(errs) > 0 {
-				return &cmderr.ExitError{Code: cmderr.Config, Message: errs.Error()}
+			merged, err := cmdutil.ResolveMergedConfig(cfg, env, app)
+			if err != nil {
+				return err
 			}
 
 			if len(merged.Servers) > 0 {
@@ -109,9 +94,9 @@ func newActivateCmd(version string) *cobra.Command {
 					Releases: merged.ReleasesRoot,
 					Shared:   merged.SharedRoot,
 				},
-				Env: releaseOsEnv(),
+				Env: hooks.OSEnv(),
 			}
-			confirmFn := releaseInteractiveConfirm()
+			confirmFn := tui.InteractiveHookConfirm()
 			hookRunner := forgeexec.New(false, false)
 
 			if err := hooks.RunInteractive(hookRunner, merged.Hooks.PreActivate, hookData, releaseDir, cmd.OutOrStdout(), confirmFn); err != nil {
@@ -177,34 +162,4 @@ func selectRelease(releasesRoot string) (string, error) {
 		return "", fmt.Errorf("release selection: %w", err)
 	}
 	return selected, nil
-}
-
-// releaseInteractiveConfirm returns a hook confirm function that shows a huh prompt on TTY.
-func releaseInteractiveConfirm() func(cmd string) bool {
-	if !tui.IsTTY() {
-		return nil
-	}
-	return func(hookCmd string) bool {
-		var ok bool
-		if err := huh.NewConfirm().
-			Title("Run interactive hook?").
-			Description(hookCmd).
-			Value(&ok).
-			WithTheme(tui.HuhTheme()).
-			Run(); err != nil {
-			return false
-		}
-		return ok
-	}
-}
-
-// releaseOsEnv returns the current process environment as a key→value map.
-func releaseOsEnv() map[string]string {
-	env := os.Environ()
-	m := make(map[string]string, len(env))
-	for _, e := range env {
-		k, v, _ := strings.Cut(e, "=")
-		m[k] = v
-	}
-	return m
 }

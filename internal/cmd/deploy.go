@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"charm.land/huh/v2"
 	"github.com/spf13/cobra"
 
+	"github.com/adaouat/bifrost/internal/cmd/cmdutil"
 	"github.com/adaouat/bifrost/internal/config"
 	"github.com/adaouat/bifrost/internal/strategy"
 	"github.com/adaouat/bifrost/internal/strategy/atomic"
@@ -35,24 +35,9 @@ func newDeployCmd(version string) *cobra.Command {
 				return err
 			}
 
-			var merged *config.MergedConfig
-			if config.IsFlat(cfg) {
-				merged = config.MergeFlat(cfg)
-			} else {
-				if env == "" {
-					return fmt.Errorf("--env (or --environment) is required")
-				}
-				if app == "" {
-					return fmt.Errorf("--app (or --application) is required")
-				}
-				merged, err = config.Merge(cfg, env, app)
-				if err != nil {
-					return err
-				}
-			}
-
-			if errs := config.Validate(merged); len(errs) > 0 {
-				return &ExitError{Code: Config, Message: errs.Error()}
+			merged, err := cmdutil.ResolveMergedConfig(cfg, env, app)
+			if err != nil {
+				return err
 			}
 
 			if len(merged.Servers) > 0 {
@@ -76,7 +61,7 @@ func newDeployCmd(version string) *cobra.Command {
 
 			out := cmd.OutOrStdout()
 			mode := forgeui.ParseMode(outputMode(cmd))
-			confirmFn := interactiveConfirm()
+			confirmFn := tui.InteractiveHookConfirm()
 
 			verbose, _ := cmd.Flags().GetBool("verbose")
 			logger := forgelog.New(cmd.ErrOrStderr(), forgelog.LevelFor(verbose))
@@ -161,26 +146,6 @@ func deployDryRun(cmd *cobra.Command, merged *config.MergedConfig, artifact, rel
 		hookLine("post_purge", h)
 	}
 	return nil
-}
-
-// interactiveConfirm returns a confirmFn that shows a huh prompt on TTY,
-// or nil (skip with warning) when stdout is not a terminal.
-func interactiveConfirm() func(cmd string) bool {
-	if !tui.IsTTY() {
-		return nil
-	}
-	return func(hookCmd string) bool {
-		var ok bool
-		if err := huh.NewConfirm().
-			Title("Run interactive hook?").
-			Description(hookCmd).
-			Value(&ok).
-			WithTheme(tui.HuhTheme()).
-			Run(); err != nil {
-			return false
-		}
-		return ok
-	}
 }
 
 func ensureRoots(releasesRoot, sharedRoot string, create bool) error {

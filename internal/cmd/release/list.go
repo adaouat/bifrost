@@ -10,7 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/adaouat/bifrost/internal/cmderr"
+	"github.com/adaouat/bifrost/internal/cmd/cmdutil"
 	"github.com/adaouat/bifrost/internal/config"
 )
 
@@ -32,23 +32,9 @@ func newListCmd(version string) *cobra.Command {
 				return err
 			}
 
-			var merged *config.MergedConfig
-			if config.IsFlat(cfg) {
-				merged = config.MergeFlat(cfg)
-			} else {
-				if env == "" {
-					return fmt.Errorf("--env (or --environment) is required")
-				}
-				if app == "" {
-					return fmt.Errorf("--app (or --application) is required")
-				}
-				merged, err = config.Merge(cfg, env, app)
-				if err != nil {
-					return err
-				}
-			}
-			if errs := config.Validate(merged); len(errs) > 0 {
-				return &cmderr.ExitError{Code: cmderr.Config, Message: errs.Error()}
+			merged, err := cmdutil.ResolveMergedConfig(cfg, env, app)
+			if err != nil {
+				return err
 			}
 
 			if len(merged.Servers) > 0 {

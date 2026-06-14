@@ -8,6 +8,7 @@ import (
 
 	forgeexec "github.com/adaouat/forge/exec"
 
+	"github.com/adaouat/bifrost/internal/cmd/cmdutil"
 	"github.com/adaouat/bifrost/internal/cmderr"
 	"github.com/adaouat/bifrost/internal/config"
 	"github.com/adaouat/bifrost/internal/hooks"
@@ -27,23 +28,9 @@ func newRollbackCmd(version string) *cobra.Command {
 				return err
 			}
 
-			var merged *config.MergedConfig
-			if config.IsFlat(cfg) {
-				merged = config.MergeFlat(cfg)
-			} else {
-				if env == "" {
-					return fmt.Errorf("--env (or --environment) is required")
-				}
-				if app == "" {
-					return fmt.Errorf("--app (or --application) is required")
-				}
-				merged, err = config.Merge(cfg, env, app)
-				if err != nil {
-					return err
-				}
-			}
-			if errs := config.Validate(merged); len(errs) > 0 {
-				return &cmderr.ExitError{Code: cmderr.Config, Message: errs.Error()}
+			merged, err := cmdutil.ResolveMergedConfig(cfg, env, app)
+			if err != nil {
+				return err
 			}
 
 			if len(merged.Servers) > 0 {
@@ -76,9 +63,9 @@ func newRollbackCmd(version string) *cobra.Command {
 					Releases: merged.ReleasesRoot,
 					Shared:   merged.SharedRoot,
 				},
-				Env: releaseOsEnv(),
+				Env: hooks.OSEnv(),
 			}
-			confirmFn := releaseInteractiveConfirm()
+			confirmFn := tui.InteractiveHookConfirm()
 			hookRunner := forgeexec.New(false, false)
 
 			if err := hooks.RunInteractive(hookRunner, merged.Hooks.PreActivate, hookData, releaseDir, cmd.OutOrStdout(), confirmFn); err != nil {

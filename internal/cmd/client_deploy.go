@@ -3,12 +3,12 @@ package cmd
 import (
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 	"sync"
 
 	"github.com/spf13/cobra"
 
+	"github.com/adaouat/bifrost/internal/cmd/cmdutil"
 	"github.com/adaouat/bifrost/internal/config"
 	"github.com/adaouat/bifrost/internal/transport"
 	"github.com/adaouat/bifrost/internal/tui"
@@ -78,7 +78,7 @@ func deployToServer(version string, _ *config.MergedConfig, cfg *config.Config, 
 		return fmt.Errorf("uploading agent to %s: %w", srv.Name, err)
 	}
 
-	flatConfigPath, cleanConfig, err := writeTempFlatConfig(cfg, env, app)
+	flatConfigPath, cleanConfig, err := cmdutil.WriteTempFlatConfig(cfg, env, app)
 	if err != nil {
 		return fmt.Errorf("generating flat config for %s: %w", srv.Name, err)
 	}
@@ -130,25 +130,4 @@ func deployToServer(version string, _ *config.MergedConfig, cfg *config.Config, 
 		return &ExitError{Code: execResult.ExitCode, Message: msg}
 	}
 	return streamErr
-}
-
-// writeTempFlatConfig generates a flat config for the given env+app and writes
-// it to a temp file. The caller must call the returned cleanup func when done.
-func writeTempFlatConfig(cfg *config.Config, envName, appName string) (path string, cleanup func(), err error) {
-	f, err := os.CreateTemp("", "bifrost-config-*.yml")
-	if err != nil {
-		return "", nil, fmt.Errorf("creating temp config: %w", err)
-	}
-	cleanFn := func() { _ = os.Remove(f.Name()) }
-
-	if err := config.GenerateFlatConfig(cfg, envName, appName, f); err != nil {
-		cleanFn()
-		_ = f.Close()
-		return "", nil, fmt.Errorf("writing flat config: %w", err)
-	}
-	if err := f.Close(); err != nil {
-		cleanFn()
-		return "", nil, fmt.Errorf("closing temp config: %w", err)
-	}
-	return f.Name(), cleanFn, nil
 }
