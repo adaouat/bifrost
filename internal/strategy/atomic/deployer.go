@@ -281,6 +281,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 	// PurgePlan failure is non-fatal: Purge carries its own error path.
 	purgePlan, purgePlanErr := PurgePlan(merged.ReleasesRoot, filepath.Base(releaseDir), merged.Settings.ReleasesToKeep)
 	if purgePlanErr != nil {
+		d.debug("purge plan failed; the purge step still runs", "error", purgePlanErr)
 		purgePlan = nil
 	}
 	if err := runStep("purge", func() (map[string]any, error) {

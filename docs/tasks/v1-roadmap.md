@@ -322,7 +322,7 @@ keep the existing tests green. Same two-step commit flow, one task at a time.
   `bufio.Reader` so large event lines don't truncate the stream (S7)
 - [ ] Use the existing `SFTP.Chmod` instead of shelling out `chmod +x` for the agent (S8)
 - [x] `internal/transport/agent.go` — give the download an `http.Client` with a timeout (S9)
-- [ ] `internal/strategy/atomic/deployer.go` — log `purgePlanErr` instead of silently
+- [x] `internal/strategy/atomic/deployer.go` — log `purgePlanErr` instead of silently
   discarding it (S10)
 - [ ] Extract the SSH stage-and-deploy scaffolding from the client E2E tests into
   `internal/testutil`, then add a container E2E asserting hook output is visible over SSH
