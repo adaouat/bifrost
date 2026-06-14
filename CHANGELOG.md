@@ -1,5 +1,45 @@
 # Changelog
 
+## [0.21.0](https://github.com/adaouat/bifrost/compare/v0.20.0..v0.21.0) - 2026-06-14
+
+### 🚀 Features
+
+- *(transport)* Verify agent binary checksum before caching - ([c332ddb](https://github.com/adaouat/bifrost/commit/c332ddbab3ff802f76149189b2a50f66dcdc3153)) by @bchatard
+
+
+### 🐛 Bug Fixes
+
+- *(deploy)* Emit hook output as JSON events in --output json mode - ([a3675e2](https://github.com/adaouat/bifrost/commit/a3675e23e0aff60c81429717ce335f00eda41856)) by @bchatard
+
+- *(deploy)* Classify hook and deploy runtime failures as exit 3 - ([11755f3](https://github.com/adaouat/bifrost/commit/11755f35fa4ff33560db7017349b1a5980670fbc)) by @bchatard
+
+- *(transport)* Download agent as a raw binary, not a tar.gz - ([ec289ad](https://github.com/adaouat/bifrost/commit/ec289ad2df88593ad9ca7b985da0e9ef4f102559)) by @bchatard
+
+- *(transport)* Shell-quote interpolated values in remote commands - ([689e901](https://github.com/adaouat/bifrost/commit/689e9018cdcc3145bc46ce11df65fa2cf646c073)) by @bchatard
+
+
+### 📚 Documentation
+
+- *(tasks)* Add M19 hardening and M20 cleanup milestones - ([bdd04a4](https://github.com/adaouat/bifrost/commit/bdd04a47b43b27921a1bda35ed3ea7bb49a344ee)) by @bchatard
+
+- *(tasks)* Record the container-readiness fix under M19 - ([03b248c](https://github.com/adaouat/bifrost/commit/03b248cfec216aa44845dfa04c069ab3f9ba3caa)) by @bchatard
+
+- *(testing)* Require container readiness to gate on a setup marker - ([639c94d](https://github.com/adaouat/bifrost/commit/639c94d8b1bdb2524c2d71dc19bf68b95c390eb2)) by @bchatard
+
+- Reconcile specs and rules with shipped behaviour - ([1ed87d6](https://github.com/adaouat/bifrost/commit/1ed87d6ef4813b3b3f5194a6ac2838b438c73882)) by @bchatard
+
+- Move M18 working-doc artifacts to .claude/plans - ([08d7b6e](https://github.com/adaouat/bifrost/commit/08d7b6e3788a306c9de76fa9fefbb8af7ff959a3)) by @bchatard
+
+
+### 🧪 Testing
+
+- *(testutil)* Wait for container setup to finish, not just the port - ([e837a96](https://github.com/adaouat/bifrost/commit/e837a966817d5cc032d7f3856a8569e3928e3282)) by @bchatard
+
+
+### ⚙️ Miscellaneous Tasks
+
+- Run the integration test suite in CI - ([98d8254](https://github.com/adaouat/bifrost/commit/98d82543dc7ad7a1418973ec0414d5b777079740)) by @bchatard
+
 ## [0.20.0](https://github.com/adaouat/bifrost/compare/v0.19.1..v0.20.0) - 2026-06-13
 
 ### 🚀 Features
