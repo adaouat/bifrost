@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -83,7 +82,7 @@ func newDeployCmd(version string) *cobra.Command {
 			logger := forgelog.New(cmd.ErrOrStderr(), forgelog.LevelFor(verbose))
 
 			var deployer strategy.Deployer = atomic.New(out, mode, confirmFn).WithLogger(logger)
-			return deployer.Deploy(context.Background(), strategy.DeployOptions{
+			return deployer.Deploy(cmd.Context(), strategy.DeployOptions{
 				Config:      merged,
 				Artifact:    artifact,
 				ReleaseName: releaseName,

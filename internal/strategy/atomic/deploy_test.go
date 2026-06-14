@@ -24,3 +24,11 @@ func TestExtract_UnsupportedFormat(t *testing.T) {
 	require.Error(t, err)
 	assert.ErrorIs(t, err, archives.NoMatch)
 }
+
+func TestExtract_CancelledContext(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	err := atomic.Extract(ctx, "../../../testdata/release.tar.gz", t.TempDir(), nil)
+	require.Error(t, err, "extract must abort on a cancelled context")
+	assert.ErrorIs(t, err, context.Canceled)
+}

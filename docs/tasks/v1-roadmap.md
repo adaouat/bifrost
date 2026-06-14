@@ -312,8 +312,10 @@ keep the existing tests green. Same two-step commit flow, one task at a time.
   the interactive-confirm helper across the `cmd` and `release` packages (S1)
 - [ ] Collapse the 8 near-identical hook-stage blocks in
   `internal/strategy/atomic/deployer.go` into a single `runHookStage` helper (S2)
-- [ ] `internal/cmd/deploy.go` — pass `cmd.Context()` instead of `context.Background()` so
-  SIGINT cancels the deploy (S3)
+- [x] `internal/cmd/deploy.go` — pass `cmd.Context()` instead of `context.Background()` so
+  SIGINT cancels the deploy (S3). Required forge v0.17.0, which wires the signal context via
+  `fang.WithNotifySignal` (`cmd.Context()` was inert before); cancellation reaches `Extract`
+  — the other deploy steps don't observe ctx, so fuller cancellation is future work
 - [x] Pick one error-inspection idiom: `errors.AsType` (`ssh.go`) vs `errors.As`
   (`runner.go`) (S4)
 - [x] `internal/config` — reject `strategy` values other than `atomic` in v0 (S5)
