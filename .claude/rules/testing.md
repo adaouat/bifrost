@@ -2,9 +2,11 @@
 
 ## Hard constraints — never break these
 
-1. **No filesystem writes on the local host.** The following are forbidden in test code:
-   `os.MkdirAll`, `os.Mkdir`, `os.Create`, `os.WriteFile`, `os.Symlink`, `os.Remove`,
-   `os.RemoveAll`, `t.TempDir()`. Writing a compiled binary to `/tmp` is the only exception.
+1. **No filesystem writes on the local host.** Forbidden in test code: `os.MkdirAll`,
+   `os.Mkdir`, `os.Create`, `os.WriteFile`, `os.Symlink`, `os.Remove`, `os.RemoveAll`,
+   `t.TempDir()`. Two exceptions: writing the compiled binary to `/tmp`; and deployer
+   FS-logic unit tests (`internal/strategy/atomic/`), which may use `t.TempDir()` for a real
+   local filesystem because the deployer relies on symlinks and afero cannot model them.
 
 2. **No shell execution on the local host.** `sh -c` and any `exec.Command` that runs
    real commands must never execute on the local machine during tests. All shell execution
