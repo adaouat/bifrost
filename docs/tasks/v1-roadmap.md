@@ -316,7 +316,7 @@ keep the existing tests green. Same two-step commit flow, one task at a time.
   SIGINT cancels the deploy (S3)
 - [ ] Pick one error-inspection idiom: `errors.AsType` (`ssh.go`) vs `errors.As`
   (`runner.go`) (S4)
-- [ ] `internal/config` — reject `strategy` values other than `atomic` in v0 (S5)
+- [x] `internal/config` — reject `strategy` values other than `atomic` in v0 (S5)
 - [ ] `internal/config` — reject an empty hook `cmd` at load time (S6)
 - [ ] `internal/tui/stream.go` — replace the 64 KB `bufio.Scanner` with a larger buffer or
   `bufio.Reader` so large event lines don't truncate the stream (S7)

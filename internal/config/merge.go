@@ -119,6 +119,13 @@ func Validate(m *MergedConfig) forgeconfig.ValidationErrors {
 	if m.SharedRoot == "" {
 		errs = append(errs, forgeconfig.ValidationError{Path: "paths.shared_root", Message: "required but not set"})
 	}
+	// Empty means unset (defaults to atomic); only an explicit non-atomic value is rejected.
+	if m.Strategy != "" && m.Strategy != "atomic" {
+		errs = append(errs, forgeconfig.ValidationError{
+			Path:    "strategy",
+			Message: fmt.Sprintf("unsupported strategy %q (only \"atomic\" is valid in v0)", m.Strategy),
+		})
+	}
 	return errs
 }
 
