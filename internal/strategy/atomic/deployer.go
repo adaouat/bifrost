@@ -156,12 +156,21 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 		hookOut = tui.NewHookOutputWriter(emit)
 	}
 
-	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PreExtract, hookData, releaseDir, hookOut, d.confirmFn, "pre_extract", hookEventFn); err != nil {
-		return emitError("pre_extract", fmt.Errorf("pre_extract hooks: %w", err))
+	// runHookStage runs one lifecycle's hooks and renders its step line. Failures
+	// carry the Runtime exit code (set by the hooks runner) through emitError.
+	runHookStage := func(name string, entries []config.HookEntry) error {
+		if err := hooks.RunWithEvents(d.runner, entries, hookData, releaseDir, hookOut, d.confirmFn, name, hookEventFn); err != nil {
+			return emitError(name, fmt.Errorf("%s hooks: %w", name, err))
+		}
+		if !d.jsonMode() && len(entries) > 0 {
+			n := len(entries)
+			sp.Step(name+" hooks", fmt.Sprintf("(%d/%d)", n, n))
+		}
+		return nil
 	}
-	if !d.jsonMode() && len(merged.Hooks.PreExtract) > 0 {
-		n := len(merged.Hooks.PreExtract)
-		sp.Step("pre_extract hooks", fmt.Sprintf("(%d/%d)", n, n))
+
+	if err := runHookStage("pre_extract", merged.Hooks.PreExtract); err != nil {
+		return err
 	}
 
 	// Extract artifact.
@@ -202,20 +211,12 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 		sp.Step("Artifact extracted", fmt.Sprintf("(%.1fs)", time.Since(extractStart).Seconds()))
 	}
 
-	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PostExtract, hookData, releaseDir, hookOut, d.confirmFn, "post_extract", hookEventFn); err != nil {
-		return emitError("post_extract", fmt.Errorf("post_extract hooks: %w", err))
-	}
-	if !d.jsonMode() && len(merged.Hooks.PostExtract) > 0 {
-		n := len(merged.Hooks.PostExtract)
-		sp.Step("post_extract hooks", fmt.Sprintf("(%d/%d)", n, n))
+	if err := runHookStage("post_extract", merged.Hooks.PostExtract); err != nil {
+		return err
 	}
 
-	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PreLink, hookData, releaseDir, hookOut, d.confirmFn, "pre_link", hookEventFn); err != nil {
-		return emitError("pre_link", fmt.Errorf("pre_link hooks: %w", err))
-	}
-	if !d.jsonMode() && len(merged.Hooks.PreLink) > 0 {
-		n := len(merged.Hooks.PreLink)
-		sp.Step("pre_link hooks", fmt.Sprintf("(%d/%d)", n, n))
+	if err := runHookStage("pre_link", merged.Hooks.PreLink); err != nil {
+		return err
 	}
 
 	if err := runStep("link", func() (map[string]any, error) {
@@ -235,20 +236,12 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 		}
 	}
 
-	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PostLink, hookData, releaseDir, hookOut, d.confirmFn, "post_link", hookEventFn); err != nil {
-		return emitError("post_link", fmt.Errorf("post_link hooks: %w", err))
-	}
-	if !d.jsonMode() && len(merged.Hooks.PostLink) > 0 {
-		n := len(merged.Hooks.PostLink)
-		sp.Step("post_link hooks", fmt.Sprintf("(%d/%d)", n, n))
+	if err := runHookStage("post_link", merged.Hooks.PostLink); err != nil {
+		return err
 	}
 
-	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PreActivate, hookData, releaseDir, hookOut, d.confirmFn, "pre_activate", hookEventFn); err != nil {
-		return emitError("pre_activate", fmt.Errorf("pre_activate hooks: %w", err))
-	}
-	if !d.jsonMode() && len(merged.Hooks.PreActivate) > 0 {
-		n := len(merged.Hooks.PreActivate)
-		sp.Step("pre_activate hooks", fmt.Sprintf("(%d/%d)", n, n))
+	if err := runHookStage("pre_activate", merged.Hooks.PreActivate); err != nil {
+		return err
 	}
 
 	if err := runStep("current_symlink", func() (map[string]any, error) {
@@ -262,20 +255,12 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 		tui.PrintDetail(d.mode, d.out, releaseDir)
 	}
 
-	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PostActivate, hookData, releaseDir, hookOut, d.confirmFn, "post_activate", hookEventFn); err != nil {
-		return emitError("post_activate", fmt.Errorf("post_activate hooks: %w", err))
-	}
-	if !d.jsonMode() && len(merged.Hooks.PostActivate) > 0 {
-		n := len(merged.Hooks.PostActivate)
-		sp.Step("post_activate hooks", fmt.Sprintf("(%d/%d)", n, n))
+	if err := runHookStage("post_activate", merged.Hooks.PostActivate); err != nil {
+		return err
 	}
 
-	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PrePurge, hookData, releaseDir, hookOut, d.confirmFn, "pre_purge", hookEventFn); err != nil {
-		return emitError("pre_purge", fmt.Errorf("pre_purge hooks: %w", err))
-	}
-	if !d.jsonMode() && len(merged.Hooks.PrePurge) > 0 {
-		n := len(merged.Hooks.PrePurge)
-		sp.Step("pre_purge hooks", fmt.Sprintf("(%d/%d)", n, n))
+	if err := runHookStage("pre_purge", merged.Hooks.PrePurge); err != nil {
+		return err
 	}
 
 	// PurgePlan failure is non-fatal: Purge carries its own error path.
@@ -303,12 +288,8 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 		}
 	}
 
-	if err := hooks.RunWithEvents(d.runner, merged.Hooks.PostPurge, hookData, releaseDir, hookOut, d.confirmFn, "post_purge", hookEventFn); err != nil {
-		return emitError("post_purge", fmt.Errorf("post_purge hooks: %w", err))
-	}
-	if !d.jsonMode() && len(merged.Hooks.PostPurge) > 0 {
-		n := len(merged.Hooks.PostPurge)
-		sp.Step("post_purge hooks", fmt.Sprintf("(%d/%d)", n, n))
+	if err := runHookStage("post_purge", merged.Hooks.PostPurge); err != nil {
+		return err
 	}
 
 	if d.jsonMode() {

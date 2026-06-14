@@ -310,7 +310,7 @@ keep the existing tests green. Same two-step commit flow, one task at a time.
 - [ ] Deduplicate the flat-detect → merge → validate block shared by `deploy`, `release list`,
   `release activate`, `release rollback`; share `writeTempFlatConfig`, the env-map helper, and
   the interactive-confirm helper across the `cmd` and `release` packages (S1)
-- [ ] Collapse the 8 near-identical hook-stage blocks in
+- [x] Collapse the 8 near-identical hook-stage blocks in
   `internal/strategy/atomic/deployer.go` into a single `runHookStage` helper (S2)
 - [x] `internal/cmd/deploy.go` — pass `cmd.Context()` instead of `context.Background()` so
   SIGINT cancels the deploy (S3). Required forge v0.17.0, which wires the signal context via
