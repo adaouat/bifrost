@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 // Platform identifies a remote OS/arch using goreleaser naming.
@@ -92,6 +93,9 @@ func cachePath(version string, p Platform) (string, error) {
 
 var downloadBaseURL = "https://github.com/adaouat/bifrost/releases/download"
 
+// httpClient bounds agent and checksum downloads so a hung server can't stall a deploy.
+var httpClient = &http.Client{Timeout: 120 * time.Second}
+
 // downloadURL builds the raw-binary release asset URL. The leading "v" is
 // stripped so the tag path (v{ver}) and asset name ({ver}) match goreleaser.
 func downloadURL(version string, p Platform) string {
@@ -106,7 +110,7 @@ func assetName(version string, p Platform) string {
 
 func downloadAgent(version string, p Platform) ([]byte, error) {
 	url := downloadURL(version, p)
-	resp, err := http.Get(url) //nolint:gosec // release URL is built from the trusted version + platform
+	resp, err := httpClient.Get(url) //nolint:gosec // release URL is built from the trusted version + platform
 	if err != nil {
 		return nil, fmt.Errorf("downloading agent: %w", err)
 	}
@@ -126,7 +130,7 @@ func downloadAgent(version string, p Platform) ([]byte, error) {
 // remotely (often via sudo), so an unverified binary must never be cached.
 func verifyChecksum(version string, p Platform, data []byte) error {
 	url := checksumURL(version)
-	resp, err := http.Get(url) //nolint:gosec // release URL is built from the trusted version
+	resp, err := httpClient.Get(url) //nolint:gosec // release URL is built from the trusted version
 	if err != nil {
 		return fmt.Errorf("downloading checksums: %w", err)
 	}
