@@ -17,6 +17,9 @@ import (
 // error, including errors reported by an error event in the stream.
 func ForwardStream(r io.Reader, serverName string, mode forgeui.Mode, out io.Writer) (string, error) {
 	scanner := bufio.NewScanner(r)
+	// Hook output is forwarded as single events that can be large; raise the line
+	// limit well above bufio.Scanner's 64 KB default so they aren't truncated.
+	scanner.Buffer(make([]byte, 0, 64*1024), 16*1024*1024)
 	emit := NewJSONEmitter(out)
 	sp := forgeui.NewSpinner(out, mode)
 

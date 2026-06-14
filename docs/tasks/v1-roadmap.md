@@ -318,7 +318,7 @@ keep the existing tests green. Same two-step commit flow, one task at a time.
   (`runner.go`) (S4)
 - [x] `internal/config` — reject `strategy` values other than `atomic` in v0 (S5)
 - [x] `internal/config` — reject an empty hook `cmd` at load time (S6)
-- [ ] `internal/tui/stream.go` — replace the 64 KB `bufio.Scanner` with a larger buffer or
+- [x] `internal/tui/stream.go` — replace the 64 KB `bufio.Scanner` with a larger buffer or
   `bufio.Reader` so large event lines don't truncate the stream (S7)
 - [ ] Use the existing `SFTP.Chmod` instead of shelling out `chmod +x` for the agent (S8)
 - [ ] `internal/transport/agent.go` — give the download an `http.Client` with a timeout (S9)

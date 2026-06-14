@@ -162,6 +162,26 @@ func TestForwardStream_PlainMode_RendersHookOutput(t *testing.T) {
 	}
 }
 
+func TestForwardStream_HandlesLargeEventLine(t *testing.T) {
+	big := strings.Repeat("x", 100*1024) // exceeds bufio.Scanner's 64 KB default token
+	r := eventStream(
+		map[string]any{"event": "hook_output", "output": big},
+		map[string]any{"event": "done", "step": "deploy", "release": "r1", "duration_ms": float64(1)},
+	)
+	var buf bytes.Buffer
+
+	release, err := tui.ForwardStream(r, "web-01", forgeui.Plain, &buf)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if release != "r1" {
+		t.Errorf("release: got %q, want r1 — the stream was truncated before the done event", release)
+	}
+	if !strings.Contains(buf.String(), big) {
+		t.Error("large hook output was not rendered — the line was truncated")
+	}
+}
+
 func TestForwardStream_EmptyStream(t *testing.T) {
 	r := strings.NewReader("")
 	var buf bytes.Buffer
