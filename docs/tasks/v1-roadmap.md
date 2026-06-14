@@ -237,6 +237,10 @@ how the broken download path shipped).
 - [x] `.github/workflows/ci.yml` — add a Docker-enabled job running
   `go test -tags integration ./...`
 - [x] Pin any new action to a full commit SHA with a version comment
+- [x] Fix the test-infra race the CI job exposed: `NewSSHContainer` waited on
+  `wait.ForListeningPort`, which returns before the setup script's `useradd` on Linux CI, so
+  `chown deploy:deploy` failed; readiness now gates on a `/tmp/.setup-complete` marker
+  (`internal/testutil/ssh_container.go`, commit `e837a96`)
 
 ### Hook output over SSH / JSON mode
 
