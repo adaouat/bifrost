@@ -3,6 +3,7 @@ package transport
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"path"
 
 	"github.com/google/uuid"
@@ -51,6 +52,11 @@ func (s *Staging) UploadBytes(data []byte, remoteName string) (string, error) {
 		return "", err
 	}
 	return remotePath, nil
+}
+
+// Chmod sets the permission bits on a path inside the staging directory.
+func (s *Staging) Chmod(remotePath string, mode os.FileMode) error {
+	return s.sftp.Chmod(remotePath, mode)
 }
 
 // Cleanup removes the staging directory and closes the SFTP session. It is meant

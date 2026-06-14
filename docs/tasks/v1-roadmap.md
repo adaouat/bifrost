@@ -320,7 +320,7 @@ keep the existing tests green. Same two-step commit flow, one task at a time.
 - [x] `internal/config` — reject an empty hook `cmd` at load time (S6)
 - [x] `internal/tui/stream.go` — replace the 64 KB `bufio.Scanner` with a larger buffer or
   `bufio.Reader` so large event lines don't truncate the stream (S7)
-- [ ] Use the existing `SFTP.Chmod` instead of shelling out `chmod +x` for the agent (S8)
+- [x] Use the existing `SFTP.Chmod` instead of shelling out `chmod +x` for the agent (S8)
 - [x] `internal/transport/agent.go` — give the download an `http.Client` with a timeout (S9)
 - [x] `internal/strategy/atomic/deployer.go` — log `purgePlanErr` instead of silently
   discarding it (S10)

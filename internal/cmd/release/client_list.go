@@ -147,18 +147,11 @@ func stageAgentSession(version string, cfg *config.Config, env, app, agentBinary
 		return nil, "", "", nil, fmt.Errorf("uploading config to %s: %w", srv.Name, err)
 	}
 
-	chmodRes, err := client.Exec("chmod +x " + transport.ShellQuote(remoteAgent))
-	if err != nil {
+	if err := staging.Chmod(remoteAgent, 0o755); err != nil {
 		cleanConfig()
 		_ = staging.Cleanup()
 		_ = client.Close()
 		return nil, "", "", nil, fmt.Errorf("chmod agent on %s: %w", srv.Name, err)
-	}
-	if chmodRes.ExitCode != 0 {
-		cleanConfig()
-		_ = staging.Cleanup()
-		_ = client.Close()
-		return nil, "", "", nil, fmt.Errorf("chmod agent on %s: exit %d: %s", srv.Name, chmodRes.ExitCode, chmodRes.Stderr.String())
 	}
 
 	cleanup = func() {
