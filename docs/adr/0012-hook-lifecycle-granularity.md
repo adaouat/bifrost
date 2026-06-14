@@ -78,6 +78,6 @@ expansion together is a single breaking change instead of two.
 
 ## References
 
-- Design spec: [`docs/specs/2026-06-12-hook-lifecycle-design.md`](../specs/2026-06-12-hook-lifecycle-design.md)
+- Design notes: [`.claude/plans/m18-hook-lifecycle-design.md`](../../.claude/plans/m18-hook-lifecycle-design.md)
 - [Spec 02 — Configuration](../specs/02-configuration.md)
 - [Spec 05 — Hooks](../specs/05-hooks.md)

@@ -173,7 +173,7 @@ the full `deploy` pipeline, and rename the activation pair to align with the
 - [x] ADR-0012 records the naming and coverage decision
 
 Spec references: [ADR-0012](../adr/0012-hook-lifecycle-granularity.md),
-[design spec](../specs/2026-06-12-hook-lifecycle-design.md), [Spec 02](../specs/02-configuration.md),
+[design notes](../../.claude/plans/m18-hook-lifecycle-design.md), [Spec 02](../specs/02-configuration.md),
 [Spec 05](../specs/05-hooks.md).
 
 Deliverable: `bifrost deploy` fires all 8 hooks in pipeline order; `release
@@ -282,10 +282,10 @@ Standalone doc drift found during the review, not tied to a code change above.
   agent-invocation examples with the actual client commands
 - [x] [`versions.md`](versions.md) — update the milestone range to include M18–M19
 - [x] Qualify the `ADR-0018` reference in `.goreleaser.yml` as a forge ADR
-- [ ] Move working-doc artifacts out of `docs/` (the ~2,000-line
-  `docs/superpowers/plans/2026-06-12-hook-lifecycle.md` and the unindexed
-  `docs/specs/2026-06-12-hook-lifecycle-design.md`) — deferred: deleting/moving committed
-  files needs the destination confirmed (the M18 entry links the design doc)
+- [x] Move working-doc artifacts out of `docs/`: the superpowers plan →
+  `.claude/plans/m18-hook-lifecycle.md` and the design notes →
+  `.claude/plans/m18-hook-lifecycle-design.md` (matching the existing `m0`/`m2` plans);
+  the durable links in the M18 entry and ADR-0012 are repointed
 
 Spec references: full code/doc review 2026-06-13; [Spec 03](../specs/03-commands.md),
 [Spec 05](../specs/05-hooks.md), [Spec 07](../specs/07-ssh-transport.md),
