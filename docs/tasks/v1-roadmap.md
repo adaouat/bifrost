@@ -329,6 +329,10 @@ keep the existing tests green. Same two-step commit flow, one task at a time.
 - [x] Extract the SSH stage-and-deploy scaffolding from the client E2E tests into
   `internal/testutil` (`DeployOverSSH`), then add a container E2E asserting hook output is
   visible over SSH (closes the M19 deferral; complements the unit + fake-runner routing tests) (S11)
+- [x] Fix the known_hosts test-infra race S11 exposed on CI: `WriteKnownHosts` wrote to a
+  shared `/tmp/bifrost-test-known-hosts` that the parallel CMD/RELEASE packages clobbered
+  ("knownhosts: key is unknown"); it now writes a unique per-call path
+  (`internal/testutil/ssh_container.go`)
 
 Deliverable: duplication removed, deploy honours cancellation, config rejects invalid
 strategy/empty hooks, and the remaining review nits are closed. No functional regressions.

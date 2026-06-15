@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/moby/moby/api/pkg/stdcopy"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -155,7 +156,10 @@ func WriteKnownHosts(containers []*SSHContainer, hostPubKeyPaths []string) (stri
 		buf.WriteString(knownhosts.Line([]string{addr}, pk) + "\n")
 	}
 
-	path := filepath.Join("/tmp", "bifrost-test-known-hosts")
+	// Unique per call: the CMD and RELEASE test packages run in parallel and would
+	// otherwise clobber each other's known_hosts at a shared path, causing
+	// "knownhosts: key is unknown" host-key failures on loaded CI runners.
+	path := filepath.Join("/tmp", "bifrost-known-hosts-"+uuid.NewString())
 	if err := os.WriteFile(path, buf.Bytes(), 0o600); err != nil {
 		return "", fmt.Errorf("writing known_hosts: %w", err)
 	}
