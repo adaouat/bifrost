@@ -352,11 +352,11 @@ one-time warning so a post-extraction Ctrl+C doesn't look like it was ignored.
 
 - [x] `internal/tui/styles.go` — add a warning color/style
 - [x] `internal/tui/deploy.go` — `PrintWarning(mode, out, msg)` for human/plain output
-- [ ] `internal/strategy/atomic/deployer.go` — after `Extract` succeeds, check `ctx.Err()`
+- [x] `internal/strategy/atomic/deployer.go` — after `Extract` succeeds, check `ctx.Err()`
   at the start of each remaining stage (`runHookStage`/`runStep`); on first detection,
   print `"Deploy in progress — cannot be cancelled, continuing..."` (human/plain) or emit
   a JSON `{"event":"warning",...}` exactly once, and continue the pipeline unchanged
-- [ ] Unit test: a context cancelled during a post-extraction hook still lets `Deploy`
+- [x] Unit test: a context cancelled during a post-extraction hook still lets `Deploy`
   return `nil`, and the warning appears in the output exactly once
 - [ ] Integration test: send SIGINT mid-deploy after extraction completes, assert the
   deploy still finishes successfully and the warning is printed

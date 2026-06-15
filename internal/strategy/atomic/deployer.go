@@ -100,7 +100,13 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 		return err
 	}
 
+	// checkCancel is a no-op until extraction succeeds, then warns once if ctx
+	// was cancelled (e.g. Ctrl+C) — the remaining steps run to completion
+	// regardless, so the user should know cancellation is being ignored.
+	checkCancel := func() {}
+
 	runStep := func(step string, fn func() (map[string]any, error)) error {
+		checkCancel()
 		if d.jsonMode() {
 			emit.Emit(map[string]any{"event": "start", "step": step})
 		}
@@ -158,6 +164,7 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 	// runHookStage runs one lifecycle's hooks and renders its step line. Failures
 	// carry the Runtime exit code (set by the hooks runner) through emitError.
 	runHookStage := func(name string, entries []config.HookEntry) error {
+		checkCancel()
 		if err := hooks.RunWithEvents(d.runner, entries, hookData, releaseDir, hookOut, d.confirmFn, name, hookEventFn); err != nil {
 			return emitError(name, fmt.Errorf("%s hooks: %w", name, err))
 		}
@@ -208,6 +215,22 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 	}
 	if !d.jsonMode() {
 		sp.Step("Artifact extracted", fmt.Sprintf("(%.1fs)", time.Since(extractStart).Seconds()))
+	}
+
+	// From here on the deploy can no longer be safely cancelled, so a Ctrl+C
+	// gets a one-time warning instead of being silently ignored.
+	cancelWarned := false
+	checkCancel = func() {
+		if cancelWarned || ctx.Err() == nil {
+			return
+		}
+		cancelWarned = true
+		const msg = "Deploy in progress — cannot be cancelled, continuing..."
+		if d.jsonMode() {
+			emit.Emit(map[string]any{"event": "warning", "message": msg})
+		} else {
+			tui.PrintWarning(d.mode, d.out, msg)
+		}
 	}
 
 	if err := runHookStage("post_extract", merged.Hooks.PostExtract); err != nil {
