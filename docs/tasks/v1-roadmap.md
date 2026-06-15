@@ -363,3 +363,40 @@ one-time warning so a post-extraction Ctrl+C doesn't look like it was ignored.
 
 Deliverable: Ctrl+C during extraction still cancels cleanly (M20 S3 behaviour preserved);
 Ctrl+C after extraction prints a one-time warning and the deploy runs to completion.
+
+---
+
+## M22 — `--interactive` deploy flag
+
+Add a `--interactive` flag to `deploy` for troubleshooting: pause after every numbered
+pipeline step — the 7 base steps (config loaded, release dir created, artifact extracted,
+shared dirs linked, shared files linked, current symlink updated, old releases purged)
+plus any configured hook-group steps (`deployStepTotal`'s "+1 per configured hook group",
+e.g. `[4/8] post_extract hooks`) — so the operator can manually inspect server state
+before continuing. This is independent of the existing per-hook `interactive: true`
+confirm (`internal/hooks/runner.go`), which is unaffected and unforced.
+
+- [ ] `internal/cmd/deploy.go` — add `--interactive` bool flag
+- [ ] Require human mode + a real TTY when `--interactive` is set; otherwise fail fast
+  with a clear `cmderr.Usage` error (matches the non-TTY guard pattern used by
+  `release activate`)
+- [ ] `internal/tui/confirm.go` — add a step-continue confirm prompt (huh, bifrost theme),
+  e.g. `Title("Continue to next step?")`, default Yes
+- [ ] `internal/strategy/atomic/deployer.go` — after every numbered step (base steps and
+  hook-group steps alike), if interactive mode is on, show the prompt; answering "no"
+  aborts the deploy with `cmderr.Runtime` and a message naming the step
+- [ ] Unit test: a fake confirm function that returns `false` on the 2nd step aborts
+  `Deploy` after step 2 and never runs step 3 onward
+- [ ] Unit test: with a configured hook group, the prompt also fires after that
+  hook-group step
+- [ ] Unit test: `--interactive` without a TTY (or in `json`/`plain` mode) fails fast with
+  `cmderr.Usage`, no steps run
+- [ ] Integration test: `--interactive` with a scripted confirm sequence runs a full
+  deploy to completion (regression check — confirming "yes" at every step behaves like a
+  normal deploy)
+- [ ] Update [Spec 03](../specs/03-commands.md) and [Spec 06](../specs/06-tui-ux.md) to
+  document the flag and its prompts
+
+Deliverable: `bifrost deploy --interactive` pauses for confirmation between each of the 7
+pipeline steps on a TTY; declining aborts the deploy; the flag is rejected outside
+human+TTY.
