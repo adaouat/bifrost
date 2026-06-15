@@ -254,8 +254,8 @@ remotely.
 - [x] Verify NDJSON stays valid and hook output surfaces: unit tests for the writer and
   `ForwardStream` rendering, plus a deployer test that runs the real pipeline in JSON mode
   with a fake runner (local shell exec is forbidden by the test rules), asserting every
-  stream line is valid JSON and a `hook_output` event carries the hook's stdout. A container
-  E2E for the SSH leg is deferred to M20 (needs the SSH-deploy scaffolding in `testutil`)
+  stream line is valid JSON and a `hook_output` event carries the hook's stdout. The container
+  E2E for the SSH leg landed in M20 (S11)
 
 ### Exit-code classification for deployer failures
 
@@ -326,9 +326,9 @@ keep the existing tests green. Same two-step commit flow, one task at a time.
 - [x] `internal/transport/agent.go` — give the download an `http.Client` with a timeout (S9)
 - [x] `internal/strategy/atomic/deployer.go` — log `purgePlanErr` instead of silently
   discarding it (S10)
-- [ ] Extract the SSH stage-and-deploy scaffolding from the client E2E tests into
-  `internal/testutil`, then add a container E2E asserting hook output is visible over SSH
-  (deferred from M19; the unit + fake-runner tests already cover the routing) (S11)
+- [x] Extract the SSH stage-and-deploy scaffolding from the client E2E tests into
+  `internal/testutil` (`DeployOverSSH`), then add a container E2E asserting hook output is
+  visible over SSH (closes the M19 deferral; complements the unit + fake-runner routing tests) (S11)
 
 Deliverable: duplication removed, deploy honours cancellation, config rejects invalid
 strategy/empty hooks, and the remaining review nits are closed. No functional regressions.
