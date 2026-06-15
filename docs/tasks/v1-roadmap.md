@@ -380,7 +380,7 @@ confirm (`internal/hooks/runner.go`), which is unaffected and unforced.
 - [x] Require human mode + a real TTY when `--interactive` is set; otherwise fail fast
   with a clear `cmderr.Usage` error (matches the non-TTY guard pattern used by
   `release activate`)
-- [ ] `internal/tui/confirm.go` — add a step-continue confirm prompt (huh, bifrost theme),
+- [x] `internal/tui/confirm.go` — add a step-continue confirm prompt (huh, bifrost theme),
   e.g. `Title("Continue to next step?")`, default Yes
 - [ ] `internal/strategy/atomic/deployer.go` — after every numbered step (base steps and
   hook-group steps alike), if interactive mode is on, show the prompt; answering "no"

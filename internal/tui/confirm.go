@@ -22,3 +22,24 @@ func InteractiveHookConfirm() func(cmd string) bool {
 		return ok
 	}
 }
+
+// StepConfirm returns a confirm function for `deploy --interactive`: it shows
+// a "Continue to next step?" prompt (default yes) on a TTY, or nil when stdout
+// is not a terminal.
+func StepConfirm() func(step string) bool {
+	if !IsTTY() {
+		return nil
+	}
+	return func(step string) bool {
+		ok := true
+		if err := huh.NewConfirm().
+			Title("Continue to next step?").
+			Description(step).
+			Value(&ok).
+			WithTheme(HuhTheme()).
+			Run(); err != nil {
+			return false
+		}
+		return ok
+	}
+}
