@@ -47,6 +47,40 @@ func TestDeployCmd_ClientMode_AttemptsSSHConnection(t *testing.T) {
 	assert.Equal(t, 3, exitErr.Code)
 }
 
+func TestDeployCmd_HasInteractiveFlag(t *testing.T) {
+	root := cmd.NewRootCmd("dev")
+	var deploy *cobra.Command
+	for _, c := range root.Commands() {
+		if c.Name() == "deploy" {
+			deploy = c
+			break
+		}
+	}
+	require.NotNil(t, deploy)
+	assert.NotNil(t, deploy.Flags().Lookup("interactive"))
+}
+
+// TestDeployCmd_Interactive_RequiresTTY proves --interactive fails fast with a
+// Usage error when stdout isn't a real terminal (as in this test), before any
+// config loading or deploy steps run.
+func TestDeployCmd_Interactive_RequiresTTY(t *testing.T) {
+	root := cmd.NewRootCmd("dev")
+	root.SetOut(&bytes.Buffer{})
+	root.SetErr(&bytes.Buffer{})
+	root.SetArgs([]string{
+		"deploy",
+		"--artifact", "../../testdata/release.tar.gz",
+		"--interactive",
+	})
+
+	err := root.Execute()
+	require.Error(t, err)
+
+	var exitErr *cmderr.ExitError
+	require.ErrorAs(t, err, &exitErr)
+	assert.Equal(t, cmderr.Usage, exitErr.Code)
+}
+
 func TestDeployCmd_FlatConfig_RequiresNoEnvApp(t *testing.T) {
 	root := cmd.NewRootCmd("dev")
 	root.SetOut(&bytes.Buffer{})

@@ -376,8 +376,8 @@ e.g. `[4/8] post_extract hooks`) — so the operator can manually inspect server
 before continuing. This is independent of the existing per-hook `interactive: true`
 confirm (`internal/hooks/runner.go`), which is unaffected and unforced.
 
-- [ ] `internal/cmd/deploy.go` — add `--interactive` bool flag
-- [ ] Require human mode + a real TTY when `--interactive` is set; otherwise fail fast
+- [x] `internal/cmd/deploy.go` — add `--interactive` bool flag
+- [x] Require human mode + a real TTY when `--interactive` is set; otherwise fail fast
   with a clear `cmderr.Usage` error (matches the non-TTY guard pattern used by
   `release activate`)
 - [ ] `internal/tui/confirm.go` — add a step-continue confirm prompt (huh, bifrost theme),

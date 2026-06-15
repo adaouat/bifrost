@@ -20,7 +20,7 @@ import (
 
 func newDeployCmd(version string) *cobra.Command {
 	var env, app, artifact, releaseName, agentBinary string
-	var init_ bool
+	var init_, interactive bool
 
 	cmd := &cobra.Command{
 		Use:   "deploy",
@@ -28,6 +28,10 @@ func newDeployCmd(version string) *cobra.Command {
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if artifact == "" {
 				return fmt.Errorf("--artifact is required")
+			}
+
+			if interactive && (!forgeui.ParseMode(outputMode(cmd)).IsHuman() || !tui.IsTTY()) {
+				return &ExitError{Code: Usage, Message: "--interactive requires --output human and a TTY"}
 			}
 
 			cfg, err := config.Load(resolveConfigPath(cmd.Root()))
@@ -86,6 +90,7 @@ func newDeployCmd(version string) *cobra.Command {
 	f.StringVar(&releaseName, "release-name", "", "override auto-generated release name")
 	f.StringVar(&agentBinary, "agent-binary", "", "path to a prebuilt agent binary (skips download in client mode)")
 	f.BoolVar(&init_, "init", false, "create releases_root and shared_root if missing")
+	f.BoolVar(&interactive, "interactive", false, "pause for confirmation after each deploy step")
 
 	return cmd
 }
