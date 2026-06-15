@@ -339,3 +339,26 @@ keep the existing tests green. Same two-step commit flow, one task at a time.
 
 Deliverable: duplication removed, deploy honours cancellation, config rejects invalid
 strategy/empty hooks, and the remaining review nits are closed. No functional regressions.
+
+---
+
+## M21 — Deploy cancellation guard
+
+M20 (S3) wired `cmd.Context()` into `deploy` so SIGINT cancels extraction. Once
+extraction succeeds, the deploy can no longer be safely cancelled — shared links, the
+`current` symlink swap, hooks, and purge could leave an inconsistent release. After
+extraction, detach from the cancellable context and warn instead of aborting on Ctrl+C.
+
+- [ ] `internal/strategy/atomic/deployer.go` — after `Extract` succeeds, continue the
+  pipeline with `context.WithoutCancel(ctx)`
+- [ ] Register a signal handler for the post-extraction phase that prints
+  `"Deploy in progress — cannot be cancelled, please wait..."` (human/plain) or emits a
+  JSON warning event on SIGINT/SIGTERM, instead of acting on the signal
+- [ ] Restore default signal handling once `Deploy` returns
+- [ ] Unit test: the context passed to post-extraction steps is non-cancellable even when
+  the parent ctx is cancelled
+- [ ] Integration test: send SIGINT mid-deploy after extraction completes, assert the
+  deploy still finishes successfully and the warning is printed
+
+Deliverable: Ctrl+C during extraction still cancels cleanly (M20 S3 behaviour preserved);
+Ctrl+C after extraction prints a warning and the deploy runs to completion.
