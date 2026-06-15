@@ -69,6 +69,16 @@ func PrintServerResult(mode forgeui.Mode, out io.Writer, name, message string) {
 	_, _ = fmt.Fprintf(out, "  %s  %s  %s\n", name, check, message)
 }
 
+// PrintWarning writes a one-line warning, e.g. for a Ctrl+C that arrived
+// after the deploy could no longer be safely cancelled.
+func PrintWarning(mode forgeui.Mode, out io.Writer, msg string) {
+	line := "⚠ " + msg
+	if mode.IsHuman() {
+		line = WarningStyle.Render(line)
+	}
+	_, _ = fmt.Fprintf(out, "\n  %s\n", line)
+}
+
 // PrintSummary writes the final deploy summary line to out.
 func PrintSummary(mode forgeui.Mode, out io.Writer, elapsed time.Duration, release string) {
 	rel := release

@@ -53,3 +53,19 @@ func TestPrintDetail(t *testing.T) {
 	// Must be indented more than a step line.
 	assert.True(t, len(out) > 0 && out[0] == ' ', "detail line should be indented")
 }
+
+func TestPrintWarning(t *testing.T) {
+	var buf bytes.Buffer
+	tui.PrintWarning(forgeui.Human, &buf, "Deploy in progress — cannot be cancelled, continuing...")
+	out := buf.String()
+	assert.Contains(t, out, "Deploy in progress — cannot be cancelled, continuing...")
+	assert.Contains(t, out, "⚠")
+}
+
+func TestPrintWarning_Plain(t *testing.T) {
+	var buf bytes.Buffer
+	tui.PrintWarning(forgeui.Plain, &buf, "Deploy in progress — cannot be cancelled, continuing...")
+	out := buf.String()
+	assert.Contains(t, out, "Deploy in progress — cannot be cancelled, continuing...")
+	assert.NotContains(t, out, "\x1b", "plain mode must not emit ANSI escapes")
+}

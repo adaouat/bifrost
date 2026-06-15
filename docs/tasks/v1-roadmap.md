@@ -344,21 +344,22 @@ strategy/empty hooks, and the remaining review nits are closed. No functional re
 
 ## M21 — Deploy cancellation guard
 
-M20 (S3) wired `cmd.Context()` into `deploy` so SIGINT cancels extraction. Once
-extraction succeeds, the deploy can no longer be safely cancelled — shared links, the
-`current` symlink swap, hooks, and purge could leave an inconsistent release. After
-extraction, detach from the cancellable context and warn instead of aborting on Ctrl+C.
+M20 (S3) wired `cmd.Context()` into `deploy` so SIGINT cancels extraction (via
+`ctx.Done()`, checked by `Extract`/`archives.Extract`). Every step after extraction
+(`LinkShared`, `SetCurrent`, hooks, `Purge`) ignores `ctx` entirely and already runs to
+completion regardless of cancellation — but silently, with no feedback to the user. Add a
+one-time warning so a post-extraction Ctrl+C doesn't look like it was ignored.
 
-- [ ] `internal/strategy/atomic/deployer.go` — after `Extract` succeeds, continue the
-  pipeline with `context.WithoutCancel(ctx)`
-- [ ] Register a signal handler for the post-extraction phase that prints
-  `"Deploy in progress — cannot be cancelled, please wait..."` (human/plain) or emits a
-  JSON warning event on SIGINT/SIGTERM, instead of acting on the signal
-- [ ] Restore default signal handling once `Deploy` returns
-- [ ] Unit test: the context passed to post-extraction steps is non-cancellable even when
-  the parent ctx is cancelled
+- [x] `internal/tui/styles.go` — add a warning color/style
+- [x] `internal/tui/deploy.go` — `PrintWarning(mode, out, msg)` for human/plain output
+- [ ] `internal/strategy/atomic/deployer.go` — after `Extract` succeeds, check `ctx.Err()`
+  at the start of each remaining stage (`runHookStage`/`runStep`); on first detection,
+  print `"Deploy in progress — cannot be cancelled, continuing..."` (human/plain) or emit
+  a JSON `{"event":"warning",...}` exactly once, and continue the pipeline unchanged
+- [ ] Unit test: a context cancelled during a post-extraction hook still lets `Deploy`
+  return `nil`, and the warning appears in the output exactly once
 - [ ] Integration test: send SIGINT mid-deploy after extraction completes, assert the
   deploy still finishes successfully and the warning is printed
 
 Deliverable: Ctrl+C during extraction still cancels cleanly (M20 S3 behaviour preserved);
-Ctrl+C after extraction prints a warning and the deploy runs to completion.
+Ctrl+C after extraction prints a one-time warning and the deploy runs to completion.
