@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.23.0](https://github.com/adaouat/bifrost/compare/v0.22.0..v0.23.0) - 2026-06-15
+
+### 🚀 Features
+
+- *(atomic)* Warn once on post-extraction cancellation - ([98cfc74](https://github.com/adaouat/bifrost/commit/98cfc74d236838a9ee744c029cdcb50b06ade1b1)) by @bchatard
+
+- *(tui)* Add PrintWarning for one-time deploy cancellation notice - ([b63250c](https://github.com/adaouat/bifrost/commit/b63250cbe3e4d8bbfa07bcd9f9d8cdb35913da79)) by @bchatard
+
+
+### 📚 Documentation
+
+- *(roadmap)* Add M21 deploy cancellation guard - ([9d9a344](https://github.com/adaouat/bifrost/commit/9d9a3440ce1f52678ea0142401e9466a96528b49)) by @bchatard
+
 ## [0.22.0](https://github.com/adaouat/bifrost/compare/v0.21.0..v0.22.0) - 2026-06-15
 
 ### 🚀 Features
