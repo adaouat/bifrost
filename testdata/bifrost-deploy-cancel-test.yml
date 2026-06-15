@@ -1,0 +1,19 @@
+strategy: atomic
+paths:
+  releases_root: /var/releases
+  shared_root: /var/shared
+settings:
+  releases_to_keep: 5
+hooks:
+  post_extract:
+    - cmd: "sleep 2"
+environments:
+  test:
+    applications:
+      app:
+        paths:
+          shared:
+            directories:
+              - var/log
+            files:
+              - .env

@@ -358,7 +358,7 @@ one-time warning so a post-extraction Ctrl+C doesn't look like it was ignored.
   a JSON `{"event":"warning",...}` exactly once, and continue the pipeline unchanged
 - [x] Unit test: a context cancelled during a post-extraction hook still lets `Deploy`
   return `nil`, and the warning appears in the output exactly once
-- [ ] Integration test: send SIGINT mid-deploy after extraction completes, assert the
+- [x] Integration test: send SIGINT mid-deploy after extraction completes, assert the
   deploy still finishes successfully and the warning is printed
 
 Deliverable: Ctrl+C during extraction still cancels cleanly (M20 S3 behaviour preserved);
