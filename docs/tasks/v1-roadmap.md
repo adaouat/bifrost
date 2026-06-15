@@ -333,6 +333,9 @@ keep the existing tests green. Same two-step commit flow, one task at a time.
   shared `/tmp/bifrost-test-known-hosts` that the parallel CMD/RELEASE packages clobbered
   ("knownhosts: key is unknown"); it now writes a unique per-call path
   (`internal/testutil/ssh_container.go`)
+- [x] Harden the `nocolor` integration tests against a testcontainers exec exit-code race
+  under CI load: confirm the deploy errored via stderr (read reliably) rather than the racy
+  container-exec exit code (`internal/cmd/nocolor_integration_test.go`)
 
 Deliverable: duplication removed, deploy honours cancellation, config rejects invalid
 strategy/empty hooks, and the remaining review nits are closed. No functional regressions.

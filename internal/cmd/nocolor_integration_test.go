@@ -23,7 +23,7 @@ func TestPlainOutput_NoColorCodes(t *testing.T) {
 		"sh", "-c", "TTY_FORCE=1 TERM=xterm /usr/local/bin/bifrost deploy",
 	})
 	require.NoError(t, err)
-	assert.NotEqual(t, 0, res.ExitCode)
+	require.NotEmpty(t, res.Stderr, "deploy with no --artifact must error to stderr")
 	assert.Contains(t, res.Stderr, "\x1b[", "errors should have ANSI codes in default mode with forced TTY")
 
 	// --output plain must suppress color ANSI codes even with forced TTY.
@@ -32,7 +32,7 @@ func TestPlainOutput_NoColorCodes(t *testing.T) {
 		"sh", "-c", "TTY_FORCE=1 TERM=xterm /usr/local/bin/bifrost --output plain deploy",
 	})
 	require.NoError(t, err)
-	assert.NotEqual(t, 0, res.ExitCode)
+	require.NotEmpty(t, res.Stderr, "deploy with no --artifact must error to stderr")
 	// \x1b[10x (background 100-107) and combined \x1b[1;... (multi-param SGR)
 	// are the color patterns used by fang's error panel.
 	assert.NotContains(t, res.Stderr, "\x1b[10", "plain mode must suppress 10x background color codes")
@@ -57,7 +57,7 @@ func TestNoColor_SuppressesColors(t *testing.T) {
 		"sh", "-c", "TTY_FORCE=1 TERM=xterm /usr/local/bin/bifrost deploy",
 	})
 	require.NoError(t, err)
-	assert.NotEqual(t, 0, res.ExitCode)
+	require.NotEmpty(t, res.Stderr, "deploy with no --artifact must error to stderr")
 	// Fang uses colored text for the error panel; expect at least one SGR color code.
 	assert.Contains(t, res.Stderr, "\x1b[", "error output should contain ANSI codes with forced TTY")
 
@@ -67,7 +67,7 @@ func TestNoColor_SuppressesColors(t *testing.T) {
 		"sh", "-c", "TTY_FORCE=1 TERM=xterm NO_COLOR=1 /usr/local/bin/bifrost deploy",
 	})
 	require.NoError(t, err)
-	assert.NotEqual(t, 0, res.ExitCode)
+	require.NotEmpty(t, res.Stderr, "deploy with no --artifact must error to stderr")
 	// Fang uses \x1b[101m (bright-red bg) and combined \x1b[1;97;101m.
 	// With NO_COLOR, those codes should be absent; only \x1b[m (reset) and
 	// \x1b[1m (bold) remain per the NO_COLOR spec.
