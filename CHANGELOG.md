@@ -1,5 +1,51 @@
 # Changelog
 
+## [0.22.0](https://github.com/adaouat/bifrost/compare/v0.21.0..v0.22.0) - 2026-06-15
+
+### 🚀 Features
+
+- *(config)* Reject unsupported strategy values - ([35709f3](https://github.com/adaouat/bifrost/commit/35709f3dd95df8197afe47dbc70fadcd9ebd2ce5)) by @bchatard
+
+- *(config)* Reject empty hook cmd at load time - ([bb39dbc](https://github.com/adaouat/bifrost/commit/bb39dbc7a67ce7c0b1e482c5f06f48a3794e9259)) by @bchatard
+
+- *(deploy)* Cancel the deploy on SIGINT via cmd.Context() - ([c897858](https://github.com/adaouat/bifrost/commit/c897858a8d73c576a84db9c2d0ca2662d16b8d3f)) by @bchatard
+
+- *(deps)* Bump forge to v0.17.0 - ([2f285a8](https://github.com/adaouat/bifrost/commit/2f285a8df58178ef0a8e61afa8196659e46eca28)) by @bchatard
+
+
+### 🐛 Bug Fixes
+
+- *(deploy)* Log purge-plan errors instead of discarding them - ([e26a80f](https://github.com/adaouat/bifrost/commit/e26a80fc36ce206542f333602fa70142eb7a146f)) by @bchatard
+
+- *(transport)* Bound agent downloads with an http.Client timeout - ([5832a68](https://github.com/adaouat/bifrost/commit/5832a68b9d4893251b7b9605eb3b7458230fc6eb)) by @bchatard
+
+- *(tui)* Raise event-stream line limit above 64 KB - ([7bad1af](https://github.com/adaouat/bifrost/commit/7bad1afc9870bfa5734788ece765256c4d85d33d)) by @bchatard
+
+
+### 🚜 Refactor
+
+- *(cmd)* Extract shared config-resolution and hook helpers - ([59ba701](https://github.com/adaouat/bifrost/commit/59ba701d4b99df31c932eb0503857d9c03572883)) by @bchatard
+
+- *(deploy)* Collapse the 8 hook-stage blocks into one helper - ([eee16f7](https://github.com/adaouat/bifrost/commit/eee16f7d56e154ca4ce00c21bae951bc2d6bb5f6)) by @bchatard
+
+- *(hooks)* Use errors.AsType to match ssh.go - ([0d599a7](https://github.com/adaouat/bifrost/commit/0d599a724ad3bb2337e4aa3273d6fcef31893056)) by @bchatard
+
+- *(transport)* Chmod the agent via SFTP, not a remote shell - ([2c64e60](https://github.com/adaouat/bifrost/commit/2c64e60ce40edf3805a03c34eacfb8df7f499eb6)) by @bchatard
+
+
+### 📚 Documentation
+
+- *(testing)* Allow t.TempDir in deployer FS-logic tests - ([f476cd6](https://github.com/adaouat/bifrost/commit/f476cd6e40adea7fe087fefcc17445f1482deadd)) by @bchatard
+
+
+### 🧪 Testing
+
+- *(cmd)* Assert hook output is visible over SSH (S11) - ([2789e1d](https://github.com/adaouat/bifrost/commit/2789e1da4bc3cca8c8934895adae593fecf74dea)) by @bchatard
+
+- *(cmd)* Confirm deploy error via stderr, not the exec exit code - ([236e130](https://github.com/adaouat/bifrost/commit/236e130b708c9a9527034dd430ccce6f3ae69b24)) by @bchatard
+
+- *(testutil)* Unique known_hosts path to fix CI host-key race - ([bca2aa2](https://github.com/adaouat/bifrost/commit/bca2aa26182846018807fdb6202fe8491c868cc1)) by @bchatard
+
 ## [0.21.0](https://github.com/adaouat/bifrost/compare/v0.20.0..v0.21.0) - 2026-06-14
 
 ### 🚀 Features
