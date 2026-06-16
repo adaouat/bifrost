@@ -391,7 +391,7 @@ confirm (`internal/hooks/runner.go`), which is unaffected and unforced.
   hook-group step
 - [x] Unit test: `--interactive` without a TTY (or in `json`/`plain` mode) fails fast with
   `cmderr.Usage`, no steps run
-- [ ] Integration test: `--interactive` with a scripted confirm sequence runs a full
+- [x] Integration test: `--interactive` with a scripted confirm sequence runs a full
   deploy to completion (regression check — confirming "yes" at every step behaves like a
   normal deploy)
 - [ ] Update [Spec 03](../specs/03-commands.md) and [Spec 06](../specs/06-tui-ux.md) to
