@@ -70,7 +70,11 @@ func newDeployCmd(version string) *cobra.Command {
 			verbose, _ := cmd.Flags().GetBool("verbose")
 			logger := forgelog.New(cmd.ErrOrStderr(), forgelog.LevelFor(verbose))
 
-			var deployer strategy.Deployer = atomic.New(out, mode, confirmFn).WithLogger(logger)
+			ad := atomic.New(out, mode, confirmFn).WithLogger(logger)
+			if interactive {
+				ad = ad.WithStepConfirm(tui.StepConfirm())
+			}
+			var deployer strategy.Deployer = ad
 			return deployer.Deploy(cmd.Context(), strategy.DeployOptions{
 				Config:      merged,
 				Artifact:    artifact,

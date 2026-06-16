@@ -37,11 +37,12 @@ func deployStepTotal(cfg *config.MergedConfig) int {
 
 // Deployer implements strategy.Deployer for the atomic deployment strategy.
 type Deployer struct {
-	out       io.Writer
-	mode      forgeui.Mode
-	confirmFn func(string) bool
-	runner    forgeexec.Runner
-	logger    *slog.Logger
+	out         io.Writer
+	mode        forgeui.Mode
+	confirmFn   func(string) bool
+	stepConfirm func(string) bool
+	runner      forgeexec.Runner
+	logger      *slog.Logger
 }
 
 var _ strategy.Deployer = (*Deployer)(nil)
@@ -62,6 +63,14 @@ func (d *Deployer) WithLogger(l *slog.Logger) *Deployer {
 // for chaining. Tests inject a fake runner to avoid real shell execution.
 func (d *Deployer) WithRunner(r forgeexec.Runner) *Deployer {
 	d.runner = r
+	return d
+}
+
+// WithStepConfirm sets the `deploy --interactive` step-continue prompt and
+// returns d for chaining. When set, Deploy calls it after every numbered step
+// (base steps and hook-group steps); a false result aborts the deploy.
+func (d *Deployer) WithStepConfirm(fn func(string) bool) *Deployer {
+	d.stepConfirm = fn
 	return d
 }
 
@@ -100,6 +109,15 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 		return err
 	}
 
+	// confirmStep implements `deploy --interactive`: when set, it pauses after
+	// every numbered step and aborts the deploy if the operator declines.
+	confirmStep := func(step string) error {
+		if d.stepConfirm == nil || d.stepConfirm(step) {
+			return nil
+		}
+		return cmderr.Wrap(cmderr.Runtime, fmt.Errorf("deploy aborted after step: %s", step))
+	}
+
 	// checkCancel is a no-op until extraction succeeds, then warns once if ctx
 	// was cancelled (e.g. Ctrl+C) — the remaining steps run to completion
 	// regardless, so the user should know cancellation is being ignored.
@@ -134,7 +152,13 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 	if !d.jsonMode() {
 		_, _ = fmt.Fprint(d.out, tui.DeployHeader(d.mode, opts.Env, opts.App, filepath.Base(releaseDir)))
 		sp.Step("Config loaded and validated", "")
+		if err := confirmStep("Config loaded and validated"); err != nil {
+			return err
+		}
 		sp.Step("Release directory created", "")
+		if err := confirmStep("Release directory created"); err != nil {
+			return err
+		}
 		tui.PrintDetail(d.mode, d.out, "Root path: "+merged.ReleasesRoot)
 		tui.PrintDetail(d.mode, d.out, "Shared path: "+merged.SharedRoot)
 	}
@@ -171,6 +195,9 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 		if !d.jsonMode() && len(entries) > 0 {
 			n := len(entries)
 			sp.Step(name+" hooks", fmt.Sprintf("(%d/%d)", n, n))
+			if err := confirmStep(name + " hooks"); err != nil {
+				return err
+			}
 		}
 		return nil
 	}
@@ -215,6 +242,9 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 	}
 	if !d.jsonMode() {
 		sp.Step("Artifact extracted", fmt.Sprintf("(%.1fs)", time.Since(extractStart).Seconds()))
+		if err := confirmStep("Artifact extracted"); err != nil {
+			return err
+		}
 	}
 
 	// From here on the deploy can no longer be safely cancelled, so a Ctrl+C
@@ -252,9 +282,15 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 		for _, dir := range merged.SharedDirs {
 			tui.PrintDetail(d.mode, d.out, dir)
 		}
+		if err := confirmStep("Shared directories linked"); err != nil {
+			return err
+		}
 		sp.Step("Shared files linked", fmt.Sprintf("(%d)", len(merged.SharedFiles)))
 		for _, f := range merged.SharedFiles {
 			tui.PrintDetail(d.mode, d.out, f)
+		}
+		if err := confirmStep("Shared files linked"); err != nil {
+			return err
 		}
 	}
 
@@ -275,6 +311,9 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 	if !d.jsonMode() {
 		sp.Step("current symlink updated", "")
 		tui.PrintDetail(d.mode, d.out, releaseDir)
+		if err := confirmStep("current symlink updated"); err != nil {
+			return err
+		}
 	}
 
 	if err := runHookStage("post_activate", merged.Hooks.PostActivate); err != nil {
@@ -307,6 +346,9 @@ func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) erro
 	if !d.jsonMode() {
 		for _, r := range purgePlan {
 			tui.PrintDetail(d.mode, d.out, r+" deleted")
+		}
+		if err := confirmStep("Old releases purged"); err != nil {
+			return err
 		}
 	}
 

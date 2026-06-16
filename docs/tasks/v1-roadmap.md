@@ -382,14 +382,14 @@ confirm (`internal/hooks/runner.go`), which is unaffected and unforced.
   `release activate`)
 - [x] `internal/tui/confirm.go` — add a step-continue confirm prompt (huh, bifrost theme),
   e.g. `Title("Continue to next step?")`, default Yes
-- [ ] `internal/strategy/atomic/deployer.go` — after every numbered step (base steps and
+- [x] `internal/strategy/atomic/deployer.go` — after every numbered step (base steps and
   hook-group steps alike), if interactive mode is on, show the prompt; answering "no"
   aborts the deploy with `cmderr.Runtime` and a message naming the step
-- [ ] Unit test: a fake confirm function that returns `false` on the 2nd step aborts
+- [x] Unit test: a fake confirm function that returns `false` on the 2nd step aborts
   `Deploy` after step 2 and never runs step 3 onward
-- [ ] Unit test: with a configured hook group, the prompt also fires after that
+- [x] Unit test: with a configured hook group, the prompt also fires after that
   hook-group step
-- [ ] Unit test: `--interactive` without a TTY (or in `json`/`plain` mode) fails fast with
+- [x] Unit test: `--interactive` without a TTY (or in `json`/`plain` mode) fails fast with
   `cmderr.Usage`, no steps run
 - [ ] Integration test: `--interactive` with a scripted confirm sequence runs a full
   deploy to completion (regression check — confirming "yes" at every step behaves like a
