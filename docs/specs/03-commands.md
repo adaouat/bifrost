@@ -88,6 +88,7 @@ bifrost deploy \
 | `--artifact` | | Yes | Path to artifact file (`.tar.gz`, `.zip`, etc.) |
 | `--release-name` | | No | Override auto-generated timestamp name (e.g. `v2.1.3`) |
 | `--init` | | No | Create `releases_root` and `shared_root` if they do not exist |
+| `--interactive` | | No | Pause for confirmation after each deploy step (human mode + TTY only) |
 | `--agent-binary` | | No | Path to a prebuilt agent binary; skips download in client mode (v1) |
 
 If the resolved config references one or more `servers`, `deploy` runs in **client mode**
@@ -113,6 +114,22 @@ local flow below is what the agent runs on each target server.
 14. Run `pre_purge` hooks
 15. Purge old releases, keeping `settings.releases_to_keep` most recent
 16. Run `post_purge` hooks
+
+**`--interactive` mode:**
+
+When `--interactive` is set, the deploy pauses after every numbered step (all 7 base steps
+plus any configured hook-group step) and shows a huh confirm prompt:
+
+```
+  Continue to next step?
+  Artifact extracted
+  > Yes / No
+```
+
+Answering **No** aborts the deploy immediately with exit code 3. The prompt is only
+available in `human` mode on a real TTY; passing `--interactive` with `--output json`,
+`--output plain`, or when stdout is not a TTY is rejected with a usage error (exit 2)
+before any steps run.
 
 ---
 

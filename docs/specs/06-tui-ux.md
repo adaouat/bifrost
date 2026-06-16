@@ -54,6 +54,29 @@ Hook step lines (`pre_extract hooks`, `post_extract hooks`, `pre_link hooks`,
 `post_purge hooks`) are only shown when at least one hook is configured for that
 lifecycle. Spinner for purge only shown when there are releases to remove.
 
+## Human mode — `--interactive` step confirm
+
+When `deploy --interactive` is passed, a huh confirm prompt is shown after every numbered
+step (base steps and hook-group steps). The prompt describes the step that just completed:
+
+```
+  ✔ Artifact extracted              (1.2s)
+
+  Continue to next step?
+  Artifact extracted
+> Yes / No
+```
+
+Answering **No** aborts the deploy with exit code 3 and prints:
+
+```
+  Error  deploy aborted after step: Artifact extracted
+```
+
+`--interactive` is rejected (exit 2) when `--output json`, `--output plain`, or when
+stdout is not a TTY. The existing per-hook `interactive: true` confirm (Spec 05) is
+independent and unaffected.
+
 ## Human mode — interactive release selection
 
 When `release activate` is called without `--release`:
