@@ -43,8 +43,8 @@ github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERo
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
 github.com/STARRY-S/zip v0.2.3 h1:luE4dMvRPDOWQdeDdUxUoZkzUIpTccdKdhHHsQJ1fm4=
 github.com/STARRY-S/zip v0.2.3/go.mod h1:lqJ9JdeRipyOQJrYSOtpNAiaesFO6zVDsE8GIGFaoSk=
-github.com/adaouat/forge v0.17.0 h1:JSjilHynBonJwcwLgcF0TzNxiiqxy3hp9PLZM1ygcOw=
-github.com/adaouat/forge v0.17.0/go.mod h1:bLMtho3FDfzeIDBywltClWtk/dqE/edPBWCb3u+AjD0=
+github.com/adaouat/forge v0.17.1 h1:3RXlgeaygiznUYTIrVFnsUGXnnXywOlLlUVvdhEj4W4=
+github.com/adaouat/forge v0.17.1/go.mod h1:bLMtho3FDfzeIDBywltClWtk/dqE/edPBWCb3u+AjD0=
 github.com/alecthomas/assert/v2 v2.7.0 h1:QtqSACNS3tF7oasA8CU6A6sXZSBDqnm7RfpLl9bZqbE=
 github.com/alecthomas/assert/v2 v2.7.0/go.mod h1:Bze95FyfUr7x34QZrjL+XP+0qgp/zg8yS+TtBj1WA3k=
 github.com/alecthomas/chroma/v2 v2.14.0 h1:R3+wzpnUArGcQz7fCETQBzO5n9IMNi13iIs46aU4V9E=
