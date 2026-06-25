@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.24.1](https://github.com/adaouat/bifrost/compare/v0.24.0..v0.24.1) - 2026-06-25
+
+### 🐛 Bug Fixes
+
+- *(atomic)* Reject unsafe symlink targets during extraction - ([f8642e1](https://github.com/adaouat/bifrost/commit/f8642e1ac27f2ccc2d75b3d19959d9207e724db9)) by @bchatard
+
+- *(deploy)* Reject --interactive for remote (server) deploys - ([ba5a0f3](https://github.com/adaouat/bifrost/commit/ba5a0f309facc970143efcd56ec683941e265608)) by @bchatard
+
+- Bump forge to v0.17.1 - ([d42f45a](https://github.com/adaouat/bifrost/commit/d42f45a06537498908354bfc57c7245977630df0)) by @bchatard
+
+
+### 📚 Documentation
+
+- *(specs)* Document archive extraction symlink safety - ([896a2b7](https://github.com/adaouat/bifrost/commit/896a2b7539126df94c1b9bb4ceb2b13741b7b9c2)) by @bchatard
+
 ## [0.24.0](https://github.com/adaouat/bifrost/compare/v0.23.1..v0.24.0) - 2026-06-16
 
 ### 🚀 Features
