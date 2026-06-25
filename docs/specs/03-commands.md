@@ -115,6 +115,24 @@ local flow below is what the agent runs on each target server.
 15. Purge old releases, keeping `settings.releases_to_keep` most recent
 16. Run `post_purge` hooks
 
+**Artifact extraction safety:**
+
+Extraction (step 6) treats the archive as untrusted and rejects entries that would write
+or point outside the release directory. On a rejected entry the deploy aborts with exit 3.
+
+- **Entry names** that are absolute or traverse upward (`/etc/...`, `../...`) are rejected.
+- **Symlink entries** are rejected when their target is **absolute** (e.g. `/etc/passwd`)
+  or is a relative path that resolves **outside** the release directory (e.g. `../../etc`).
+  Relative symlink targets that resolve **inside** the release directory are extracted
+  normally.
+
+Absolute symlink targets are rejected unconditionally — even ones that happen to point back
+into the release directory — because a release directory's absolute path is generated per
+deploy and cannot be known by the artifact builder. To link a release file or directory to
+a fixed location outside the release (for example a shared `.env`), declare it under
+[`paths.shared`](04-shared-resources.md) instead of shipping a symlink in the artifact;
+bifrost creates that link itself during the link step.
+
 **`--interactive` mode:**
 
 When `--interactive` is set, the deploy pauses after every numbered step (all 7 base steps

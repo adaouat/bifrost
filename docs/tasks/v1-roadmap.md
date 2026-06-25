@@ -445,6 +445,9 @@ extractor should reject escaping symlink targets too.
 - [x] Unit test: an archive with a `..`-escaping relative symlink target is rejected
 - [x] Unit test: a relative symlink that resolves inside the release directory is still
   extracted normally (no over-restriction)
+- [x] [Spec 03](../specs/03-commands.md) — document artifact extraction safety: rejected
+  entry names and symlink targets, why absolute targets are rejected unconditionally, and
+  the `paths.shared` alternative
 
 Deliverable: archive extraction rejects symlink targets that would escape the release
 directory, matching the existing entry-name traversal guard.
