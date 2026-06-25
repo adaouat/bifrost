@@ -61,6 +61,9 @@ func extractHandler(destDir string) archives.FileHandler {
 		}
 
 		if fi.Mode()&fs.ModeSymlink != 0 {
+			if symlinkEscapes(destDir, destPath, fi.LinkTarget) {
+				return fmt.Errorf("rejected unsafe symlink in archive: %s -> %s", fi.NameInArchive, fi.LinkTarget)
+			}
 			_ = os.Remove(destPath)
 			return os.Symlink(fi.LinkTarget, destPath)
 		}
@@ -91,6 +94,22 @@ func extractHandler(destDir string) archives.FileHandler {
 
 		return nil
 	}
+}
+
+// symlinkEscapes reports whether a symlink at linkPath pointing to target would
+// resolve outside destDir — an absolute target, or a relative target that climbs
+// out via "..". Such a symlink lets a later archive entry write through it to an
+// arbitrary location, so extraction rejects it.
+func symlinkEscapes(destDir, linkPath, target string) bool {
+	if filepath.IsAbs(target) {
+		return true
+	}
+	resolved := filepath.Join(filepath.Dir(linkPath), target)
+	rel, err := filepath.Rel(destDir, resolved)
+	if err != nil {
+		return true
+	}
+	return rel == ".." || strings.HasPrefix(rel, ".."+string(os.PathSeparator))
 }
 
 type progressReader struct {

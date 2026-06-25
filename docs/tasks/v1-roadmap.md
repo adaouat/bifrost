@@ -423,3 +423,28 @@ the guard's usage error as exit 2, but the code returns `cmderr.Usage` (exit 1).
 
 Deliverable: `bifrost deploy --interactive` against a server config fails fast with a clear
 usage error (exit 1) instead of silently ignoring the flag; the spec matches the code.
+
+---
+
+## M24 — Validate archive symlink targets (review fix)
+
+A code review found that `extractHandler` validated entry *names* against path
+traversal (absolute / `../`) but created symlink entries with an unvalidated,
+attacker-controlled *target* (`os.Symlink(fi.LinkTarget, …)`). A crafted artifact
+could ship a symlink whose target is absolute (`/etc`) or climbs out via `..`;
+a later entry written under that link then escapes the release directory (the
+symlink-based zip-slip variant). Severity is bounded — operators deploy their own
+artifacts — but it is inconsistent with the existing path-traversal guard, so the
+extractor should reject escaping symlink targets too.
+
+- [x] `internal/strategy/atomic/deploy.go` — add `symlinkEscapes(destDir, linkPath,
+  target)` and reject symlink entries whose target is absolute or resolves outside
+  the release directory, before `os.Symlink`
+- [x] Unit test: an archive with an absolute symlink target is rejected and the link
+  is not created
+- [x] Unit test: an archive with a `..`-escaping relative symlink target is rejected
+- [x] Unit test: a relative symlink that resolves inside the release directory is still
+  extracted normally (no over-restriction)
+
+Deliverable: archive extraction rejects symlink targets that would escape the release
+directory, matching the existing entry-name traversal guard.
