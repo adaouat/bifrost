@@ -6,6 +6,7 @@ import (
 
 	"github.com/adaouat/bifrost/internal/cmd"
 	"github.com/adaouat/bifrost/internal/cmderr"
+	"github.com/adaouat/bifrost/internal/tui"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -79,6 +80,35 @@ func TestDeployCmd_Interactive_RequiresTTY(t *testing.T) {
 	var exitErr *cmderr.ExitError
 	require.ErrorAs(t, err, &exitErr)
 	assert.Equal(t, cmderr.Usage, exitErr.Code)
+}
+
+// TestDeployCmd_Interactive_RejectsServerConfig proves --interactive is rejected
+// with a Usage error for a server (remote) config, even on a TTY: the agent runs
+// remotely in JSON mode, so per-step prompts can't work. Without the guard the
+// command would silently fall through to a client-mode SSH deploy.
+func TestDeployCmd_Interactive_RejectsServerConfig(t *testing.T) {
+	tui.SetIsTTY(func() bool { return true })
+	defer tui.SetIsTTY(nil)
+
+	root := cmd.NewRootCmd("dev")
+	root.SetOut(&bytes.Buffer{})
+	root.SetErr(&bytes.Buffer{})
+	root.SetArgs([]string{
+		"deploy",
+		"--config", "../../testdata/bifrost-servers.yml",
+		"--env", "prod",
+		"--app", "web",
+		"--artifact", "../../testdata/release.tar.gz",
+		"--interactive",
+	})
+
+	err := root.Execute()
+	require.Error(t, err)
+
+	var exitErr *cmderr.ExitError
+	require.ErrorAs(t, err, &exitErr)
+	assert.Equal(t, cmderr.Usage, exitErr.Code)
+	assert.Contains(t, exitErr.Error(), "remote")
 }
 
 func TestDeployCmd_FlatConfig_RequiresNoEnvApp(t *testing.T) {

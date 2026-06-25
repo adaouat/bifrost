@@ -11,8 +11,20 @@ import (
 	forgeui "github.com/adaouat/forge/ui"
 )
 
+var ttyFn = func() bool { return forgeui.IsTTY(os.Stdout) }
+
 // IsTTY reports whether stdout is connected to a real terminal.
-func IsTTY() bool { return forgeui.IsTTY(os.Stdout) }
+func IsTTY() bool { return ttyFn() }
+
+// SetIsTTY overrides the TTY check (for testing). Pass nil to restore the default.
+// Tests that call this must not run in parallel — this is a package-level global.
+func SetIsTTY(fn func() bool) {
+	if fn == nil {
+		ttyFn = func() bool { return forgeui.IsTTY(os.Stdout) }
+		return
+	}
+	ttyFn = fn
+}
 
 // NewProgressBar returns an update func and a done func for rendering a titled progress bar.
 // total is the expected byte count used to compute fill percentage.

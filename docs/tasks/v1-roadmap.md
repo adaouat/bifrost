@@ -400,3 +400,26 @@ confirm (`internal/hooks/runner.go`), which is unaffected and unforced.
 Deliverable: `bifrost deploy --interactive` pauses for confirmation between each of the 7
 pipeline steps on a TTY; declining aborts the deploy; the flag is rejected outside
 human+TTY.
+
+---
+
+## M23 — Reject `--interactive` for remote deploys (review fix)
+
+A code review found two defects in the M22 `--interactive` guard. First, the human+TTY
+guard runs before config load, so on a real TTY a `--interactive` deploy against a config
+with `servers:` passed the guard and silently fell through to a client-mode SSH deploy —
+the flag was accepted and ignored, because the remote agent runs in `--output json` mode
+where per-step prompts are skipped. Second, [Spec 03](../specs/03-commands.md) documented
+the guard's usage error as exit 2, but the code returns `cmderr.Usage` (exit 1).
+
+- [x] `internal/tui/progress.go` — make `IsTTY` overridable via `SetIsTTY` (test seam,
+  matching the `SetStatFile`/`SetInitWrite` pattern)
+- [x] `internal/cmd/deploy.go` — after merge, reject `--interactive` with `cmderr.Usage`
+  when `len(merged.Servers) > 0`, before the client-mode branch
+- [x] Unit test: with TTY forced on, `--interactive` against a server config returns a
+  `cmderr.Usage` error naming "remote" and never attempts an SSH connection
+- [x] [Spec 03](../specs/03-commands.md) — correct the guard exit code to 1 and document
+  the local-only restriction
+
+Deliverable: `bifrost deploy --interactive` against a server config fails fast with a clear
+usage error (exit 1) instead of silently ignoring the flag; the spec matches the code.

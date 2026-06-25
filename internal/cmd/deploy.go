@@ -44,6 +44,10 @@ func newDeployCmd(version string) *cobra.Command {
 				return err
 			}
 
+			if interactive && len(merged.Servers) > 0 {
+				return &ExitError{Code: Usage, Message: "--interactive is not supported for remote (server) deploys; the agent runs remotely in JSON mode"}
+			}
+
 			if len(merged.Servers) > 0 {
 				if releaseName == "" {
 					releaseName = time.Now().UTC().Format("20060102-150405")

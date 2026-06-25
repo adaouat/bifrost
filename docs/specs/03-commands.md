@@ -128,8 +128,12 @@ plus any configured hook-group step) and shows a huh confirm prompt:
 
 Answering **No** aborts the deploy immediately with exit code 3. The prompt is only
 available in `human` mode on a real TTY; passing `--interactive` with `--output json`,
-`--output plain`, or when stdout is not a TTY is rejected with a usage error (exit 2)
+`--output plain`, or when stdout is not a TTY is rejected with a usage error (exit 1)
 before any steps run.
+
+`--interactive` is local-only: it is rejected with a usage error (exit 1) when the resolved
+config references one or more `servers`, because in client mode the agent runs remotely in
+`--output json` mode and cannot show per-step prompts.
 
 ---
 
