@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.24.2](https://github.com/adaouat/bifrost/compare/v0.24.1..v0.24.2) - 2026-07-26
+
+### 💼 Other
+
+- *(deps)* Bump forge to v0.17.2 - ([2647df9](https://github.com/adaouat/bifrost/commit/2647df9c25c94427e9bed5549e1ba7bff82efed6)) by @bchatard
+
 ## [0.24.1](https://github.com/adaouat/bifrost/compare/v0.24.0..v0.24.1) - 2026-06-25
 
 ### 🐛 Bug Fixes
