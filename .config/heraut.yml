@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/adaouat/heraut/v0.31.0/schema.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/adaouat/heraut/v0.58.0/schema.json
 version: "1"
 
 versioning:
@@ -8,16 +8,17 @@ versioning:
   bump: auto
 
 changelog:
-  generator: git-cliff
   output: CHANGELOG.md
 
+forges:
+  - name: GitHub
+    platform: github
+    repository: adaouat/bifrost
+
 release:
-  notes:
-    generator: git-cliff
-  platforms:
-    - name: GitHub
-      platform: github
-      repository: adaouat/bifrost
+  notes: {}
+  targets:
+    - forge: GitHub
   assets:
     - "dist/bifrost_*_linux_amd64"
     - "dist/bifrost_*_linux_arm64"
