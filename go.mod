@@ -6,7 +6,7 @@ require (
 	charm.land/bubbles/v2 v2.2.1
 	charm.land/huh/v2 v2.0.3
 	charm.land/lipgloss/v2 v2.0.6
-	github.com/adaouat/forge v0.18.0
+	github.com/adaouat/forge v0.19.0
 	github.com/google/uuid v1.6.0
 	github.com/mholt/archives v0.1.5
 	github.com/moby/moby/api v1.54.1
