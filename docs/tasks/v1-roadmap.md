@@ -451,3 +451,36 @@ extractor should reject escaping symlink targets too.
 
 Deliverable: archive extraction rejects symlink targets that would escape the release
 directory, matching the existing entry-name traversal guard.
+
+---
+
+## M25 — Honor `--dry-run` for remote and rollback commands (review fix)
+
+A code review found that `--dry-run` is silently ignored in several paths. `deploy` and
+`release activate` both check the client-mode branch (`len(merged.Servers) > 0`) before
+ever checking `--dry-run`, so a remote (SSH) invocation performs a real deployment or
+activation even when the operator asked for a simulation. `release rollback` never checks
+`--dry-run` at all, on either the local or client path.
+
+- [x] `internal/cmd/client_deploy.go` — `runClientDeploy` checks `--dry-run` before looping
+  servers; prints a per-server plan and returns without connecting to any server when set
+- [x] `internal/cmd/release/client_activate.go` — `runClientReleaseActivate` checks
+  `--dry-run` after resolving release selections, before the mutating loop; prints a
+  per-server plan and returns without executing the remote agent
+- [x] `internal/cmd/release/client_rollback.go` — `runClientReleaseRollback` checks
+  `--dry-run` before looping servers; prints a per-server plan (the actual target release
+  is only known once the remote agent runs) and returns without connecting
+- [x] `internal/cmd/release/rollback.go` — local rollback path checks `--dry-run` after
+  computing the rollback target, before `LinkShared`/hooks/`SetCurrent`; prints the target
+  release and returns without mutating anything
+- [x] Unit tests: dry-run in each of the three client-mode functions never invokes the
+  per-server mutating function (`deployToServerFn` / `releaseActivateToServerFn` /
+  `releaseRollbackToServerFn`)
+- [x] Integration test: local `release rollback --dry-run` leaves `current` unchanged and
+  prints the would-be target release
+- [x] [Spec 03](../specs/03-commands.md) — document `--dry-run` behavior for `deploy`,
+  `release activate`, and `release rollback`, including that a remote (client-mode)
+  dry run prints a plan without connecting to any server
+
+Deliverable: `--dry-run` never performs a real deployment, activation, or rollback on any
+path — local or remote — for any of `deploy`, `release activate`, `release rollback`.

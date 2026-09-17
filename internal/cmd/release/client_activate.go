@@ -41,6 +41,19 @@ func runClientReleaseActivate(cmd *cobra.Command, version string, merged *config
 		}
 	}
 
+	if dryRun, _ := cmd.Root().PersistentFlags().GetBool("dry-run"); dryRun {
+		_, _ = fmt.Fprintln(out, "DRY RUN — no changes will be made")
+		_, _ = fmt.Fprintln(out)
+		for _, srv := range merged.Servers {
+			name := releaseName
+			if name == "" {
+				name = selections[srv.Name]
+			}
+			_, _ = fmt.Fprintf(out, "  Would activate %s  on  %s (%s)\n", name, srv.Name, srv.Host)
+		}
+		return nil
+	}
+
 	if mode != forgeui.JSON {
 		tui.PrintActionHeader(mode, out, "Activating", env, app)
 	}

@@ -28,6 +28,15 @@ func runClientReleaseRollback(cmd *cobra.Command, version string, merged *config
 	modeFlag, _ := cmd.Root().PersistentFlags().GetString("output")
 	mode := forgeui.ParseMode(modeFlag)
 
+	if dryRun, _ := cmd.Root().PersistentFlags().GetBool("dry-run"); dryRun {
+		_, _ = fmt.Fprintln(out, "DRY RUN — no changes will be made")
+		_, _ = fmt.Fprintln(out)
+		for _, srv := range merged.Servers {
+			_, _ = fmt.Fprintf(out, "  Would roll back  %s (%s)  to its previous release\n", srv.Name, srv.Host)
+		}
+		return nil
+	}
+
 	if mode != forgeui.JSON {
 		tui.PrintActionHeader(mode, out, "Rolling back", env, app)
 	}

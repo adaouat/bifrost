@@ -92,3 +92,29 @@ func TestRunClientReleaseActivate_NonTTYWithoutRelease_ExitsCode1(t *testing.T) 
 	require.ErrorAs(t, err, &exitErr)
 	assert.Equal(t, 1, exitErr.Code, "non-TTY without --release must exit with code 1")
 }
+
+func TestRunClientReleaseActivate_DryRun_NeverCallsServer(t *testing.T) {
+	orig := releaseActivateToServerFn
+	defer func() { releaseActivateToServerFn = orig }()
+
+	releaseActivateToServerFn = func(_ string, _ *config.Config, _, _, _, _ string, _ config.ResolvedServer, _ forgeui.Mode, _ io.Writer) error {
+		t.Fatal("releaseActivateToServerFn must not be called during a dry run")
+		return nil
+	}
+
+	merged := &config.MergedConfig{
+		Servers: []config.ResolvedServer{{Name: "web-01"}, {Name: "web-02"}},
+	}
+
+	root := &cobra.Command{Use: "root"}
+	root.PersistentFlags().Bool("dry-run", true, "")
+	var out bytes.Buffer
+	root.SetOut(&out)
+
+	err := runClientReleaseActivate(root, "dev", merged, &config.Config{}, "prod", "web", "20260601-120000", "")
+	require.NoError(t, err)
+	assert.Contains(t, out.String(), "DRY RUN")
+	assert.Contains(t, out.String(), "web-01")
+	assert.Contains(t, out.String(), "web-02")
+	assert.Contains(t, out.String(), "20260601-120000")
+}

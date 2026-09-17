@@ -69,3 +69,28 @@ func TestRunClientDeploy_FailureSkipsRemainingServers(t *testing.T) {
 	require.ErrorAs(t, err, &exitErr)
 	assert.Equal(t, 7, exitErr.Code, "exit code must come from the failing server's agent")
 }
+
+func TestRunClientDeploy_DryRun_NeverCallsServer(t *testing.T) {
+	orig := deployToServerFn
+	defer func() { deployToServerFn = orig }()
+
+	deployToServerFn = func(_ string, _ *config.MergedConfig, _ *config.Config, _, _, _, _, _ string, _ config.ResolvedServer, _ forgeui.Mode, _ io.Writer) error {
+		t.Fatal("deployToServerFn must not be called during a dry run")
+		return nil
+	}
+
+	merged := &config.MergedConfig{
+		Servers: []config.ResolvedServer{{Name: "web-01"}, {Name: "web-02"}},
+	}
+
+	root := &cobra.Command{Use: "root"}
+	root.PersistentFlags().Bool("dry-run", true, "")
+	var out bytes.Buffer
+	root.SetOut(&out)
+
+	err := runClientDeploy(root, "dev", merged, &config.Config{}, "prod", "web", "artifact.tar.gz", "20260601-120000", "")
+	require.NoError(t, err)
+	assert.Contains(t, out.String(), "DRY RUN")
+	assert.Contains(t, out.String(), "web-01")
+	assert.Contains(t, out.String(), "web-02")
+}

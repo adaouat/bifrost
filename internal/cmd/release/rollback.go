@@ -47,8 +47,17 @@ func newRollbackCmd(version string) *cobra.Command {
 				return err
 			}
 
-			releaseDir := filepath.Join(merged.ReleasesRoot, target)
 			currentLink := filepath.Join(merged.ReleasesRoot, "current")
+
+			if dryRun, _ := cmd.Root().PersistentFlags().GetBool("dry-run"); dryRun {
+				out := cmd.OutOrStdout()
+				_, _ = fmt.Fprintln(out, "DRY RUN — no changes will be made")
+				_, _ = fmt.Fprintln(out)
+				_, _ = fmt.Fprintf(out, "  Would update   %s  →  %s\n", currentLink, target)
+				return nil
+			}
+
+			releaseDir := filepath.Join(merged.ReleasesRoot, target)
 
 			if err := atomic.LinkShared(merged.SharedDirs, merged.SharedFiles, releaseDir, merged.SharedRoot); err != nil {
 				return fmt.Errorf("linking shared resources: %w", err)

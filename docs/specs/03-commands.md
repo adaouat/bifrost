@@ -153,6 +153,13 @@ before any steps run.
 config references one or more `servers`, because in client mode the agent runs remotely in
 `--output json` mode and cannot show per-step prompts.
 
+**`--dry-run` mode:**
+
+When `--dry-run` is set, `deploy` prints the steps it would take (including every hook and
+the would-be release directory) and exits 0 without touching the filesystem or running any
+hooks. If the resolved config references one or more `servers`, no SSH connection is made
+to any of them: a per-server "would deploy" line is printed locally instead.
+
 ---
 
 ## `release list`
@@ -208,6 +215,12 @@ and an error asking for `--release`.
 6. Update `current` symlink
 7. Run `post_activate` hooks
 
+**`--dry-run` mode:** prints the `current` symlink update it would make and exits 0 without
+linking, running hooks, or touching `current`. In client mode, no SSH connection is made to
+any server: a per-server "would activate" line is printed locally instead (the release
+selector still runs first if `--release` was omitted and stdout is a TTY, since listing
+releases makes no changes).
+
 ---
 
 ## `release rollback`
@@ -226,6 +239,12 @@ bifrost release rollback --environment/--env <env> --application/--app <app>
 
 Equivalent to `release activate` with the second-most-recent release. Exits with code 3
 if there is no previous release to roll back to.
+
+**`--dry-run` mode:** in local mode, prints the `current` symlink update it would make
+(the rollback target is computed the same way as a real run) and exits 0 without linking,
+running hooks, or touching `current`. In client mode, no SSH connection is made to any
+server: a per-server "would roll back" line is printed locally instead, without a specific
+release name, since the target is only known once the remote agent computes it.
 
 ---
 

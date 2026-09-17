@@ -189,6 +189,49 @@ func TestReleaseRollbackCmd_JSONOutput(t *testing.T) {
 	assert.Equal(t, "done", ev["status"])
 }
 
+func TestReleaseRollbackCmd_DryRun(t *testing.T) {
+	ctx := context.Background()
+	c := testutil.NewContainer(ctx, t, bifrostBin)
+
+	cfg, err := os.ReadFile("../../testdata/bifrost-deploy-int-test.yml")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, cfg, "/tmp/bifrost.yml", 0o644))
+
+	artifact, err := os.ReadFile("../../testdata/release.tar.gz")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, artifact, "/tmp/release.tar.gz", 0o644))
+
+	for _, name := range []string{"r1", "r2"} {
+		result, err := c.RunBifrost(ctx,
+			"deploy",
+			"--config", "/tmp/bifrost.yml",
+			"--env", "test",
+			"--app", "app",
+			"--artifact", "/tmp/release.tar.gz",
+			"--release-name", name,
+			"--init",
+		)
+		require.NoError(t, err)
+		require.Equal(t, 0, result.ExitCode, "deploy %s:\n%s", name, result.Output)
+	}
+
+	result, err := c.RunBifrost(ctx,
+		"release", "rollback",
+		"--dry-run",
+		"--config", "/tmp/bifrost.yml",
+		"--env", "test",
+		"--app", "app",
+	)
+	require.NoError(t, err)
+	assert.Equal(t, 0, result.ExitCode, "dry-run rollback:\n%s\nstderr:\n%s", result.Output, result.Stderr)
+	assert.Contains(t, result.Output, "DRY RUN")
+	assert.Contains(t, result.Output, "r1")
+
+	res, err := c.Exec(ctx, []string{"readlink", "/var/releases/current"})
+	require.NoError(t, err)
+	assert.Equal(t, "/var/releases/r2", res.Output, "current should still point to r2 after dry-run")
+}
+
 func TestReleaseRollbackCmd_NoPreviousRelease(t *testing.T) {
 	ctx := context.Background()
 	c := testutil.NewContainer(ctx, t, bifrostBin)
