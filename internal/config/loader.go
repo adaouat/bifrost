@@ -40,6 +40,13 @@ func IsFlat(cfg *Config) bool {
 func ValidateServerRefs(cfg *Config) forgeconfig.ValidationErrors {
 	var errs forgeconfig.ValidationErrors
 
+	if IsFlat(cfg) && len(cfg.Servers) > 0 {
+		errs = append(errs, forgeconfig.ValidationError{
+			Path:    "servers",
+			Message: "has no effect without an environments: block; servers are only reachable via environment/application server references",
+		})
+	}
+
 	for name, srv := range cfg.Servers {
 		if srv.Host == "" {
 			errs = append(errs, forgeconfig.ValidationError{Path: "servers." + name, Message: "host is required"})

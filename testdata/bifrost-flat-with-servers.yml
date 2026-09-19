@@ -1,0 +1,8 @@
+paths:
+  releases_root: /var/www/releases
+  shared_root: /var/www/shared
+
+servers:
+  web-01:
+    host: 1.2.3.4
+    user: deploy

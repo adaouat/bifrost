@@ -100,6 +100,14 @@ environments:
     hooks: { ... }
 ```
 
+A top-level `servers:` block only has effect when referenced from an `environments:` block
+(directly or via an application's `servers:` override) — that reference is what actually
+puts a deployment in client mode. A config with `servers:` but no `environments:` key is a
+**flat config** (see [ADR-0009](../adr/0009-self-agent-model.md)): flat configs are always
+agent mode and never open an SSH connection, so a declared `servers:` block would silently
+have no effect. `Load` rejects this combination at load time (exit 2) rather than deploying
+locally with no warning.
+
 ## Hook entry schema
 
 ```yaml

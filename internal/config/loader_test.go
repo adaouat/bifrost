@@ -309,6 +309,32 @@ func TestValidateServerRefs_NoServersNoEnvRefs(t *testing.T) {
 	}
 }
 
+func TestValidateServerRefs_FlatConfigWithServers_Rejected(t *testing.T) {
+	cfg := &config.Config{
+		Servers: map[string]config.Server{
+			"web-01": {Host: "1.2.3.4", User: "deploy"},
+		},
+	}
+	errs := config.ValidateServerRefs(cfg)
+	if len(errs) == 0 {
+		t.Fatal("expected error for a flat config (no environments) declaring servers")
+	}
+}
+
+func TestLoad_FlatConfigWithServers_ExitCode2(t *testing.T) {
+	_, err := config.Load("../../testdata/bifrost-flat-with-servers.yml")
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	var exitErr *cmderr.ExitError
+	if !errors.As(err, &exitErr) {
+		t.Fatalf("expected *cmderr.ExitError, got %T: %v", err, err)
+	}
+	if exitErr.Code != cmderr.Config {
+		t.Errorf("exit code: got %d, want %d (Config)", exitErr.Code, cmderr.Config)
+	}
+}
+
 func TestIsFlat_WithEnvironments(t *testing.T) {
 	cfg := &config.Config{
 		Environments: map[string]config.Environment{

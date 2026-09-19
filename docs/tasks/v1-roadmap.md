@@ -520,10 +520,10 @@ the target server and must not re-open SSH to itself. But nothing warns a user w
 hand-authors a flat `.bifrost.yml` with a top-level `servers:` block, expecting a remote
 deploy: it silently deploys to the local machine instead, no error.
 
-- [ ] `internal/config/loader.go` — reject a flat config (`IsFlat(cfg)`) that has a
+- [x] `internal/config/loader.go` — reject a flat config (`IsFlat(cfg)`) that has a
   non-empty `cfg.Servers` map, at `Load` time (exit 2, matching other config validation)
-- [ ] Unit test covering the rejection
-- [ ] [Spec 02](../specs/02-configuration.md) — document that `servers:` has no effect
+- [x] Unit test covering the rejection
+- [x] [Spec 02](../specs/02-configuration.md) — document that `servers:` has no effect
   without an `environments:` block, and is rejected at load time in that combination
 
 Deliverable: a flat config that declares `servers:` fails fast with a clear config error
