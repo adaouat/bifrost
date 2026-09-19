@@ -130,6 +130,31 @@ func TestVerifyChecksum_Tampered(t *testing.T) {
 	assert.Contains(t, err.Error(), "checksum mismatch")
 }
 
+func TestSidecarPath(t *testing.T) {
+	assert.Equal(t, "/cache/bifrost.sha256", sidecarPath("/cache/bifrost"))
+}
+
+func TestVerifyDigest_Match(t *testing.T) {
+	data := []byte("agent-binary-bytes")
+	sum := sha256.Sum256(data)
+	assert.True(t, verifyDigest(data, hex.EncodeToString(sum[:])))
+}
+
+func TestVerifyDigest_Mismatch(t *testing.T) {
+	original := sha256.Sum256([]byte("original"))
+	assert.False(t, verifyDigest([]byte("tampered-or-truncated"), hex.EncodeToString(original[:])))
+}
+
+func TestVerifyDigest_TrimsSidecarWhitespace(t *testing.T) {
+	data := []byte("agent-binary-bytes")
+	sum := sha256.Sum256(data)
+	assert.True(t, verifyDigest(data, hex.EncodeToString(sum[:])+"\n"), "a trailing newline in the sidecar file must not break the comparison")
+}
+
+func TestVerifyDigest_EmptySidecar(t *testing.T) {
+	assert.False(t, verifyDigest([]byte("data"), ""), "a missing/empty sidecar must never be treated as a match")
+}
+
 func TestVerifyChecksum_NoEntryForPlatform(t *testing.T) {
 	sum := sha256.Sum256([]byte("data"))
 	checksums := hex.EncodeToString(sum[:]) + "  bifrost_1.2.3_linux_amd64\n"

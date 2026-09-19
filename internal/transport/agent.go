@@ -35,13 +35,17 @@ func DetectPlatform(client *Client) (Platform, error) {
 }
 
 // ResolveAgentBinary returns a local path to the agent binary for p at the given
-// version, downloading and caching it from GitHub Releases on a cache miss.
+// version, downloading and caching it from GitHub Releases on a cache miss. A
+// cache hit is re-verified against a local sidecar digest before being trusted
+// — the agent runs remotely (often via sudo), so a corrupted, truncated, or
+// tampered cache entry must never be trusted just because it exists on disk.
+// A missing or mismatched sidecar is treated as a cache miss.
 func ResolveAgentBinary(version string, p Platform) (string, error) {
 	dest, err := cachePath(version, p)
 	if err != nil {
 		return "", err
 	}
-	if _, err := os.Stat(dest); err == nil {
+	if cachedBinaryVerified(dest) {
 		return dest, nil
 	}
 
@@ -52,13 +56,89 @@ func ResolveAgentBinary(version string, p Platform) (string, error) {
 	if err := verifyChecksum(version, p, data); err != nil {
 		return "", err
 	}
-	if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
-		return "", fmt.Errorf("creating agent cache dir: %w", err)
-	}
-	if err := os.WriteFile(dest, data, 0o755); err != nil { //nolint:gosec // agent binary must be executable
-		return "", fmt.Errorf("writing agent cache %s: %w", dest, err)
+	if err := writeAgentCache(dest, data); err != nil {
+		return "", err
 	}
 	return dest, nil
+}
+
+// cachedBinaryVerified reports whether dest exists and its content matches the
+// digest recorded in its sidecar file, written atomically alongside it by
+// writeAgentCache. It re-hashes the cached file on every call rather than
+// trusting a prior verification, since the file on disk could have been
+// corrupted or replaced since.
+func cachedBinaryVerified(dest string) bool {
+	sidecar, err := os.ReadFile(sidecarPath(dest))
+	if err != nil {
+		return false
+	}
+	data, err := os.ReadFile(dest)
+	if err != nil {
+		return false
+	}
+	return verifyDigest(data, string(sidecar))
+}
+
+// writeAgentCache atomically writes data to dest and its verified SHA-256
+// digest to dest's sidecar file, so a reader never observes a partially
+// written binary or a sidecar that doesn't match what's on disk: interrupted
+// writes and concurrent bifrost invocations resolving the same version/
+// platform both leave either the old cache entry or one fully written by a
+// single call, never a torn mix of the two.
+func writeAgentCache(dest string, data []byte) error {
+	if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
+		return fmt.Errorf("creating agent cache dir: %w", err)
+	}
+	if err := atomicWriteFile(dest, data, 0o755); err != nil { //nolint:gosec // agent binary must be executable
+		return fmt.Errorf("writing agent cache %s: %w", dest, err)
+	}
+	sum := sha256.Sum256(data)
+	if err := atomicWriteFile(sidecarPath(dest), []byte(hex.EncodeToString(sum[:])), 0o644); err != nil {
+		return fmt.Errorf("writing agent cache digest: %w", err)
+	}
+	return nil
+}
+
+// atomicWriteFile writes data to a uniquely named temp file in dest's
+// directory and renames it into place, so a reader of dest never observes a
+// partial write, and two concurrent writers never corrupt each other's
+// in-progress write by sharing a fixed temp path.
+func atomicWriteFile(dest string, data []byte, perm os.FileMode) error {
+	tmp, err := os.CreateTemp(filepath.Dir(dest), filepath.Base(dest)+".tmp-*")
+	if err != nil {
+		return err
+	}
+	tmpPath := tmp.Name()
+	defer func() { _ = os.Remove(tmpPath) }() // no-op once renamed
+
+	if _, err := tmp.Write(data); err != nil {
+		_ = tmp.Close()
+		return err
+	}
+	if err := tmp.Chmod(perm); err != nil {
+		_ = tmp.Close()
+		return err
+	}
+	if err := tmp.Close(); err != nil {
+		return err
+	}
+	return os.Rename(tmpPath, dest)
+}
+
+// sidecarPath is where writeAgentCache records dest's verified SHA-256 digest.
+func sidecarPath(dest string) string {
+	return dest + ".sha256"
+}
+
+// verifyDigest reports whether data's SHA-256 matches wantHex (hex-encoded,
+// as written by writeAgentCache; surrounding whitespace is ignored).
+func verifyDigest(data []byte, wantHex string) bool {
+	want := strings.TrimSpace(wantHex)
+	if want == "" {
+		return false
+	}
+	sum := sha256.Sum256(data)
+	return hex.EncodeToString(sum[:]) == want
 }
 
 // mapPlatform maps uname -s / uname -m output to a Platform.

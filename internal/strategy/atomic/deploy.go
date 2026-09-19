@@ -56,6 +56,12 @@ func extractHandler(destDir string) archives.FileHandler {
 
 		destPath := filepath.Join(destDir, filepath.FromSlash(name))
 
+		if escaped, err := hasSymlinkAncestor(destDir, destPath); err != nil {
+			return fmt.Errorf("checking archive entry %s: %w", fi.NameInArchive, err)
+		} else if escaped {
+			return fmt.Errorf("rejected archive entry %s: an ancestor path is a symlink", fi.NameInArchive)
+		}
+
 		if fi.IsDir() {
 			return os.MkdirAll(destPath, fi.Mode().Perm())
 		}
@@ -94,6 +100,38 @@ func extractHandler(destDir string) archives.FileHandler {
 
 		return nil
 	}
+}
+
+// hasSymlinkAncestor reports whether any path component between destDir and
+// destPath's parent is itself a symlink. filepath.Join/Rel reason lexically
+// and never touch the filesystem, so a per-entry check like symlinkEscapes can
+// look contained while the OS actually follows a symlink an earlier archive
+// entry created — landing the new entry outside destDir. Rejecting any entry
+// whose ancestor is a symlink closes that class of chain regardless of length.
+func hasSymlinkAncestor(destDir, destPath string) (bool, error) {
+	rel, err := filepath.Rel(destDir, filepath.Dir(destPath))
+	if err != nil {
+		return false, err
+	}
+	if rel == "." {
+		return false, nil
+	}
+
+	cur := destDir
+	for part := range strings.SplitSeq(rel, string(os.PathSeparator)) {
+		cur = filepath.Join(cur, part)
+		info, err := os.Lstat(cur)
+		if os.IsNotExist(err) {
+			return false, nil
+		}
+		if err != nil {
+			return false, err
+		}
+		if info.Mode()&fs.ModeSymlink != 0 {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // symlinkEscapes reports whether a symlink at linkPath pointing to target would

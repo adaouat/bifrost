@@ -21,7 +21,8 @@ import (
 
 // Client is an SSH connection to a single remote server.
 type Client struct {
-	conn *ssh.Client
+	conn      *ssh.Client
+	agentConn net.Conn // the SSH-agent socket dialed for auth, if any; closed alongside conn
 }
 
 // ExecResult captures the output and exit status of a remote command.
@@ -36,12 +37,15 @@ type ExecResult struct {
 // Connect opens an SSH connection to srv using the configured auth chain and
 // strict host-key verification against the system known_hosts file.
 func Connect(srv config.ResolvedServer) (*Client, error) {
-	auth, err := authMethods(srv)
+	auth, agentConn, err := authMethods(srv)
 	if err != nil {
 		return nil, err
 	}
 	hostKey, err := knownHostsCallback()
 	if err != nil {
+		if agentConn != nil {
+			_ = agentConn.Close()
+		}
 		return nil, err
 	}
 
@@ -59,9 +63,12 @@ func Connect(srv config.ResolvedServer) (*Client, error) {
 	addr := net.JoinHostPort(srv.Host, strconv.Itoa(port))
 	conn, err := ssh.Dial("tcp", addr, clientCfg)
 	if err != nil {
+		if agentConn != nil {
+			_ = agentConn.Close()
+		}
 		return nil, fmt.Errorf("ssh dial %s: %w", addr, err)
 	}
-	return &Client{conn: conn}, nil
+	return &Client{conn: conn, agentConn: agentConn}, nil
 }
 
 // Exec runs cmd on the remote host and returns its captured output and exit code.
@@ -114,27 +121,40 @@ func (c *Client) ExecStream(cmd string, stdout io.Writer) (*ExecResult, error) {
 	return res, fmt.Errorf("running %q: %w", cmd, runErr)
 }
 
-// Close terminates the underlying SSH connection.
+// Close terminates the underlying SSH connection and the SSH-agent socket
+// dialed for auth, if any.
 func (c *Client) Close() error {
+	if c.agentConn != nil {
+		_ = c.agentConn.Close()
+	}
 	return c.conn.Close()
+}
+
+// dialAgentSocket dials the SSH-agent unix socket, replaced in tests.
+var dialAgentSocket = func(sock string) (net.Conn, error) {
+	return net.Dial("unix", sock)
 }
 
 // authMethods builds the auth chain in priority order: explicit key file, then
 // the SSH agent, then the BIFROST_SSH_PASSWORD env var. The ssh library tries
-// each in order and uses the first that authenticates.
-func authMethods(srv config.ResolvedServer) ([]ssh.AuthMethod, error) {
+// each in order and uses the first that authenticates. The second return
+// value is the SSH-agent socket connection, if one was dialed — the caller
+// must close it alongside the SSH connection, or it leaks.
+func authMethods(srv config.ResolvedServer) ([]ssh.AuthMethod, net.Conn, error) {
 	var methods []ssh.AuthMethod
+	var agentConn net.Conn
 
 	if srv.KeyFile != "" {
 		signer, err := loadKey(srv.KeyFile)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		methods = append(methods, ssh.PublicKeys(signer))
 	}
 
 	if sock := os.Getenv("SSH_AUTH_SOCK"); sock != "" {
-		if conn, err := net.Dial("unix", sock); err == nil {
+		if conn, err := dialAgentSocket(sock); err == nil {
+			agentConn = conn
 			ag := agent.NewClient(conn)
 			methods = append(methods, ssh.PublicKeysCallback(ag.Signers))
 		}
@@ -145,9 +165,12 @@ func authMethods(srv config.ResolvedServer) ([]ssh.AuthMethod, error) {
 	}
 
 	if len(methods) == 0 {
-		return nil, fmt.Errorf("no SSH authentication available: set key_file, start an ssh-agent, or set BIFROST_SSH_PASSWORD")
+		if agentConn != nil {
+			_ = agentConn.Close()
+		}
+		return nil, nil, fmt.Errorf("no SSH authentication available: set key_file, start an ssh-agent, or set BIFROST_SSH_PASSWORD")
 	}
-	return methods, nil
+	return methods, agentConn, nil
 }
 
 func loadKey(path string) (ssh.Signer, error) {

@@ -564,19 +564,22 @@ leaks raw hook output into the event stream, on any path.
 
 ## M29 — Extraction and agent-binary security hardening (review fix)
 
-- [ ] `internal/strategy/atomic/deploy.go` — reject an archive entry whose destination path
+- [x] `internal/strategy/atomic/deploy.go` — reject an archive entry whose destination path
   has a symlink anywhere in its ancestor chain (not just a lexical check on the entry's own
   target), closing a two-link chain that defeats the M24 guard by writing through a
   previously-extracted symlink
-- [ ] `internal/transport/agent.go` — write the cached agent binary atomically (temp file +
+- [x] `internal/transport/agent.go` — write the cached agent binary atomically (temp file +
   rename) and record its verified SHA-256 in a local sidecar file; on a cache hit, recompute
   the cached file's digest against the sidecar before trusting it (missing/mismatched
   sidecar falls back to a fresh download + verify)
-- [ ] `internal/transport/ssh.go` — close the SSH-agent unix socket dialed in `authMethods`
+- [x] `internal/transport/ssh.go` — close the SSH-agent unix socket dialed in `authMethods`
   when the `Client` is closed, instead of leaking one fd/connection per server per deploy
-- [ ] Unit tests: a two-link symlink-chain archive is rejected; a tampered/truncated cache
-  entry is re-verified and re-downloaded rather than trusted; `Client.Close` closes the
-  agent socket
+- [x] Unit tests: a two-link symlink-chain archive is rejected; the sidecar digest
+  comparison used to verify a cache hit (a tampered/mismatched digest is rejected);
+  `authMethods` returns the dialed agent conn for `Client.Close` to close. (The full
+  download/cache disk-I/O path in `ResolveAgentBinary` remains untested at the unit level —
+  this project's testing rules forbid local-host filesystem writes outside
+  `internal/strategy/atomic/`, and it had no prior coverage either.)
 
 Deliverable: extraction closes the ancestor-symlink escape class, the agent binary cache
 never trusts unverified bytes, and SSH connections don't leak file descriptors.
