@@ -1,6 +1,7 @@
 package release
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -72,19 +73,40 @@ func releaseRollbackOnServer(version string, cfg *config.Config, env, app, agent
 		return &cmderr.ExitError{Code: res.ExitCode, Message: msg}
 	}
 
-	var ev struct {
-		Release string `json:"release"`
-	}
-	if err := json.Unmarshal(res.Stdout.Bytes(), &ev); err != nil {
+	release, err := parseRollbackEvent(res.Stdout.Bytes())
+	if err != nil {
 		return fmt.Errorf("parsing rollback result from %s: %w", srv.Name, err)
 	}
 
 	if mode == forgeui.JSON {
 		emit := tui.NewJSONEmitter(out)
-		emit.Emit(map[string]any{"event": "rollback", "server": srv.Name, "release": ev.Release, "status": "done"})
+		emit.Emit(map[string]any{"event": "rollback", "server": srv.Name, "release": release, "status": "done"})
 		return nil
 	}
 
-	tui.PrintServerResult(mode, out, srv.Name, fmt.Sprintf("Rolled back to %s", ev.Release))
+	tui.PrintServerResult(mode, out, srv.Name, fmt.Sprintf("Rolled back to %s", release))
 	return nil
+}
+
+// parseRollbackEvent scans the agent's NDJSON stdout — which may include
+// hook_output events ahead of the final one — for the "rollback" event and
+// returns its release name. A single whole-buffer json.Unmarshal would fail
+// as soon as a configured hook prints anything.
+func parseRollbackEvent(stdout []byte) (string, error) {
+	for _, line := range bytes.Split(stdout, []byte("\n")) {
+		if len(line) == 0 {
+			continue
+		}
+		var ev struct {
+			Event   string `json:"event"`
+			Release string `json:"release"`
+		}
+		if err := json.Unmarshal(line, &ev); err != nil {
+			continue
+		}
+		if ev.Event == "rollback" {
+			return ev.Release, nil
+		}
+	}
+	return "", fmt.Errorf("no rollback event in agent output")
 }

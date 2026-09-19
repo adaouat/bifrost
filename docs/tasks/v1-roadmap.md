@@ -539,18 +539,23 @@ interactive prompts (hook confirms, the release selector) gate on TTY alone rath
 output mode — both `deployer.go` and `deploy.go`'s `--interactive` guard already do this
 correctly; these commands never picked up the pattern.
 
-- [ ] `internal/tui/confirm.go` — `InteractiveHookConfirm` takes a `forgeui.Mode` and
+- [x] `internal/tui/confirm.go` — `InteractiveHookConfirm` takes a `forgeui.Mode` and
   returns nil (hook skipped with a warning) unless mode is human and stdout is a TTY
-- [ ] `internal/cmd/deploy.go` — pass `mode` to `InteractiveHookConfirm`
-- [ ] `internal/cmd/release/activate.go` — pass `mode` to `InteractiveHookConfirm`; require
+- [x] `internal/cmd/deploy.go` — pass `mode` to `InteractiveHookConfirm`
+- [x] `internal/cmd/release/activate.go` — pass `mode` to `InteractiveHookConfirm`; require
   `--release` (not just a TTY) before showing the interactive selector when mode isn't
   human; swap the hook writer for `tui.NewHookOutputWriter` when mode is JSON
-- [ ] `internal/cmd/release/rollback.go` — same two fixes: mode-gated hook confirm, and
+- [x] `internal/cmd/release/rollback.go` — same two fixes: mode-gated hook confirm, and
   `tui.NewHookOutputWriter` for hooks in JSON mode
-- [ ] `internal/cmd/release/client_activate.go` — require `--release` (not just a TTY)
+- [x] `internal/cmd/release/client_activate.go` — require `--release` (not just a TTY)
   before showing the per-server selector form when mode isn't human; remote `agentCmd`
   includes `--output json`, matching `deploy`/`release list`/`release rollback`
-- [ ] Tests for each
+- [x] `internal/cmd/release/client_rollback.go` — discovered while testing the above: once
+  the agent emits hook output as JSON events, its stdout is NDJSON (multiple lines), not a
+  single object, so the whole-buffer `json.Unmarshal` of the rollback result broke on any
+  configured hook; replaced with `parseRollbackEvent`, which scans for the `"rollback"`
+  event line
+- [x] Tests for each
 
 Deliverable: `release activate`/`rollback --output json` never renders a blocking prompt or
 leaks raw hook output into the event stream, on any path.

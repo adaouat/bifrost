@@ -5,6 +5,7 @@ package release
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -160,5 +161,53 @@ func TestReleaseCommands_ClientMode_SingleServer_E2E(t *testing.T) {
 		res, err := c.Exec(ctx, []string{"readlink", "/var/releases/current"})
 		require.NoError(t, err)
 		assert.Equal(t, "/var/releases/r1", res.Output, "rollback must move to the release preceding the activated one")
+	})
+}
+
+// TestReleaseCommands_ClientMode_JSONMode_HookOutputDoesNotCorruptStream
+// proves the M19 hook_output fix, applied only to the atomic deployer, also
+// covers release activate/rollback: a configured hook that prints to stdout
+// must not break the single JSON object the client (and any other automated
+// caller) expects on --output json.
+func TestReleaseCommands_ClientMode_JSONMode_HookOutputDoesNotCorruptStream(t *testing.T) {
+	ctx := context.Background()
+
+	c, absKeyFile := newReleaseSSHContainer(ctx, t)
+
+	port, err := strconv.Atoi(c.Port)
+	require.NoError(t, err)
+
+	priority := 10
+	hookedCfg := releaseSSHTestConfig(map[string]config.Server{
+		"ssh-test": {Host: c.Host, Port: port, User: "deploy", KeyFile: absKeyFile, StagingDir: "/tmp"},
+	}, []string{"ssh-test"})
+	hookedCfg.Hooks.PostActivate = []config.HookEntry{{Cmd: "echo hook-output-marker", Priority: &priority}}
+
+	merged, err := config.Merge(hookedCfg, "test", "app")
+	require.NoError(t, err)
+	require.Len(t, merged.Servers, 1)
+
+	seedReleases(ctx, t, c, []string{"r1", "r2", "r3"}, "r3")
+
+	t.Run("activate", func(t *testing.T) {
+		root, out := newReleaseRoot(nil, "json")
+		err := runClientReleaseActivate(root, "dev", merged, hookedCfg, "test", "app", "r2", bifrostAgentBin)
+		require.NoError(t, err, "activate output:\n%s", out.String())
+
+		var ev map[string]any
+		require.NoError(t, json.Unmarshal(bytes.TrimSpace(out.Bytes()), &ev),
+			"output must be a single JSON object, not corrupted by hook stdout:\n%s", out.String())
+		assert.Equal(t, "activate", ev["event"])
+	})
+
+	t.Run("rollback", func(t *testing.T) {
+		root, out := newReleaseRoot(nil, "json")
+		err := runClientReleaseRollback(root, "dev", merged, hookedCfg, "test", "app", bifrostAgentBin)
+		require.NoError(t, err, "rollback output:\n%s", out.String())
+
+		var ev map[string]any
+		require.NoError(t, json.Unmarshal(bytes.TrimSpace(out.Bytes()), &ev),
+			"output must be a single JSON object, not corrupted by hook stdout:\n%s", out.String())
+		assert.Equal(t, "rollback", ev["event"])
 	})
 }

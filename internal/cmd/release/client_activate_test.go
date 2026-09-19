@@ -11,6 +11,7 @@ import (
 
 	"github.com/adaouat/bifrost/internal/cmderr"
 	"github.com/adaouat/bifrost/internal/config"
+	"github.com/adaouat/bifrost/internal/tui"
 	forgeui "github.com/adaouat/forge/ui"
 )
 
@@ -91,6 +92,34 @@ func TestRunClientReleaseActivate_NonTTYWithoutRelease_ExitsCode1(t *testing.T) 
 	var exitErr *cmderr.ExitError
 	require.ErrorAs(t, err, &exitErr)
 	assert.Equal(t, 1, exitErr.Code, "non-TTY without --release must exit with code 1")
+}
+
+func TestRunClientReleaseActivate_JSONModeWithoutRelease_RequiresRelease(t *testing.T) {
+	tui.SetIsTTY(func() bool { return true })
+	defer tui.SetIsTTY(nil)
+
+	orig := releaseActivateToServerFn
+	defer func() { releaseActivateToServerFn = orig }()
+	releaseActivateToServerFn = func(_ string, _ *config.Config, _, _, _, _ string, _ config.ResolvedServer, _ forgeui.Mode, _ io.Writer) error {
+		t.Fatal("releaseActivateToServerFn must not be called when --release is required but missing")
+		return nil
+	}
+
+	merged := &config.MergedConfig{
+		Servers: []config.ResolvedServer{{Name: "web-01"}},
+	}
+
+	root := &cobra.Command{Use: "root"}
+	root.PersistentFlags().String("output", "json", "")
+	var out bytes.Buffer
+	root.SetOut(&out)
+
+	err := runClientReleaseActivate(root, "dev", merged, &config.Config{}, "prod", "web", "", "")
+	require.Error(t, err)
+
+	var exitErr *cmderr.ExitError
+	require.ErrorAs(t, err, &exitErr)
+	assert.Equal(t, 1, exitErr.Code, "--output json without --release must exit with code 1, even on a TTY")
 }
 
 func TestRunClientReleaseActivate_DryRun_NeverCallsServer(t *testing.T) {

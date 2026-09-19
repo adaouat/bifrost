@@ -1,12 +1,17 @@
 package tui
 
-import "charm.land/huh/v2"
+import (
+	"charm.land/huh/v2"
+
+	forgeui "github.com/adaouat/forge/ui"
+)
 
 // InteractiveHookConfirm returns a confirm function for interactive hooks: it
-// shows a huh prompt on a TTY, or nil (the hook is skipped with a warning) when
-// stdout is not a terminal.
-func InteractiveHookConfirm() func(cmd string) bool {
-	if !IsTTY() {
+// shows a huh prompt in human mode on a TTY, or nil (the hook is skipped with a
+// warning) otherwise — including in json/plain mode, where a blocking prompt
+// would corrupt the machine-parsed output stream.
+func InteractiveHookConfirm(mode forgeui.Mode) func(cmd string) bool {
+	if !mode.IsHuman() || !IsTTY() {
 		return nil
 	}
 	return func(hookCmd string) bool {

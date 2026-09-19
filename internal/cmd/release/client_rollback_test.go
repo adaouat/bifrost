@@ -69,6 +69,27 @@ func TestRunClientReleaseRollback_FailureSkipsRemainingServers(t *testing.T) {
 	assert.Equal(t, 7, exitErr.Code, "exit code must come from the failing server's agent")
 }
 
+func TestParseRollbackEvent_SingleLine(t *testing.T) {
+	release, err := parseRollbackEvent([]byte(`{"event":"rollback","release":"r1","status":"done"}` + "\n"))
+	require.NoError(t, err)
+	assert.Equal(t, "r1", release)
+}
+
+func TestParseRollbackEvent_HookOutputLinesAheadOfRollbackEvent(t *testing.T) {
+	stdout := []byte(`{"event":"hook_output","output":"migrating\n"}` + "\n" +
+		`{"event":"hook_output","output":"done\n"}` + "\n" +
+		`{"event":"rollback","release":"r1","status":"done"}` + "\n")
+
+	release, err := parseRollbackEvent(stdout)
+	require.NoError(t, err)
+	assert.Equal(t, "r1", release, "must find the rollback event even with hook_output lines ahead of it")
+}
+
+func TestParseRollbackEvent_NoRollbackEvent(t *testing.T) {
+	_, err := parseRollbackEvent([]byte(`{"event":"hook_output","output":"oops\n"}` + "\n"))
+	require.Error(t, err)
+}
+
 func TestRunClientReleaseRollback_DryRun_NeverCallsServer(t *testing.T) {
 	orig := releaseRollbackToServerFn
 	defer func() { releaseRollbackToServerFn = orig }()

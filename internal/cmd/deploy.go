@@ -69,7 +69,7 @@ func newDeployCmd(version string) *cobra.Command {
 
 			out := cmd.OutOrStdout()
 			mode := forgeui.ParseMode(outputMode(cmd))
-			confirmFn := tui.InteractiveHookConfirm()
+			confirmFn := tui.InteractiveHookConfirm(mode)
 
 			verbose, _ := cmd.Flags().GetBool("verbose")
 			logger := forgelog.New(cmd.ErrOrStderr(), forgelog.LevelFor(verbose))

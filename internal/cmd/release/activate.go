@@ -16,6 +16,7 @@ import (
 	"github.com/adaouat/bifrost/internal/hooks"
 	"github.com/adaouat/bifrost/internal/strategy/atomic"
 	"github.com/adaouat/bifrost/internal/tui"
+	forgeui "github.com/adaouat/forge/ui"
 )
 
 func newActivateCmd(version string) *cobra.Command {
@@ -40,8 +41,11 @@ func newActivateCmd(version string) *cobra.Command {
 				return runClientReleaseActivate(cmd, version, merged, cfg, env, app, releaseName, agentBinary)
 			}
 
+			modeFlag, _ := cmd.Root().PersistentFlags().GetString("output")
+			mode := forgeui.ParseMode(modeFlag)
+
 			if releaseName == "" {
-				if !tui.IsTTY() {
+				if !mode.IsHuman() || !tui.IsTTY() {
 					return fmt.Errorf("--release is required in non-interactive mode")
 				}
 				selected, err := selectRelease(merged.ReleasesRoot)
@@ -96,10 +100,17 @@ func newActivateCmd(version string) *cobra.Command {
 				},
 				Env: hooks.OSEnv(),
 			}
-			confirmFn := tui.InteractiveHookConfirm()
+			confirmFn := tui.InteractiveHookConfirm(mode)
 			hookRunner := forgeexec.New(false, false)
 
-			if err := hooks.RunInteractive(hookRunner, merged.Hooks.PreActivate, hookData, releaseDir, cmd.OutOrStdout(), confirmFn); err != nil {
+			// In JSON mode hook stdout/stderr must become events, not raw writes to
+			// the shared stream, or they corrupt the NDJSON a caller parses (M19).
+			hookOut := cmd.OutOrStdout()
+			if mode == forgeui.JSON {
+				hookOut = tui.NewHookOutputWriter(tui.NewJSONEmitter(cmd.OutOrStdout()))
+			}
+
+			if err := hooks.RunInteractive(hookRunner, merged.Hooks.PreActivate, hookData, releaseDir, hookOut, confirmFn); err != nil {
 				return fmt.Errorf("pre_activate hooks: %w", err)
 			}
 
@@ -107,7 +118,7 @@ func newActivateCmd(version string) *cobra.Command {
 				return fmt.Errorf("updating current symlink: %w", err)
 			}
 
-			if err := hooks.RunInteractive(hookRunner, merged.Hooks.PostActivate, hookData, releaseDir, cmd.OutOrStdout(), confirmFn); err != nil {
+			if err := hooks.RunInteractive(hookRunner, merged.Hooks.PostActivate, hookData, releaseDir, hookOut, confirmFn); err != nil {
 				return fmt.Errorf("post_activate hooks: %w", err)
 			}
 

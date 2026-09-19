@@ -31,7 +31,7 @@ func runClientReleaseActivate(cmd *cobra.Command, version string, merged *config
 
 	var selections map[string]string
 	if releaseName == "" {
-		if !tui.IsTTY() {
+		if !mode.IsHuman() || !tui.IsTTY() {
 			return &cmderr.ExitError{Code: cmderr.Usage, Message: "--release is required in non-interactive mode"}
 		}
 		var err error
@@ -77,7 +77,7 @@ func releaseActivateOnServer(version string, cfg *config.Config, env, app, agent
 	}
 	defer cleanup()
 
-	agentCmd := fmt.Sprintf("%s release activate --release %s --no-confirm --config %s --env %s --app %s",
+	agentCmd := fmt.Sprintf("%s release activate --release %s --no-confirm --output json --config %s --env %s --app %s",
 		transport.ShellQuote(remoteAgent), transport.ShellQuote(releaseName),
 		transport.ShellQuote(remoteConfig), transport.ShellQuote(env), transport.ShellQuote(app))
 
