@@ -111,6 +111,17 @@ func deployToServer(version string, _ *config.MergedConfig, cfg *config.Config, 
 		transport.ShellQuote(remoteAgent), transport.ShellQuote(remoteConfig),
 		transport.ShellQuote(remoteArtifact), transport.ShellQuote(releaseName))
 
+	return execAndForward(func(w io.Writer) (*transport.ExecResult, error) {
+		return client.ExecStream(agentCmd, w)
+	}, srv, mode, out)
+}
+
+// execAndForward runs execStreamFn on its own goroutine, streaming its output
+// through a pipe into tui.ForwardStream, and reconciles the two independently
+// completing results. It is split out from deployToServer so this
+// orchestration — including the failure-mode edge cases below — is
+// unit-testable without a real SSH connection.
+func execAndForward(execStreamFn func(io.Writer) (*transport.ExecResult, error), srv config.ResolvedServer, mode forgeui.Mode, out io.Writer) error {
 	pr, pw := io.Pipe()
 	var execResult *transport.ExecResult
 	var execErr error
@@ -121,13 +132,25 @@ func deployToServer(version string, _ *config.MergedConfig, cfg *config.Config, 
 			_ = pw.Close()
 			wg.Done()
 		}()
-		execResult, execErr = client.ExecStream(agentCmd, pw)
+		execResult, execErr = execStreamFn(pw)
 	}()
 
 	_, streamErr := tui.ForwardStream(pr, srv.Name, mode, out)
-	_ = pr.Close()
+	if streamErr != nil {
+		// ForwardStream stopped reading before EOF (e.g. a mid-stream agent
+		// error). Keep draining pr instead of closing it: closing would make
+		// the writer goroutine's next write fail, which stops it reading from
+		// the underlying SSH channel — the channel then stops acknowledging
+		// received data, and the remote agent can block indefinitely trying
+		// to flush its own stdout, so ExecStream would never return.
+		go func() { _, _ = io.Copy(io.Discard, pr) }()
+	}
 	wg.Wait()
+	_ = pr.Close()
 
+	if streamErr != nil {
+		return streamErr
+	}
 	if execErr != nil {
 		return fmt.Errorf("agent exec on %s: %w", srv.Name, execErr)
 	}
@@ -138,5 +161,5 @@ func deployToServer(version string, _ *config.MergedConfig, cfg *config.Config, 
 		}
 		return &ExitError{Code: execResult.ExitCode, Message: msg}
 	}
-	return streamErr
+	return nil
 }

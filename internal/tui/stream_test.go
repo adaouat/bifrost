@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/adaouat/bifrost/internal/cmderr"
 	"github.com/adaouat/bifrost/internal/tui"
 	forgeui "github.com/adaouat/forge/ui"
 )
@@ -179,6 +180,55 @@ func TestForwardStream_HandlesLargeEventLine(t *testing.T) {
 	}
 	if !strings.Contains(buf.String(), big) {
 		t.Error("large hook output was not rendered — the line was truncated")
+	}
+}
+
+func TestForwardStream_HugeHookOutputLine_NotTruncated(t *testing.T) {
+	big := strings.Repeat("x", 20*1024*1024) // exceeds the old 16 MB scanner token cap
+	r := eventStream(
+		map[string]any{"event": "hook_output", "output": big},
+		map[string]any{"event": "done", "step": "deploy", "release": "r1", "duration_ms": float64(1)},
+	)
+	var buf bytes.Buffer
+
+	release, err := tui.ForwardStream(r, "web-01", forgeui.Plain, &buf)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if release != "r1" {
+		t.Errorf("release: got %q, want r1 — the stream was cut off before the done event", release)
+	}
+}
+
+func TestForwardStream_NullLine_SkippedWithoutPanic(t *testing.T) {
+	var raw strings.Builder
+	raw.WriteString("null\n")
+	data, _ := json.Marshal(map[string]any{"event": "done", "step": "deploy", "release": "r1", "duration_ms": float64(1)})
+	raw.Write(data)
+	raw.WriteByte('\n')
+
+	var buf bytes.Buffer
+	release, err := tui.ForwardStream(strings.NewReader(raw.String()), "web-01", forgeui.JSON, &buf)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if release != "r1" {
+		t.Errorf("release: got %q, want r1 — the null line must be skipped, not panic", release)
+	}
+}
+
+func TestForwardStream_ErrorEvent_CarriesExitCode(t *testing.T) {
+	r := eventStream(
+		map[string]any{"event": "error", "step": "post_activate", "message": "boom", "exit_code": float64(3)},
+	)
+	var buf bytes.Buffer
+
+	_, err := tui.ForwardStream(r, "web-01", forgeui.Plain, &buf)
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if code := cmderr.Resolve(err); code != 3 {
+		t.Errorf("exit code: got %d, want 3 (from the event's exit_code field)", code)
 	}
 }
 

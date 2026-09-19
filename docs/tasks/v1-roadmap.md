@@ -484,3 +484,125 @@ activation even when the operator asked for a simulation. `release rollback` nev
 
 Deliverable: `--dry-run` never performs a real deployment, activation, or rollback on any
 path — local or remote — for any of `deploy`, `release activate`, `release rollback`.
+
+---
+
+## M26 — Fix crash, hang, and masked-failure bugs in the SSH event pipeline (review fix)
+
+A code review found several ways a remote deploy can crash the client, hang indefinitely,
+or misreport success/failure, independent of any specific command's business logic.
+
+- [x] `internal/tui/stream.go` — guard against a decoded event map being `nil` (a literal
+  `null` JSON line) before writing into it, instead of panicking with "assignment to entry
+  in nil map"
+- [x] `internal/tui/stream.go` — a single large `hook_output` line (a verbose hook's entire
+  stdout) must not fail `ForwardStream` on an otherwise-successful deploy; raise or remove
+  the `bufio.Scanner`'s fixed token-size cap
+- [x] `internal/cmd/client_deploy.go` — when `ForwardStream` returns early, drain the
+  remaining SSH channel output instead of only closing the pipe reader, so the SSH copy
+  goroutine can exit and `wg.Wait()` cannot hang forever
+- [x] `internal/cmd/client_deploy.go` — check `streamErr` before `execErr` (or ignore
+  `io.ErrClosedPipe` from `execErr`) so a real remote failure and its exit code are not
+  masked by a pipe-close race triggered by the client's own cleanup
+- [x] Unit tests covering each of the above
+
+Deliverable: a remote deploy with verbose hook output, an unusual event payload, or a
+mid-stream failure never panics or hangs the client, and always reports the agent's real
+exit code.
+
+---
+
+## M27 — Reject a flat config that declares `servers:` (review fix)
+
+Per [ADR-0009](../adr/0009-self-agent-model.md), a flat config (no `environments:` key) is
+always agent mode, and `MergeFlat` correctly drops `Servers` — the agent runs locally on
+the target server and must not re-open SSH to itself. But nothing warns a user who
+hand-authors a flat `.bifrost.yml` with a top-level `servers:` block, expecting a remote
+deploy: it silently deploys to the local machine instead, no error.
+
+- [ ] `internal/config/loader.go` — reject a flat config (`IsFlat(cfg)`) that has a
+  non-empty `cfg.Servers` map, at `Load` time (exit 2, matching other config validation)
+- [ ] Unit test covering the rejection
+- [ ] [Spec 02](../specs/02-configuration.md) — document that `servers:` has no effect
+  without an `environments:` block, and is rejected at load time in that combination
+
+Deliverable: a flat config that declares `servers:` fails fast with a clear config error
+instead of silently deploying locally.
+
+---
+
+## M28 — Fix JSON-mode safety in `release activate`/`rollback` (review fix)
+
+A code review found that `release activate` and `release rollback` never got the M19 fix
+that routes hook output through JSON events instead of raw stdout writes, and that their
+interactive prompts (hook confirms, the release selector) gate on TTY alone rather than on
+output mode — both `deployer.go` and `deploy.go`'s `--interactive` guard already do this
+correctly; these commands never picked up the pattern.
+
+- [ ] `internal/tui/confirm.go` — `InteractiveHookConfirm` takes a `forgeui.Mode` and
+  returns nil (hook skipped with a warning) unless mode is human and stdout is a TTY
+- [ ] `internal/cmd/deploy.go` — pass `mode` to `InteractiveHookConfirm`
+- [ ] `internal/cmd/release/activate.go` — pass `mode` to `InteractiveHookConfirm`; require
+  `--release` (not just a TTY) before showing the interactive selector when mode isn't
+  human; swap the hook writer for `tui.NewHookOutputWriter` when mode is JSON
+- [ ] `internal/cmd/release/rollback.go` — same two fixes: mode-gated hook confirm, and
+  `tui.NewHookOutputWriter` for hooks in JSON mode
+- [ ] `internal/cmd/release/client_activate.go` — require `--release` (not just a TTY)
+  before showing the per-server selector form when mode isn't human; remote `agentCmd`
+  includes `--output json`, matching `deploy`/`release list`/`release rollback`
+- [ ] Tests for each
+
+Deliverable: `release activate`/`rollback --output json` never renders a blocking prompt or
+leaks raw hook output into the event stream, on any path.
+
+---
+
+## M29 — Extraction and agent-binary security hardening (review fix)
+
+- [ ] `internal/strategy/atomic/deploy.go` — reject an archive entry whose destination path
+  has a symlink anywhere in its ancestor chain (not just a lexical check on the entry's own
+  target), closing a two-link chain that defeats the M24 guard by writing through a
+  previously-extracted symlink
+- [ ] `internal/transport/agent.go` — write the cached agent binary atomically (temp file +
+  rename) and record its verified SHA-256 in a local sidecar file; on a cache hit, recompute
+  the cached file's digest against the sidecar before trusting it (missing/mismatched
+  sidecar falls back to a fresh download + verify)
+- [ ] `internal/transport/ssh.go` — close the SSH-agent unix socket dialed in `authMethods`
+  when the `Client` is closed, instead of leaking one fd/connection per server per deploy
+- [ ] Unit tests: a two-link symlink-chain archive is rejected; a tampered/truncated cache
+  entry is re-verified and re-downloaded rather than trusted; `Client.Close` closes the
+  agent socket
+
+Deliverable: extraction closes the ancestor-symlink escape class, the agent binary cache
+never trusts unverified bytes, and SSH connections don't leak file descriptors.
+
+---
+
+## M30 — Exit-code and behavior consistency batch (review fix)
+
+- [ ] `internal/cmd/client_deploy.go` — forward `--init` to the remote agent command when
+  set, so first-time remote deploys can create `releases_root`/`shared_root` on the target
+- [ ] `internal/cmd/client_deploy.go`, `internal/cmd/release/client_list.go` — replace
+  `fmt.Sprintf("...: %v", err)`-into-`Message` with `%w`-wrapped errors passed through
+  `cmderr.Wrap`, so `errors.Is`/`errors.As` work across the transport boundary and every
+  failure resolves to the documented exit code (3) instead of defaulting to 1
+- [ ] `internal/cmd/release/list.go` — wrap `listReleases`' directory-read failure with
+  `cmderr.Wrap(cmderr.Runtime, ...)` so `release list`/`rollback` exit 3 for a missing
+  releases root, matching `deploy`'s classification of the same failure class
+- [ ] `internal/config/merge.go` — `MergeFlat` sorts hooks by priority like `Merge` does,
+  instead of leaving them in file order
+- [ ] `internal/hooks/runner.go` — render `cmd_dir` through the same template pass as `cmd`,
+  matching the documented example in spec 02 and the sample config
+- [ ] `internal/strategy/atomic/release.go`, `internal/cmd/release/list.go` — order releases
+  by directory modification time instead of a lexicographic name sort, so a custom
+  `--release-name` (documented as accepting e.g. `v2.1.3`) can't cause `Purge` to delete the
+  newest release or `rollback` to miss a valid target
+- [ ] [Spec 06](../specs/06-tui-ux.md) — correct the `--interactive` guard's documented exit
+  code (1, not 2) and the JSON error event's documented `exit_code` (resolved via
+  `cmderr.Resolve`, not a hardcoded 1), matching spec 03 and the M19 fix
+- [ ] Unit/integration tests for each
+
+Deliverable: exit codes are consistent between local and client-mode paths for the same
+failure class, remote `--init` works, flat-config hook ordering matches merged-config
+ordering, `cmd_dir` templating works as documented, and release ordering is immune to
+custom release names.
