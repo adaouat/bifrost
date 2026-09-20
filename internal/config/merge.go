@@ -85,7 +85,16 @@ func MergeFlat(cfg *Config) *MergedConfig {
 		SharedFiles:  cfg.Paths.Shared.Files,
 		Settings:     cfg.Settings,
 		Variables:    cfg.Variables,
-		Hooks:        cfg.Hooks,
+		Hooks: Hooks{
+			PreExtract:   sortedHooks(cfg.Hooks.PreExtract),
+			PostExtract:  sortedHooks(cfg.Hooks.PostExtract),
+			PreLink:      sortedHooks(cfg.Hooks.PreLink),
+			PostLink:     sortedHooks(cfg.Hooks.PostLink),
+			PreActivate:  sortedHooks(cfg.Hooks.PreActivate),
+			PostActivate: sortedHooks(cfg.Hooks.PostActivate),
+			PrePurge:     sortedHooks(cfg.Hooks.PrePurge),
+			PostPurge:    sortedHooks(cfg.Hooks.PostPurge),
+		},
 	}
 }
 

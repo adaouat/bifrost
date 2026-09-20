@@ -64,7 +64,7 @@ func TestRunClientDeploy_AgentBinaryFlag_SkipsDownload(t *testing.T) {
 	const unresolvableVersion = "v0.0.0-no-such-release"
 
 	err = runClientDeploy(root, unresolvableVersion, merged, cfg, "test", "app",
-		"../../testdata/release.tar.gz", "agentflag-r1", testutil.BinaryPath)
+		"../../testdata/release.tar.gz", "agentflag-r1", testutil.BinaryPath, false)
 	t.Logf("deploy output:\n%s", out.String())
 	require.NoError(t, err)
 

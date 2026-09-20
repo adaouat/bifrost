@@ -19,7 +19,7 @@ func TestRunClientDeploy_SequentialLoop(t *testing.T) {
 	defer func() { deployToServerFn = orig }()
 
 	var called []string
-	deployToServerFn = func(_ string, _ *config.MergedConfig, _ *config.Config, _, _, _, _, _ string, srv config.ResolvedServer, _ forgeui.Mode, _ io.Writer) error {
+	deployToServerFn = func(_ string, _ *config.MergedConfig, _ *config.Config, _, _, _, _, _ string, _ bool, srv config.ResolvedServer, _ forgeui.Mode, _ io.Writer) error {
 		called = append(called, srv.Name)
 		return nil
 	}
@@ -32,7 +32,7 @@ func TestRunClientDeploy_SequentialLoop(t *testing.T) {
 	var out bytes.Buffer
 	root.SetOut(&out)
 
-	err := runClientDeploy(root, "dev", merged, &config.Config{}, "prod", "web", "artifact.tar.gz", "20260601-120000", "")
+	err := runClientDeploy(root, "dev", merged, &config.Config{}, "prod", "web", "artifact.tar.gz", "20260601-120000", "", false)
 	require.NoError(t, err)
 	assert.Equal(t, []string{"web-01", "web-02", "web-03"}, called, "servers must be deployed in resolved order")
 	assert.Equal(t, 1, strings.Count(out.String(), "Environment"), "deploy header must be printed once, not per server")
@@ -45,7 +45,7 @@ func TestRunClientDeploy_FailureSkipsRemainingServers(t *testing.T) {
 	failure := &ExitError{Code: 7, Message: "agent failed"}
 
 	var called []string
-	deployToServerFn = func(_ string, _ *config.MergedConfig, _ *config.Config, _, _, _, _, _ string, srv config.ResolvedServer, _ forgeui.Mode, _ io.Writer) error {
+	deployToServerFn = func(_ string, _ *config.MergedConfig, _ *config.Config, _, _, _, _, _ string, _ bool, srv config.ResolvedServer, _ forgeui.Mode, _ io.Writer) error {
 		called = append(called, srv.Name)
 		if srv.Name == "web-02" {
 			return failure
@@ -61,7 +61,7 @@ func TestRunClientDeploy_FailureSkipsRemainingServers(t *testing.T) {
 	var out bytes.Buffer
 	root.SetOut(&out)
 
-	err := runClientDeploy(root, "dev", merged, &config.Config{}, "prod", "web", "artifact.tar.gz", "20260601-120000", "")
+	err := runClientDeploy(root, "dev", merged, &config.Config{}, "prod", "web", "artifact.tar.gz", "20260601-120000", "", false)
 	require.Error(t, err)
 	assert.Equal(t, []string{"web-01", "web-02"}, called, "remaining servers must be skipped after a failure")
 
@@ -74,7 +74,7 @@ func TestRunClientDeploy_DryRun_NeverCallsServer(t *testing.T) {
 	orig := deployToServerFn
 	defer func() { deployToServerFn = orig }()
 
-	deployToServerFn = func(_ string, _ *config.MergedConfig, _ *config.Config, _, _, _, _, _ string, _ config.ResolvedServer, _ forgeui.Mode, _ io.Writer) error {
+	deployToServerFn = func(_ string, _ *config.MergedConfig, _ *config.Config, _, _, _, _, _ string, _ bool, _ config.ResolvedServer, _ forgeui.Mode, _ io.Writer) error {
 		t.Fatal("deployToServerFn must not be called during a dry run")
 		return nil
 	}
@@ -88,7 +88,7 @@ func TestRunClientDeploy_DryRun_NeverCallsServer(t *testing.T) {
 	var out bytes.Buffer
 	root.SetOut(&out)
 
-	err := runClientDeploy(root, "dev", merged, &config.Config{}, "prod", "web", "artifact.tar.gz", "20260601-120000", "")
+	err := runClientDeploy(root, "dev", merged, &config.Config{}, "prod", "web", "artifact.tar.gz", "20260601-120000", "", false)
 	require.NoError(t, err)
 	assert.Contains(t, out.String(), "DRY RUN")
 	assert.Contains(t, out.String(), "web-01")

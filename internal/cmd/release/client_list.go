@@ -103,7 +103,7 @@ func fetchReleaseEntries(version string, cfg *config.Config, env, app, agentBina
 func stageAgentSession(version string, cfg *config.Config, env, app, agentBinary string, srv config.ResolvedServer) (client *transport.Client, remoteAgent, remoteConfig string, cleanup func(), err error) {
 	client, err = transport.Connect(srv)
 	if err != nil {
-		return nil, "", "", nil, &cmderr.ExitError{Code: cmderr.Runtime, Message: fmt.Sprintf("connecting to %s: %v", srv.Name, err)}
+		return nil, "", "", nil, cmderr.Wrap(cmderr.Runtime, fmt.Errorf("connecting to %s: %w", srv.Name, err))
 	}
 
 	localAgentPath := agentBinary
@@ -111,19 +111,19 @@ func stageAgentSession(version string, cfg *config.Config, env, app, agentBinary
 		p, err := transport.DetectPlatform(client)
 		if err != nil {
 			_ = client.Close()
-			return nil, "", "", nil, &cmderr.ExitError{Code: cmderr.Runtime, Message: fmt.Sprintf("detecting platform on %s: %v", srv.Name, err)}
+			return nil, "", "", nil, cmderr.Wrap(cmderr.Runtime, fmt.Errorf("detecting platform on %s: %w", srv.Name, err))
 		}
 		localAgentPath, err = transport.ResolveAgentBinary(version, p)
 		if err != nil {
 			_ = client.Close()
-			return nil, "", "", nil, &cmderr.ExitError{Code: cmderr.Runtime, Message: fmt.Sprintf("resolving agent binary for %s: %v", srv.Name, err)}
+			return nil, "", "", nil, cmderr.Wrap(cmderr.Runtime, fmt.Errorf("resolving agent binary for %s: %w", srv.Name, err))
 		}
 	}
 
 	staging, err := transport.NewStaging(client, srv.StagingDir)
 	if err != nil {
 		_ = client.Close()
-		return nil, "", "", nil, &cmderr.ExitError{Code: cmderr.Runtime, Message: fmt.Sprintf("creating staging dir on %s: %v", srv.Name, err)}
+		return nil, "", "", nil, cmderr.Wrap(cmderr.Runtime, fmt.Errorf("creating staging dir on %s: %w", srv.Name, err))
 	}
 
 	remoteAgent, err = staging.Upload(localAgentPath, "bifrost-agent")

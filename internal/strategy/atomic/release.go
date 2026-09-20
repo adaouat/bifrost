@@ -61,17 +61,10 @@ func Purge(releasesRoot string, keepN int) error {
 		activeRelease = filepath.Base(target)
 	}
 
-	var names []string
-	for _, e := range entries {
-		if e.Name() == "current" || e.Name() == activeRelease {
-			continue
-		}
-		if e.IsDir() {
-			names = append(names, e.Name())
-		}
+	names, err := releaseNamesByModTime(entries, activeRelease)
+	if err != nil {
+		return fmt.Errorf("reading releases dir: %w", err)
 	}
-
-	sort.Strings(names)
 
 	for _, name := range purgeFromList(names, keepN) {
 		if err := os.RemoveAll(filepath.Join(releasesRoot, name)); err != nil {
@@ -93,18 +86,42 @@ func PurgePlan(releasesRoot, newRelease string, keepN int) ([]string, error) {
 		return nil, fmt.Errorf("reading releases dir: %w", err)
 	}
 
-	var existing []string
+	existing, err := releaseNamesByModTime(entries, newRelease)
+	if err != nil {
+		return nil, fmt.Errorf("reading releases dir: %w", err)
+	}
+	return purgeFromList(existing, keepN), nil
+}
+
+// releaseNamesByModTime returns release directory names from entries, oldest
+// first, excluding "current" and excludeName. --release-name accepts
+// arbitrary values (e.g. "v2.1.3"), so sorting lexicographically would not
+// reliably reflect creation order the way sorting by directory modification
+// time does — release directories are created once and never renamed.
+func releaseNamesByModTime(entries []os.DirEntry, excludeName string) ([]string, error) {
+	type releaseDir struct {
+		name    string
+		modTime time.Time
+	}
+	var dirs []releaseDir
 	for _, e := range entries {
-		if e.Name() == "current" || e.Name() == newRelease {
+		if e.Name() == "current" || e.Name() == excludeName || !e.IsDir() {
 			continue
 		}
-		if e.IsDir() {
-			existing = append(existing, e.Name())
+		info, err := e.Info()
+		if err != nil {
+			return nil, fmt.Errorf("stat release %s: %w", e.Name(), err)
 		}
+		dirs = append(dirs, releaseDir{name: e.Name(), modTime: info.ModTime()})
 	}
 
-	sort.Strings(existing)
-	return purgeFromList(existing, keepN), nil
+	sort.Slice(dirs, func(i, j int) bool { return dirs[i].modTime.Before(dirs[j].modTime) })
+
+	names := make([]string, len(dirs))
+	for i, d := range dirs {
+		names[i] = d.name
+	}
+	return names, nil
 }
 
 // purgeFromList returns the existing releases to remove when keepN total slots are available

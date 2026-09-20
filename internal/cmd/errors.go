@@ -11,3 +11,6 @@ const (
 	Config  = cmderr.Config
 	Runtime = cmderr.Runtime
 )
+
+// Wrap is an alias for cmderr.Wrap, kept for package-cmd-local use.
+var Wrap = cmderr.Wrap

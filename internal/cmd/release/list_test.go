@@ -5,7 +5,19 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/adaouat/bifrost/internal/cmderr"
 )
+
+func TestListReleases_MissingReleasesRoot_ExitCode3(t *testing.T) {
+	_, _, err := listReleases("/nonexistent/releases/root")
+	require.Error(t, err)
+
+	var exitErr *cmderr.ExitError
+	require.ErrorAs(t, err, &exitErr)
+	assert.Equal(t, cmderr.Runtime, exitErr.Code, "a missing releases root is a runtime error (3), not the generic default (1)")
+}
 
 func TestRenderReleaseList_Header(t *testing.T) {
 	var buf bytes.Buffer

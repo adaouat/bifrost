@@ -52,7 +52,7 @@ func newDeployCmd(version string) *cobra.Command {
 				if releaseName == "" {
 					releaseName = time.Now().UTC().Format("20060102-150405")
 				}
-				return runClientDeploy(cmd, version, merged, cfg, env, app, artifact, releaseName, agentBinary)
+				return runClientDeploy(cmd, version, merged, cfg, env, app, artifact, releaseName, agentBinary, init_)
 			}
 
 			if err := ensureRoots(merged.ReleasesRoot, merged.SharedRoot, init_); err != nil {

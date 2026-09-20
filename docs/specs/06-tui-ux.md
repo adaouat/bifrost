@@ -73,9 +73,10 @@ Answering **No** aborts the deploy with exit code 3 and prints:
   Error  deploy aborted after step: Artifact extracted
 ```
 
-`--interactive` is rejected (exit 2) when `--output json`, `--output plain`, or when
-stdout is not a TTY. The existing per-hook `interactive: true` confirm (Spec 05) is
-independent and unaffected.
+`--interactive` is rejected (exit 1, usage error) when `--output json`, `--output plain`,
+when stdout is not a TTY, or when the resolved config references one or more `servers`
+(Spec 03). The existing per-hook `interactive: true` confirm (Spec 05) is independent and
+unaffected.
 
 ## Human mode — interactive release selection
 
@@ -159,8 +160,11 @@ Each step emits one JSON line to stdout:
 On error:
 
 ```json
-{"event":"error","step":"extract","message":"extracting archive: ...","exit_code":1}
+{"event":"error","step":"extract","message":"extracting archive: ...","exit_code":3}
 ```
+
+`exit_code` is the resolved process exit code for the failure (Spec 01) — 3 (runtime error)
+for the great majority of step/hook failures, or a hook's own propagated exit code.
 
 Hook lifecycles emitted as `hook` events: `pre_extract`, `post_extract`, `pre_link`,
 `post_link`, `pre_activate`, `post_activate`, `pre_purge`, `post_purge`.

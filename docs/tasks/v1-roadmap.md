@@ -588,27 +588,29 @@ never trusts unverified bytes, and SSH connections don't leak file descriptors.
 
 ## M30 — Exit-code and behavior consistency batch (review fix)
 
-- [ ] `internal/cmd/client_deploy.go` — forward `--init` to the remote agent command when
+- [x] `internal/cmd/client_deploy.go` — forward `--init` to the remote agent command when
   set, so first-time remote deploys can create `releases_root`/`shared_root` on the target
-- [ ] `internal/cmd/client_deploy.go`, `internal/cmd/release/client_list.go` — replace
+- [x] `internal/cmd/client_deploy.go`, `internal/cmd/release/client_list.go` — replace
   `fmt.Sprintf("...: %v", err)`-into-`Message` with `%w`-wrapped errors passed through
   `cmderr.Wrap`, so `errors.Is`/`errors.As` work across the transport boundary and every
   failure resolves to the documented exit code (3) instead of defaulting to 1
-- [ ] `internal/cmd/release/list.go` — wrap `listReleases`' directory-read failure with
+- [x] `internal/cmd/release/list.go` — wrap `listReleases`' directory-read failure with
   `cmderr.Wrap(cmderr.Runtime, ...)` so `release list`/`rollback` exit 3 for a missing
   releases root, matching `deploy`'s classification of the same failure class
-- [ ] `internal/config/merge.go` — `MergeFlat` sorts hooks by priority like `Merge` does,
+- [x] `internal/config/merge.go` — `MergeFlat` sorts hooks by priority like `Merge` does,
   instead of leaving them in file order
-- [ ] `internal/hooks/runner.go` — render `cmd_dir` through the same template pass as `cmd`,
+- [x] `internal/hooks/runner.go` — render `cmd_dir` through the same template pass as `cmd`,
   matching the documented example in spec 02 and the sample config
-- [ ] `internal/strategy/atomic/release.go`, `internal/cmd/release/list.go` — order releases
+- [x] `internal/strategy/atomic/release.go`, `internal/cmd/release/list.go` — order releases
   by directory modification time instead of a lexicographic name sort, so a custom
   `--release-name` (documented as accepting e.g. `v2.1.3`) can't cause `Purge` to delete the
-  newest release or `rollback` to miss a valid target
-- [ ] [Spec 06](../specs/06-tui-ux.md) — correct the `--interactive` guard's documented exit
+  newest release or `rollback` to miss a valid target. `client_release_integration_test.go`'s
+  `seedReleases` helper now stamps each seeded release with a distinct, increasing mtime
+  (a single bulk `mkdir` previously gave them effectively-tied timestamps)
+- [x] [Spec 06](../specs/06-tui-ux.md) — correct the `--interactive` guard's documented exit
   code (1, not 2) and the JSON error event's documented `exit_code` (resolved via
   `cmderr.Resolve`, not a hardcoded 1), matching spec 03 and the M19 fix
-- [ ] Unit/integration tests for each
+- [x] Unit/integration tests for each
 
 Deliverable: exit codes are consistent between local and client-mode paths for the same
 failure class, remote `--init` works, flat-config hook ordering matches merged-config

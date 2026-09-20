@@ -80,7 +80,10 @@ func runOne(runner forgeexec.Runner, h config.HookEntry, data HookData, workingD
 
 	dir := workingDir
 	if h.CmdDir != "" {
-		dir = h.CmdDir
+		dir, err = renderCmd(h.CmdDir, data)
+		if err != nil {
+			return -1, cmderr.Wrap(cmderr.Runtime, fmt.Errorf("hook cmd_dir template: %w", err))
+		}
 	}
 
 	name := "sh"

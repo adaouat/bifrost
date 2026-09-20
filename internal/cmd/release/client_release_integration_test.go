@@ -57,23 +57,27 @@ func releaseSSHTestConfig(servers map[string]config.Server, order []string) *con
 func seedReleases(ctx context.Context, t *testing.T, c *testutil.SSHContainer, releases []string, currentRelease string) {
 	t.Helper()
 
-	mkdirArgs := make([]string, len(releases))
+	// Release ordering (list/rollback/purge) sorts by directory modification
+	// time, not name, so each seeded release needs a distinct, increasing
+	// mtime in `releases` order — a single bulk mkdir would give them
+	// indistinguishable (or filesystem-dependent) timestamps instead.
+	touchCmds := make([]string, len(releases))
 	for i, r := range releases {
-		mkdirArgs[i] = "/var/releases/" + r
+		touchCmds[i] = fmt.Sprintf("mkdir -p /var/releases/%s && touch -d '2026-01-01T00:00:%02dZ' /var/releases/%s", r, i, r)
 	}
-	script := fmt.Sprintf("mkdir -p %s && ln -sfn /var/releases/%s /var/releases/current && chown -R deploy:deploy /var/releases",
-		joinArgs(mkdirArgs), currentRelease)
+	script := fmt.Sprintf("%s && ln -sfn /var/releases/%s /var/releases/current && chown -R deploy:deploy /var/releases",
+		joinArgs(touchCmds, " && "), currentRelease)
 
 	res, err := c.Exec(ctx, []string{"sh", "-c", script})
 	require.NoError(t, err)
 	require.Equal(t, 0, res.ExitCode, "seeding releases: %s", res.Output)
 }
 
-func joinArgs(args []string) string {
+func joinArgs(args []string, sep string) string {
 	out := ""
 	for i, a := range args {
 		if i > 0 {
-			out += " "
+			out += sep
 		}
 		out += a
 	}

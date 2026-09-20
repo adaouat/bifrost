@@ -7,10 +7,12 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/adaouat/bifrost/internal/cmd/cmdutil"
+	"github.com/adaouat/bifrost/internal/cmderr"
 	"github.com/adaouat/bifrost/internal/config"
 )
 
@@ -74,24 +76,38 @@ func newListCmd(version string) *cobra.Command {
 	return cmd
 }
 
-// listReleases returns release directory names sorted newest-first and the
-// name of the currently active release (empty if no current symlink exists).
+// listReleases returns release directory names sorted newest-first (by
+// modification time — --release-name accepts arbitrary values, so a
+// lexicographic sort would not reliably reflect creation order) and the name
+// of the currently active release (empty if no current symlink exists).
 func listReleases(releasesRoot string) (releases []string, active string, err error) {
 	entries, err := os.ReadDir(releasesRoot)
 	if err != nil {
-		return nil, "", fmt.Errorf("reading releases dir: %w", err)
+		return nil, "", cmderr.Wrap(cmderr.Runtime, fmt.Errorf("reading releases dir: %w", err))
 	}
 
+	type releaseDir struct {
+		name    string
+		modTime time.Time
+	}
+	var dirs []releaseDir
 	for _, e := range entries {
-		if e.Name() == "current" {
+		if e.Name() == "current" || !e.IsDir() {
 			continue
 		}
-		if e.IsDir() {
-			releases = append(releases, e.Name())
+		info, err := e.Info()
+		if err != nil {
+			return nil, "", cmderr.Wrap(cmderr.Runtime, fmt.Errorf("stat release %s: %w", e.Name(), err))
 		}
+		dirs = append(dirs, releaseDir{name: e.Name(), modTime: info.ModTime()})
 	}
 
-	sort.Sort(sort.Reverse(sort.StringSlice(releases)))
+	sort.Slice(dirs, func(i, j int) bool { return dirs[i].modTime.After(dirs[j].modTime) })
+
+	releases = make([]string, len(dirs))
+	for i, d := range dirs {
+		releases[i] = d.name
+	}
 
 	currentLink := filepath.Join(releasesRoot, "current")
 	if target, err := os.Readlink(currentLink); err == nil {

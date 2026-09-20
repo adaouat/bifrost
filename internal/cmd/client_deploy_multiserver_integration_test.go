@@ -98,7 +98,7 @@ func TestRunClientDeploy_MultiServer_E2E(t *testing.T) {
 	var out bytes.Buffer
 	root.SetOut(&out)
 
-	err = runClientDeploy(root, "dev", merged, cfg, "test", "app", "../../testdata/release.tar.gz", "multi-r1", testutil.BinaryPath)
+	err = runClientDeploy(root, "dev", merged, cfg, "test", "app", "../../testdata/release.tar.gz", "multi-r1", testutil.BinaryPath, false)
 	t.Logf("deploy output:\n%s", out.String())
 	require.NoError(t, err)
 

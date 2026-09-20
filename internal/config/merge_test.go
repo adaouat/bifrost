@@ -426,3 +426,27 @@ func TestMergeFlat_TopLevelFields(t *testing.T) {
 		t.Errorf("Variables: got %v", m.Variables)
 	}
 }
+
+func TestMergeFlat_HooksSortedByPriority(t *testing.T) {
+	high, low := 90, 10
+	cfg := &config.Config{
+		Paths: config.Paths{ReleasesRoot: "/x", SharedRoot: "/y"},
+		Hooks: config.Hooks{
+			PostActivate: []config.HookEntry{
+				{Cmd: "reload nginx", Priority: &high},
+				{Cmd: "warm cache", Priority: &low},
+			},
+		},
+	}
+
+	m := config.MergeFlat(cfg)
+	if len(m.Hooks.PostActivate) != 2 {
+		t.Fatalf("post_activate hooks: got %d, want 2", len(m.Hooks.PostActivate))
+	}
+	if got := m.Hooks.PostActivate[0].Cmd; got != "warm cache" {
+		t.Errorf("first hook: got %q, want %q (lower priority runs first, matching Merge)", got, "warm cache")
+	}
+	if got := m.Hooks.PostActivate[1].Cmd; got != "reload nginx" {
+		t.Errorf("second hook: got %q, want %q", got, "reload nginx")
+	}
+}

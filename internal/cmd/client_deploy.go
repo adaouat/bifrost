@@ -24,7 +24,7 @@ var deployToServerFn = deployToServer
 // agent with --output json, streams the event output back, then cleans up.
 // Servers are processed sequentially; a failure on any server skips the
 // remaining ones and the failure is returned as-is, preserving the agent's exit code.
-func runClientDeploy(cmd *cobra.Command, version string, merged *config.MergedConfig, cfg *config.Config, env, app, artifact, releaseName, agentBinary string) error {
+func runClientDeploy(cmd *cobra.Command, version string, merged *config.MergedConfig, cfg *config.Config, env, app, artifact, releaseName, agentBinary string, init_ bool) error {
 	out := cmd.OutOrStdout()
 	mode := forgeui.ParseMode(outputMode(cmd))
 
@@ -42,21 +42,21 @@ func runClientDeploy(cmd *cobra.Command, version string, merged *config.MergedCo
 	}
 
 	for _, srv := range merged.Servers {
-		if err := deployToServerFn(version, merged, cfg, env, app, artifact, releaseName, agentBinary, srv, mode, out); err != nil {
+		if err := deployToServerFn(version, merged, cfg, env, app, artifact, releaseName, agentBinary, init_, srv, mode, out); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func deployToServer(version string, _ *config.MergedConfig, cfg *config.Config, env, app, artifact, releaseName, agentBinary string, srv config.ResolvedServer, mode forgeui.Mode, out io.Writer) error {
+func deployToServer(version string, _ *config.MergedConfig, cfg *config.Config, env, app, artifact, releaseName, agentBinary string, init_ bool, srv config.ResolvedServer, mode forgeui.Mode, out io.Writer) error {
 	if mode != forgeui.JSON {
 		_, _ = fmt.Fprint(out, tui.ServerHeader(mode, srv.Name, srv.Host))
 	}
 
 	client, err := transport.Connect(srv)
 	if err != nil {
-		return &ExitError{Code: Runtime, Message: fmt.Sprintf("connecting to %s: %v", srv.Name, err)}
+		return Wrap(Runtime, fmt.Errorf("connecting to %s: %w", srv.Name, err))
 	}
 	defer func() { _ = client.Close() }()
 
@@ -64,17 +64,17 @@ func deployToServer(version string, _ *config.MergedConfig, cfg *config.Config, 
 	if localAgentPath == "" {
 		p, err := transport.DetectPlatform(client)
 		if err != nil {
-			return &ExitError{Code: Runtime, Message: fmt.Sprintf("detecting platform on %s: %v", srv.Name, err)}
+			return Wrap(Runtime, fmt.Errorf("detecting platform on %s: %w", srv.Name, err))
 		}
 		localAgentPath, err = transport.ResolveAgentBinary(version, p)
 		if err != nil {
-			return &ExitError{Code: Runtime, Message: fmt.Sprintf("resolving agent binary for %s: %v", srv.Name, err)}
+			return Wrap(Runtime, fmt.Errorf("resolving agent binary for %s: %w", srv.Name, err))
 		}
 	}
 
 	staging, err := transport.NewStaging(client, srv.StagingDir)
 	if err != nil {
-		return &ExitError{Code: Runtime, Message: fmt.Sprintf("creating staging dir on %s: %v", srv.Name, err)}
+		return Wrap(Runtime, fmt.Errorf("creating staging dir on %s: %w", srv.Name, err))
 	}
 	defer func() {
 		if cleanErr := staging.Cleanup(); cleanErr != nil {
@@ -107,13 +107,24 @@ func deployToServer(version string, _ *config.MergedConfig, cfg *config.Config, 
 		return fmt.Errorf("chmod agent on %s: %w", srv.Name, err)
 	}
 
-	agentCmd := fmt.Sprintf("%s deploy --output json --config %s --artifact %s --release-name %s",
-		transport.ShellQuote(remoteAgent), transport.ShellQuote(remoteConfig),
-		transport.ShellQuote(remoteArtifact), transport.ShellQuote(releaseName))
+	agentCmd := deployAgentCmd(remoteAgent, remoteConfig, remoteArtifact, releaseName, init_)
 
 	return execAndForward(func(w io.Writer) (*transport.ExecResult, error) {
 		return client.ExecStream(agentCmd, w)
 	}, srv, mode, out)
+}
+
+// deployAgentCmd builds the remote agent's deploy command. init_ forwards
+// --init so the agent can create releases_root/shared_root on the target,
+// matching the local (non-SSH) deploy path.
+func deployAgentCmd(remoteAgent, remoteConfig, remoteArtifact, releaseName string, init_ bool) string {
+	cmd := fmt.Sprintf("%s deploy --output json --config %s --artifact %s --release-name %s",
+		transport.ShellQuote(remoteAgent), transport.ShellQuote(remoteConfig),
+		transport.ShellQuote(remoteArtifact), transport.ShellQuote(releaseName))
+	if init_ {
+		cmd += " --init"
+	}
+	return cmd
 }
 
 // execAndForward runs execStreamFn on its own goroutine, streaming its output

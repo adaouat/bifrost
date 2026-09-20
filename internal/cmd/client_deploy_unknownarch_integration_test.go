@@ -93,7 +93,7 @@ func TestRunClientDeploy_UnknownRemoteArch_ExitCode3(t *testing.T) {
 	// Empty agentBinary forces the download path, which begins with remote
 	// platform detection — the step that must reject the unsupported arch.
 	err = runClientDeploy(root, "dev", merged, cfg, "test", "app",
-		"../../testdata/release.tar.gz", "arch-r1", "")
+		"../../testdata/release.tar.gz", "arch-r1", "", false)
 	require.Error(t, err)
 
 	var exitErr *ExitError

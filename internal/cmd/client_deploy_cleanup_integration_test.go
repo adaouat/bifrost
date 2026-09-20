@@ -68,7 +68,7 @@ func TestRunClientDeploy_AgentFailsMidDeploy_CleansStaging(t *testing.T) {
 	root.SetOut(&out)
 
 	err = runClientDeploy(root, "dev", merged, cfg, "test", "app",
-		"../../testdata/release.tar.gz", "cleanup-r1", testutil.BinaryPath)
+		"../../testdata/release.tar.gz", "cleanup-r1", testutil.BinaryPath, false)
 	t.Logf("deploy output:\n%s", out.String())
 
 	var exitErr *ExitError

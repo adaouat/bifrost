@@ -5,6 +5,7 @@ package cmd
 import (
 	"bytes"
 	"context"
+	"errors"
 	"path/filepath"
 	"strconv"
 	"testing"
@@ -59,11 +60,14 @@ func TestRunClientDeploy_SSHAuthFailure_ExitCode3(t *testing.T) {
 	root.SetOut(&out)
 
 	err = runClientDeploy(root, "dev", merged, cfg, "test", "app",
-		"../../testdata/release.tar.gz", "authfail-r1", testutil.BinaryPath)
+		"../../testdata/release.tar.gz", "authfail-r1", testutil.BinaryPath, false)
 	require.Error(t, err)
 
 	var exitErr *ExitError
 	require.ErrorAs(t, err, &exitErr)
 	assert.Equal(t, Runtime, exitErr.Code, "auth failure must map to exit code 3 (Runtime)")
 	assert.Contains(t, err.Error(), "connecting to web-01", "error must name the server it failed to reach")
+
+	underlying := errors.Unwrap(errors.Unwrap(err))
+	assert.NotNil(t, underlying, "the real SSH error must stay reachable via errors.Unwrap for errors.Is/As, not flattened into a message string")
 }

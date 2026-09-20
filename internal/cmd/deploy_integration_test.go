@@ -388,3 +388,62 @@ func TestDeployCmd_Purge(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "/var/releases/purge-r3", res.Output)
 }
+
+// TestDeployCmd_Purge_NonMonotonicReleaseNames proves purge orders releases by
+// creation time, not by lexicographically sorting --release-name. Deployed in
+// this order, "v2.10.0" and "v2.11.0" both sort lexicographically before
+// "v2.9.0" — a name-sorted purge would keep v2.9.0 (wrongly treating it as
+// newest) and remove v2.10.0 (the actual middle release) instead of the
+// actually-oldest v2.9.0.
+func TestDeployCmd_Purge_NonMonotonicReleaseNames(t *testing.T) {
+	ctx := context.Background()
+	c := testutil.NewContainer(ctx, t, bifrostBin)
+
+	cfg, err := os.ReadFile("../../testdata/bifrost-deploy-purge-test.yml")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, cfg, "/tmp/bifrost-purge.yml", 0o644))
+
+	artifact, err := os.ReadFile("../../testdata/release.tar.gz")
+	require.NoError(t, err)
+	require.NoError(t, c.CopyFile(ctx, artifact, "/tmp/release.tar.gz", 0o644))
+
+	// releases_to_keep=2; deploy 3 releases in creation order v2.9.0, v2.10.0,
+	// v2.11.0 — v2.9.0 (oldest) must be purged after v2.11.0 deploys.
+	for i, name := range []string{"v2.9.0", "v2.10.0", "v2.11.0"} {
+		args := []string{
+			"deploy",
+			"--config", "/tmp/bifrost-purge.yml",
+			"--env", "test",
+			"--app", "app",
+			"--artifact", "/tmp/release.tar.gz",
+			"--release-name", name,
+		}
+		if i == 0 {
+			args = append(args, "--init")
+		}
+		result, err := c.RunBifrost(ctx, args...)
+		require.NoError(t, err)
+		assert.Equal(t, 0, result.ExitCode, "deploy %s:\n%s", name, result.Output)
+	}
+
+	res, err := c.Exec(ctx, []string{"test", "-d", "/var/releases/v2.9.0"})
+	require.NoError(t, err)
+	assert.NotEqual(t, 0, res.ExitCode, "v2.9.0 (oldest by creation time) should have been purged")
+
+	for _, name := range []string{"v2.10.0", "v2.11.0"} {
+		res, err = c.Exec(ctx, []string{"test", "-d", "/var/releases/" + name})
+		require.NoError(t, err)
+		assert.Equal(t, 0, res.ExitCode, "%s should still exist", name)
+	}
+
+	result, err := c.RunBifrost(ctx,
+		"release", "list",
+		"--config", "/tmp/bifrost-purge.yml",
+		"--env", "test",
+		"--app", "app",
+	)
+	require.NoError(t, err)
+	assert.Equal(t, 0, result.ExitCode, "release list output:\n%s", result.Output)
+	assert.Less(t, strings.Index(result.Output, "v2.11.0"), strings.Index(result.Output, "v2.10.0"),
+		"release list must show v2.11.0 (newest by creation time) before v2.10.0, not lexicographic order")
+}

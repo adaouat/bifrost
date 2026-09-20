@@ -14,6 +14,16 @@ import (
 	forgeui "github.com/adaouat/forge/ui"
 )
 
+func TestDeployAgentCmd_WithoutInit(t *testing.T) {
+	cmd := deployAgentCmd("/tmp/x/bifrost-agent", "/tmp/x/bifrost.yml", "/tmp/x/app.tar.gz", "r1", false)
+	assert.NotContains(t, cmd, "--init")
+}
+
+func TestDeployAgentCmd_WithInit(t *testing.T) {
+	cmd := deployAgentCmd("/tmp/x/bifrost-agent", "/tmp/x/bifrost.yml", "/tmp/x/app.tar.gz", "r1", true)
+	assert.Contains(t, cmd, "--init", "--init must be forwarded to the remote agent so it can create releases_root/shared_root")
+}
+
 func TestExecAndForward_StreamErrorDrainsRemainingOutput(t *testing.T) {
 	writeCompleted := make(chan struct{})
 	execFn := func(w io.Writer) (*transport.ExecResult, error) {

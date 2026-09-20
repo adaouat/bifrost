@@ -114,6 +114,20 @@ func TestRun_CmdDirOverridesWorkingDir(t *testing.T) {
 	assert.Equal(t, "/tmp", mr.Calls[0].Dir)
 }
 
+func TestRun_CmdDirIsTemplateRendered(t *testing.T) {
+	mr := okRunner(1)
+	hooks := []config.HookEntry{{
+		Cmd:      "composer install",
+		CmdDir:   "{{ .Directories.Working }}",
+		Priority: prio(99999),
+	}}
+	data := HookData{Directories: Directories{Working: "/releases/20260524"}}
+	var out bytes.Buffer
+	require.NoError(t, Run(mr, hooks, data, "/tmp", &out))
+	require.Len(t, mr.Calls, 1)
+	assert.Equal(t, "/releases/20260524", mr.Calls[0].Dir, "cmd_dir must be template-rendered like cmd, matching the documented example")
+}
+
 func TestRun_AllowFailContinuesOnNonZeroExit(t *testing.T) {
 	mr := exectest.NewMockRunner()
 	mr.QueueResponse("", "", errors.New("exit status 1"))
