@@ -1,6 +1,8 @@
 # Build outputs
 /bifrost
 /dist
+/completions
+/manpages
 *.test
 
 # IDE

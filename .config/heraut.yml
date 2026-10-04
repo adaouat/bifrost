@@ -25,4 +25,11 @@ release:
     - "dist/bifrost_*_darwin_amd64"
     - "dist/bifrost_*_darwin_arm64"
     - "dist/bifrost_*_windows_amd64.exe"
+    # homebrew archive — the cask's url.template points at these
+    - "dist/bifrost_*_linux_amd64.tar.gz"
+    - "dist/bifrost_*_linux_arm64.tar.gz"
+    - "dist/bifrost_*_darwin_amd64.tar.gz"
+    - "dist/bifrost_*_darwin_arm64.tar.gz"
     - "dist/checksums.txt"
+    - "dist/packslip.sigstore.json"
+    - "dist/*.sbom.json"
