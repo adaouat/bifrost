@@ -1,11 +1,13 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/adaouat/heraut/v0.58.0/schema.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/adaouat/heraut/v0.75.0/schema.json
 version: "1"
 
 versioning:
   strategy: semver
   tag_prefix: "v"
   initial_version: "0.1.0"
-  bump: auto
+  bump:
+    mode: auto
+    stay_at_v0: true
 
 changelog:
   output: CHANGELOG.md
