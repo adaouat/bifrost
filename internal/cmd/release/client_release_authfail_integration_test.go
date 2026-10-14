@@ -17,7 +17,7 @@ import (
 	"github.com/adaouat/bifrost/internal/testutil"
 )
 
-// TestRunClientReleaseList_SSHAuthFailure_ExitCode3 proves stageAgentSession's
+// TestRunClientReleaseList_SSHAuthFailure_ExitCode3 proves transport.StageAgentSession's
 // connect failure both classifies as exit 3 (Runtime) and keeps the real SSH
 // error reachable via errors.Unwrap for errors.Is/errors.As, instead of
 // flattening it into a message string.

@@ -8,7 +8,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/adaouat/bifrost/internal/cmd/cmdutil"
 	"github.com/adaouat/bifrost/internal/config"
 	"github.com/adaouat/bifrost/internal/transport"
 	"github.com/adaouat/bifrost/internal/tui"
@@ -54,63 +53,21 @@ func deployToServer(version string, _ *config.MergedConfig, cfg *config.Config, 
 		_, _ = fmt.Fprint(out, tui.ServerHeader(mode, srv.Name, srv.Host))
 	}
 
-	client, err := transport.Connect(srv)
+	session, err := transport.StageAgentSession(version, cfg, env, app, agentBinary, srv)
 	if err != nil {
-		return Wrap(Runtime, fmt.Errorf("connecting to %s: %w", srv.Name, err))
+		return Wrap(Runtime, err)
 	}
-	defer func() { _ = client.Close() }()
+	defer session.Close()
 
-	localAgentPath := agentBinary
-	if localAgentPath == "" {
-		p, err := transport.DetectPlatform(client)
-		if err != nil {
-			return Wrap(Runtime, fmt.Errorf("detecting platform on %s: %w", srv.Name, err))
-		}
-		localAgentPath, err = transport.ResolveAgentBinary(version, p)
-		if err != nil {
-			return Wrap(Runtime, fmt.Errorf("resolving agent binary for %s: %w", srv.Name, err))
-		}
-	}
-
-	staging, err := transport.NewStaging(client, srv.StagingDir)
-	if err != nil {
-		return Wrap(Runtime, fmt.Errorf("creating staging dir on %s: %w", srv.Name, err))
-	}
-	defer func() {
-		if cleanErr := staging.Cleanup(); cleanErr != nil {
-			_, _ = fmt.Fprintf(out, "WARNING: cleanup staging on %s: %v\n", srv.Name, cleanErr)
-		}
-	}()
-
-	remoteAgent, err := staging.Upload(localAgentPath, "bifrost-agent")
-	if err != nil {
-		return fmt.Errorf("uploading agent to %s: %w", srv.Name, err)
-	}
-
-	flatConfigPath, cleanConfig, err := cmdutil.WriteTempFlatConfig(cfg, env, app)
-	if err != nil {
-		return fmt.Errorf("generating flat config for %s: %w", srv.Name, err)
-	}
-	defer cleanConfig()
-
-	remoteConfig, err := staging.Upload(flatConfigPath, "bifrost.yml")
-	if err != nil {
-		return fmt.Errorf("uploading config to %s: %w", srv.Name, err)
-	}
-
-	remoteArtifact, err := staging.Upload(artifact, filepath.Base(artifact))
+	remoteArtifact, err := session.Staging.Upload(artifact, filepath.Base(artifact))
 	if err != nil {
 		return fmt.Errorf("uploading artifact to %s: %w", srv.Name, err)
 	}
 
-	if err := staging.Chmod(remoteAgent, 0o755); err != nil {
-		return fmt.Errorf("chmod agent on %s: %w", srv.Name, err)
-	}
-
-	agentCmd := deployAgentCmd(remoteAgent, remoteConfig, remoteArtifact, releaseName, init_)
+	agentCmd := deployAgentCmd(session.RemoteAgent, session.RemoteConfig, remoteArtifact, releaseName, init_)
 
 	return execAndForward(func(w io.Writer) (*transport.ExecResult, error) {
-		return client.ExecStream(agentCmd, w)
+		return session.Client.ExecStream(agentCmd, w)
 	}, srv, mode, out)
 }
 

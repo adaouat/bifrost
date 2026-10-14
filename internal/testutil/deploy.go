@@ -22,34 +22,20 @@ import (
 // DeployOverSSH stages the agent binary, the flat config for (env, app), and the
 // artifact on the remote, runs `bifrost-agent deploy --output json`, forwards the
 // event stream in mode, and returns the rendered output. It mirrors the client
-// deploy path (shell-quoted args, SFTP chmod) and manages its own connection and
-// staging cleanup. BinaryPath must be set (the package TestMain builds it).
+// deploy path and manages its own connection and staging cleanup. BinaryPath
+// must be set (the package TestMain builds it).
 func DeployOverSSH(ctx context.Context, t *testing.T, srv config.ResolvedServer, cfg *config.Config, env, app, artifactPath, releaseName string, mode forgeui.Mode) string {
 	t.Helper()
 
-	client, err := transport.Connect(srv)
-	require.NoError(t, err, "ssh connect")
-	defer func() { _ = client.Close() }()
+	session, err := transport.StageAgentSession("dev", cfg, env, app, BinaryPath, srv)
+	require.NoError(t, err, "staging agent session")
+	defer session.Close()
 
-	staging, err := transport.NewStaging(client, srv.StagingDir)
-	require.NoError(t, err, "staging")
-	defer func() { _ = staging.Cleanup() }()
-
-	remoteAgent, err := staging.Upload(BinaryPath, "bifrost-agent")
-	require.NoError(t, err, "upload agent")
-
-	var flat bytes.Buffer
-	require.NoError(t, config.GenerateFlatConfig(cfg, env, app, &flat), "generate flat config")
-	remoteConfig, err := staging.UploadBytes(flat.Bytes(), "bifrost.yml")
-	require.NoError(t, err, "upload config")
-
-	remoteArtifact, err := staging.Upload(artifactPath, filepath.Base(artifactPath))
+	remoteArtifact, err := session.Staging.Upload(artifactPath, filepath.Base(artifactPath))
 	require.NoError(t, err, "upload artifact")
 
-	require.NoError(t, staging.Chmod(remoteAgent, 0o755), "chmod agent")
-
 	agentCmd := fmt.Sprintf("%s deploy --output json --config %s --artifact %s --release-name %s",
-		transport.ShellQuote(remoteAgent), transport.ShellQuote(remoteConfig),
+		transport.ShellQuote(session.RemoteAgent), transport.ShellQuote(session.RemoteConfig),
 		transport.ShellQuote(remoteArtifact), transport.ShellQuote(releaseName))
 
 	pr, pw := io.Pipe()
@@ -59,13 +45,19 @@ func DeployOverSSH(ctx context.Context, t *testing.T, srv config.ResolvedServer,
 	wg.Add(1)
 	go func() {
 		defer func() { _ = pw.Close(); wg.Done() }()
-		execResult, execErr = client.ExecStream(agentCmd, pw)
+		execResult, execErr = session.Client.ExecStream(agentCmd, pw)
 	}()
 
 	var out bytes.Buffer
 	_, streamErr := tui.ForwardStream(pr, srv.Name, mode, &out)
-	_ = pr.Close()
+	if streamErr != nil {
+		// Drain instead of closing early — see execAndForward (M26): closing
+		// here would stop the writer goroutine from draining the SSH channel,
+		// which can hang the remote agent trying to flush its own stdout.
+		go func() { _, _ = io.Copy(io.Discard, pr) }()
+	}
 	wg.Wait()
+	_ = pr.Close()
 
 	require.NoError(t, execErr, "agent exec")
 	require.Equalf(t, 0, execResult.ExitCode, "agent exited non-zero: %s", execResult.Stderr.String())

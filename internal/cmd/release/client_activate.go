@@ -71,17 +71,17 @@ func runClientReleaseActivate(cmd *cobra.Command, version string, merged *config
 }
 
 func releaseActivateOnServer(version string, cfg *config.Config, env, app, agentBinary, releaseName string, srv config.ResolvedServer, mode forgeui.Mode, out io.Writer) error {
-	client, remoteAgent, remoteConfig, cleanup, err := stageAgentSession(version, cfg, env, app, agentBinary, srv)
+	session, err := transport.StageAgentSession(version, cfg, env, app, agentBinary, srv)
 	if err != nil {
-		return err
+		return cmderr.Wrap(cmderr.Runtime, err)
 	}
-	defer cleanup()
+	defer session.Close()
 
 	agentCmd := fmt.Sprintf("%s release activate --release %s --no-confirm --output json --config %s --env %s --app %s",
-		transport.ShellQuote(remoteAgent), transport.ShellQuote(releaseName),
-		transport.ShellQuote(remoteConfig), transport.ShellQuote(env), transport.ShellQuote(app))
+		transport.ShellQuote(session.RemoteAgent), transport.ShellQuote(releaseName),
+		transport.ShellQuote(session.RemoteConfig), transport.ShellQuote(env), transport.ShellQuote(app))
 
-	res, err := client.Exec(agentCmd)
+	res, err := session.Client.Exec(agentCmd)
 	if err != nil {
 		return fmt.Errorf("agent exec on %s: %w", srv.Name, err)
 	}

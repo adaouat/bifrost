@@ -658,22 +658,22 @@ that can hang draining a large/erroring event stream. The per-server flat config
 also round-tripped through a local temp file (`cmdutil.WriteTempFlatConfig`) instead of
 `Staging.UploadBytes`, which `testutil/deploy.go` already used directly from memory.
 
-- [ ] `internal/transport/session.go` (new) — `AgentSession` + `StageAgentSession`:
+- [x] `internal/transport/session.go` (new) — `AgentSession` + `StageAgentSession`:
   connect, resolve/upload the agent binary, generate and upload the flat config via
   `config.GenerateFlatConfig` + `Staging.UploadBytes` (no local temp file), chmod; `Close`
   warns to stderr on a cleanup failure
-- [ ] `internal/cmd/release/client_list.go` — delete `stageAgentSession`; `fetchReleaseEntries`
+- [x] `internal/cmd/release/client_list.go` — delete `stageAgentSession`; `fetchReleaseEntries`
   uses `transport.StageAgentSession`, classifying its error with `cmderr.Wrap(cmderr.Runtime,
   ...)` once (every staging step gets the same classification, not just the first few)
-- [ ] `internal/cmd/release/client_activate.go`, `client_rollback.go` — use
+- [x] `internal/cmd/release/client_activate.go`, `client_rollback.go` — use
   `transport.StageAgentSession`/`AgentSession`
-- [ ] `internal/cmd/client_deploy.go` — `deployToServer` uses `transport.StageAgentSession`,
+- [x] `internal/cmd/client_deploy.go` — `deployToServer` uses `transport.StageAgentSession`,
   then uploads the artifact into the same session before building the agent command
-- [ ] `internal/testutil/deploy.go` — `DeployOverSSH` uses `transport.StageAgentSession`,
+- [x] `internal/testutil/deploy.go` — `DeployOverSSH` uses `transport.StageAgentSession`,
   and its event-stream handling drains instead of closing early on a stream error (matching
   `execAndForward`'s M26 fix)
-- [ ] `internal/cmd/cmdutil/config.go` — delete `WriteTempFlatConfig` once nothing calls it
-- [ ] Existing unit/integration suites pass unchanged in behavior; the hang/warning-stream
+- [x] `internal/cmd/cmdutil/config.go` — delete `WriteTempFlatConfig` once nothing calls it
+- [x] Existing unit/integration suites pass unchanged in behavior; the hang/warning-stream
   fixes land as natural consequences of deduplication, not separate changes to verify
 
 Deliverable: one staging implementation instead of three, no local temp file for the flat
