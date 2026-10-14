@@ -55,6 +55,32 @@ func TestPurge_OrdersByModTimeNotName(t *testing.T) {
 	assert.NoError(t, err, "the newer old release must survive")
 }
 
+// TestPurgeNames_RemovesExactlyGivenNames proves PurgeNames deletes exactly
+// the given release directories with no scan or sort of its own — the
+// deployer uses it to apply PurgePlan's already-computed candidate list
+// without re-scanning the releases directory PurgePlan was just computed from.
+func TestPurgeNames_RemovesExactlyGivenNames(t *testing.T) {
+	root := t.TempDir()
+	seedReleaseDirs(t, root, []struct {
+		name string
+		age  time.Duration
+	}{
+		{"r1", 2 * time.Hour},
+		{"r2", 1 * time.Hour},
+		{"r3", 0},
+	})
+
+	require.NoError(t, PurgeNames(root, []string{"r1"}))
+
+	_, err := os.Stat(filepath.Join(root, "r1"))
+	assert.True(t, os.IsNotExist(err), "r1 must be removed")
+
+	for _, name := range []string{"r2", "r3"} {
+		_, err := os.Stat(filepath.Join(root, name))
+		assert.NoError(t, err, "%s must survive", name)
+	}
+}
+
 // TestPurgePlan_OrdersByModTimeNotName is TestPurge_OrdersByModTimeNotName's
 // dry-run counterpart: the planned candidate list must match what Purge would
 // actually remove.

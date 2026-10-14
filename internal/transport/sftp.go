@@ -13,9 +13,13 @@ type SFTP struct {
 	client *sftp.Client
 }
 
-// NewSFTP opens an SFTP session over the client's SSH connection.
+// NewSFTP opens an SFTP session over the client's SSH connection. Writes are
+// pipelined (concurrent requests per file) instead of waiting for each 32 KB
+// chunk's round-trip before sending the next — every upload (agent binary,
+// config, artifact) goes through this client, so round-trip latency would
+// otherwise dominate transfer time regardless of available bandwidth.
 func (c *Client) NewSFTP() (*SFTP, error) {
-	s, err := sftp.NewClient(c.conn)
+	s, err := sftp.NewClient(c.conn, sftp.UseConcurrentWrites(true))
 	if err != nil {
 		return nil, fmt.Errorf("opening sftp session: %w", err)
 	}

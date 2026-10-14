@@ -51,9 +51,8 @@ func RunInteractive(runner forgeexec.Runner, hooks []config.HookEntry, data Hook
 // lifecycle is the name of the hook group (e.g. "pre_activate"). eventFn may be nil.
 func RunWithEvents(runner forgeexec.Runner, hooks []config.HookEntry, data HookData, workingDir string, out io.Writer, confirmFn func(cmd string) bool, lifecycle string, eventFn HookEventFn) error {
 	for i, h := range hooks {
-		exitCode, err := runOne(runner, h, data, workingDir, out, confirmFn)
+		rendered, exitCode, err := runOne(runner, h, data, workingDir, out, confirmFn)
 		if eventFn != nil {
-			rendered, _ := renderCmd(h.Cmd, data)
 			eventFn(lifecycle, i, rendered, exitCode)
 		}
 		if err != nil {
@@ -63,26 +62,29 @@ func RunWithEvents(runner forgeexec.Runner, hooks []config.HookEntry, data HookD
 	return nil
 }
 
-// runOne executes a single hook and returns its exit code and any error.
-// Exit code 0 means success; -1 means the hook was skipped.
-func runOne(runner forgeexec.Runner, h config.HookEntry, data HookData, workingDir string, out io.Writer, confirmFn func(cmd string) bool) (exitCode int, err error) {
+// runOne executes a single hook and returns its rendered command string, exit
+// code, and any error. Exit code 0 means success; -1 means the hook was
+// skipped. The rendered string is also the one eventFn reports, so execution
+// and the reported event can never disagree about what ran.
+func runOne(runner forgeexec.Runner, h config.HookEntry, data HookData, workingDir string, out io.Writer, confirmFn func(cmd string) bool) (rendered string, exitCode int, err error) {
 	if h.Interactive {
 		if confirmFn == nil || !confirmFn(h.Cmd) {
 			_, _ = fmt.Fprintf(out, "warning: skipping interactive hook %q\n", h.Cmd)
-			return -1, nil
+			rendered, _ = renderCmd(h.Cmd, data)
+			return rendered, -1, nil
 		}
 	}
 
-	rendered, err := renderCmd(h.Cmd, data)
+	rendered, err = renderCmd(h.Cmd, data)
 	if err != nil {
-		return -1, cmderr.Wrap(cmderr.Runtime, fmt.Errorf("hook template: %w", err))
+		return "", -1, cmderr.Wrap(cmderr.Runtime, fmt.Errorf("hook template: %w", err))
 	}
 
 	dir := workingDir
 	if h.CmdDir != "" {
 		dir, err = renderCmd(h.CmdDir, data)
 		if err != nil {
-			return -1, cmderr.Wrap(cmderr.Runtime, fmt.Errorf("hook cmd_dir template: %w", err))
+			return rendered, -1, cmderr.Wrap(cmderr.Runtime, fmt.Errorf("hook cmd_dir template: %w", err))
 		}
 	}
 
@@ -111,12 +113,12 @@ func runOne(runner forgeexec.Runner, h config.HookEntry, data HookData, workingD
 			// Report the exit status, not runErr: forge embeds the captured
 			// stderr in its error, which was already streamed to out above.
 			_, _ = fmt.Fprintf(out, "warning: hook %q failed (allow_fail): exit status %d\n", h.Cmd, code)
-			return code, nil
+			return rendered, code, nil
 		}
-		return code, cmderr.Wrap(cmderr.Runtime, fmt.Errorf("hook %q: %w", h.Cmd, runErr))
+		return rendered, code, cmderr.Wrap(cmderr.Runtime, fmt.Errorf("hook %q: %w", h.Cmd, runErr))
 	}
 
-	return 0, nil
+	return rendered, 0, nil
 }
 
 func renderCmd(tmpl string, data HookData) (string, error) {

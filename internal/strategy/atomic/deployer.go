@@ -223,20 +223,42 @@ func (d *Deployer) Deploy(ctx context.Context, opts DeployOptions) error {
 		emit.Emit(map[string]any{"event": "start", "step": "extract", "artifact": opts.Artifact})
 	}
 	extractStart := time.Now()
-	updateProgress, doneProgress := tui.NewProgressBar(d.mode, info.Size(), "Extracting artifact", d.out)
+	total := info.Size()
+	updateProgress, doneProgress := tui.NewProgressBar(d.mode, total, "Extracting artifact", d.out)
 	var jsonProgressFn func(n int64)
 	if d.jsonMode() {
 		var written int64
-		total := info.Size()
 		jsonProgressFn = func(n int64) {
 			written += n
 			emit.Emit(map[string]any{"event": "progress", "step": "extract", "bytes": written, "total": total})
 		}
 	}
-	progressFn := func(n int64) {
-		updateProgress(n)
+	// Throttle emission to roughly once per 1% of total bytes or 50ms,
+	// whichever comes first, instead of once per ~32 KB read chunk: a large
+	// artifact would otherwise produce thousands of progress events/renders
+	// purely to redraw one bar. Bytes are still accumulated exactly (via
+	// pending) between emissions, and a flush is forced once the full size
+	// has been written so the bar/stream always reaches 100%.
+	minBytes := int64(float64(total) * 0.01)
+	const minInterval = 50 * time.Millisecond
+	var pending, writtenSoFar int64
+	var lastEmit time.Time
+	flush := func() {
+		if pending == 0 {
+			return
+		}
+		updateProgress(pending)
 		if jsonProgressFn != nil {
-			jsonProgressFn(n)
+			jsonProgressFn(pending)
+		}
+		pending = 0
+		lastEmit = time.Now()
+	}
+	progressFn := func(n int64) {
+		pending += n
+		writtenSoFar += n
+		if pending >= minBytes || time.Since(lastEmit) >= minInterval || writtenSoFar >= total {
+			flush()
 		}
 	}
 	if err := Extract(ctx, opts.Artifact, releaseDir, progressFn); err != nil {
@@ -339,7 +361,14 @@ func (d *Deployer) Deploy(ctx context.Context, opts DeployOptions) error {
 	}
 	if err := runStep("purge", func() (map[string]any, error) {
 		extras := map[string]any{"purged": purgePlan, "kept": merged.Settings.ReleasesToKeep}
-		purge := func() error { return Purge(merged.ReleasesRoot, merged.Settings.ReleasesToKeep) }
+		purge := func() error {
+			if purgePlanErr != nil {
+				// The plan is unreliable; fall back to Purge's own fresh scan
+				// rather than purging nothing.
+				return Purge(merged.ReleasesRoot, merged.Settings.ReleasesToKeep)
+			}
+			return PurgeNames(merged.ReleasesRoot, purgePlan)
+		}
 		if d.jsonMode() {
 			return extras, purge()
 		}

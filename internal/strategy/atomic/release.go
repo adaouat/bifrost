@@ -66,7 +66,15 @@ func Purge(releasesRoot string, keepN int) error {
 		return fmt.Errorf("reading releases dir: %w", err)
 	}
 
-	for _, name := range purgeFromList(names, keepN) {
+	return PurgeNames(releasesRoot, purgeFromList(names, keepN))
+}
+
+// PurgeNames removes exactly the given release directories under
+// releasesRoot — no scan or sort of its own. A caller that already knows
+// which releases to remove (e.g. from PurgePlan) should call this directly
+// instead of Purge, which would otherwise repeat the scan the caller just did.
+func PurgeNames(releasesRoot string, names []string) error {
+	for _, name := range names {
 		if err := os.RemoveAll(filepath.Join(releasesRoot, name)); err != nil {
 			return fmt.Errorf("purging release %s: %w", name, err)
 		}

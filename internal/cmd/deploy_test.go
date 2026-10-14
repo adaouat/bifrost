@@ -3,6 +3,7 @@ package cmd_test
 import (
 	"bytes"
 	"testing"
+	"time"
 
 	"github.com/adaouat/bifrost/internal/cmd"
 	"github.com/adaouat/bifrost/internal/cmderr"
@@ -46,6 +47,35 @@ func TestDeployCmd_ClientMode_AttemptsSSHConnection(t *testing.T) {
 	var exitErr *cmderr.ExitError
 	require.ErrorAs(t, err, &exitErr)
 	assert.Equal(t, 3, exitErr.Code)
+}
+
+// TestDeployCmd_ClientMode_MissingArtifact_FailsBeforeSSH proves a bad
+// --artifact path is caught locally before any SSH connection attempt in
+// client mode. bifrost-servers.yml points at an unreachable host, so if the
+// artifact check ran after the client-mode branch (the bug), this would fail
+// with a "connecting to ..." SSH error instead of "artifact not found".
+func TestDeployCmd_ClientMode_MissingArtifact_FailsBeforeSSH(t *testing.T) {
+	root := cmd.NewRootCmd("dev")
+	root.SetOut(&bytes.Buffer{})
+	root.SetErr(&bytes.Buffer{})
+	root.SetArgs([]string{
+		"deploy",
+		"--config", "../../testdata/bifrost-servers.yml",
+		"--env", "prod",
+		"--app", "web",
+		"--artifact", "../../testdata/does-not-exist.tar.gz",
+	})
+
+	start := time.Now()
+	err := root.Execute()
+	elapsed := time.Since(start)
+	require.Error(t, err)
+
+	var exitErr *cmderr.ExitError
+	require.ErrorAs(t, err, &exitErr)
+	assert.Equal(t, cmderr.Runtime, exitErr.Code)
+	assert.Contains(t, exitErr.Error(), "artifact not found")
+	assert.Less(t, elapsed, 2*time.Second, "a missing artifact must fail locally, not after attempting an SSH connection")
 }
 
 func TestDeployCmd_HasInteractiveFlag(t *testing.T) {

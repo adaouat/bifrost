@@ -81,6 +81,27 @@ func TestForwardStream_JSONMode_PreservesOriginalFields(t *testing.T) {
 	}
 }
 
+// TestForwardStream_JSONMode_SplicesWithoutRemarshaling proves the server
+// field is spliced into the raw line rather than decoded into a map and
+// re-marshaled — a re-marshal would alphabetize keys (encoding/json always
+// sorts map keys), so the original key order surviving intact proves no
+// full decode/re-encode round-trip happened.
+func TestForwardStream_JSONMode_SplicesWithoutRemarshaling(t *testing.T) {
+	r := strings.NewReader(`{"zebra":"first","alpha":"second"}` + "\n")
+	var buf bytes.Buffer
+
+	_, err := tui.ForwardStream(r, "web-01", forgeui.JSON, &buf)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	got := strings.TrimSpace(buf.String())
+	want := `{"zebra":"first","alpha":"second","server":"web-01"}`
+	if got != want {
+		t.Errorf("output: got %q, want %q", got, want)
+	}
+}
+
 func TestForwardStream_PlainMode_RendersSteps(t *testing.T) {
 	r := eventStream(minimalDeployEvents()...)
 	var buf bytes.Buffer

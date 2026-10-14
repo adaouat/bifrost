@@ -23,7 +23,6 @@ func ForwardStream(r io.Reader, serverName string, mode forgeui.Mode, out io.Wri
 	// (unlike bufio.Scanner), so a verbose hook can never fail an otherwise
 	// successful deploy here.
 	reader := bufio.NewReaderSize(r, 64*1024)
-	emit := NewJSONEmitter(out)
 	sp := forgeui.NewSpinner(out, mode)
 
 	var release string
@@ -44,8 +43,8 @@ func ForwardStream(r io.Reader, serverName string, mode forgeui.Mode, out io.Wri
 				if ev["event"] == "done" && ev["step"] == "deploy" {
 					release, _ = ev["release"].(string)
 				}
-				ev["server"] = serverName
-				emit.Emit(ev)
+				_, _ = out.Write(spliceServerField(line, serverName))
+				_, _ = out.Write([]byte("\n"))
 			} else {
 				event, _ := ev["event"].(string)
 				step, _ := ev["step"].(string)
@@ -126,4 +125,20 @@ func ForwardStream(r io.Reader, serverName string, mode forgeui.Mode, out io.Wri
 	}
 
 	return release, nil
+}
+
+// spliceServerField appends a "server" key to a single-line JSON object by
+// inserting text before its closing brace, instead of decoding the line into
+// a map and re-marshaling the whole object (which would also alphabetize
+// every other key, since encoding/json always sorts map keys). line must be
+// a trimmed, complete JSON object with no trailing content after the final
+// '}' — which every event this is called on already is, by construction.
+func spliceServerField(line []byte, serverName string) []byte {
+	serverJSON, _ := json.Marshal(serverName)
+	out := make([]byte, 0, len(line)+len(serverJSON)+11)
+	out = append(out, line[:len(line)-1]...)
+	out = append(out, `,"server":`...)
+	out = append(out, serverJSON...)
+	out = append(out, '}')
+	return out
 }

@@ -47,6 +47,13 @@ func newDeployCmd(version string) *cobra.Command {
 				return &ExitError{Code: Usage, Message: "--interactive is not supported for remote (server) deploys; the agent runs remotely in JSON mode"}
 			}
 
+			// Checked before the client-mode branch so a bad --artifact path
+			// fails locally and immediately, instead of after a full SSH
+			// connect, agent stage, and upload attempt.
+			if _, err := os.Stat(artifact); err != nil {
+				return &ExitError{Code: Runtime, Message: fmt.Sprintf("artifact not found: %s", artifact)}
+			}
+
 			if len(merged.Servers) > 0 {
 				if releaseName == "" {
 					releaseName = time.Now().UTC().Format("20060102-150405")
@@ -56,10 +63,6 @@ func newDeployCmd(version string) *cobra.Command {
 
 			if err := ensureRoots(merged.ReleasesRoot, merged.SharedRoot, init_); err != nil {
 				return err
-			}
-
-			if _, err := os.Stat(artifact); err != nil {
-				return &ExitError{Code: Runtime, Message: fmt.Sprintf("artifact not found: %s", artifact)}
 			}
 
 			if isDryRun(cmd) {

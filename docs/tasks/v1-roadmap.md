@@ -687,27 +687,27 @@ fourth copy because there's only one copy.
 Independent, low-risk performance fixes identified by the code review, bundled into one
 milestone (matching the M20 pattern).
 
-- [ ] `internal/transport/sftp.go` — enable `sftp.UseConcurrentWrites` on the client so
+- [x] `internal/transport/sftp.go` — enable `sftp.UseConcurrentWrites` on the client so
   uploads pipeline writes instead of waiting for each 32 KB chunk's round-trip before
   sending the next
-- [ ] `internal/strategy/atomic/deployer.go` — throttle extraction progress emission
+- [x] `internal/strategy/atomic/deployer.go` — throttle extraction progress emission
   (JSON events and the human-mode progress bar) to roughly once per 1% of total bytes or
   50 ms, whichever comes first, instead of once per ~32 KB read chunk
-- [ ] `internal/hooks/runner.go` — `runOne` now returns the rendered command string it
+- [x] `internal/hooks/runner.go` — `runOne` now returns the rendered command string it
   executed; `RunWithEvents` reports that string in the event instead of rendering the
   template a second time (which also silently discarded its own render error)
-- [ ] `internal/strategy/atomic/release.go`, `deployer.go` — new `PurgeNames` removes
+- [x] `internal/strategy/atomic/release.go`, `deployer.go` — new `PurgeNames` removes
   exactly a given name list with no scan/sort; the deployer passes `PurgePlan`'s
   already-computed candidates into it directly instead of letting `Purge` re-scan and
   re-sort the releases directory it was just computed from (falling back to `Purge`'s own
   scan only if `PurgePlan` itself failed, preserving that resilience)
-- [ ] `internal/cmd/deploy.go` — hoisted the local `os.Stat(artifact)` existence check
+- [x] `internal/cmd/deploy.go` — hoisted the local `os.Stat(artifact)` existence check
   above the client-mode branch, so a bad `--artifact` path fails immediately instead of
   after a full SSH connect + agent stage
-- [ ] `internal/tui/stream.go` — in JSON passthrough mode, `spliceServerField` inserts the
+- [x] `internal/tui/stream.go` — in JSON passthrough mode, `spliceServerField` inserts the
   `server` key into the raw NDJSON line instead of decoding into `map[string]any` and
   re-marshaling the whole object (which would also alphabetize every other key)
-- [ ] Unit tests for each fix that doesn't require a real SSH/container round-trip,
+- [x] Unit tests for each fix that doesn't require a real SSH/container round-trip,
   including one proving the splice preserves original key order (a re-marshal wouldn't);
   integration tests where the change is only observable end-to-end (artifact-check
   ordering, verified via the full `deploy` command against an unreachable server)
