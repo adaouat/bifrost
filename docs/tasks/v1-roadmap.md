@@ -616,3 +616,101 @@ Deliverable: exit codes are consistent between local and client-mode paths for t
 failure class, remote `--init` works, flat-config hook ordering matches merged-config
 ordering, `cmd_dir` templating works as documented, and release ordering is immune to
 custom release names.
+
+---
+
+## M31 — Revert premature strategy interface (review fix)
+
+A code review found that `internal/strategy.Deployer` is a strategy-selection interface
+with exactly one implementation (`atomic.Deployer`), contradicting
+`.claude/rules/coding.md`: "No strategy interface in v0 — it will be introduced in v1 when
+a second strategy exists." We're past v0, but the precondition still isn't met — a second
+strategy (docker/k8s) isn't scheduled until v4/v5 (`versions.md`). The interface's shape is
+guessed from a single implementation and loses the concrete `*atomic.Deployer`'s chainable
+`With*` methods behind the interface boundary for no current benefit.
+
+- [x] `internal/strategy/strategy.go` — delete; move `DeployOptions` into
+  `internal/strategy/atomic/deployer.go` as a concrete, unqualified type
+- [x] `internal/strategy/atomic/deployer.go` — drop the `strategy.Deployer` interface
+  satisfaction assertion and the `strategy` import; `Deploy` takes the local
+  `DeployOptions` directly
+- [x] `internal/cmd/deploy.go` — call `ad.Deploy(...)` on the concrete `*atomic.Deployer`
+  directly, no interface variable
+- [x] Update the 6 test files referencing `strategy.DeployOptions`/`strategy.Deployer` to
+  use `atomic.DeployOptions` and drop the interface-satisfaction test
+- [x] All existing tests pass unchanged in behavior (pure structural revert, no new
+  behavior — verified by the existing suite, not a new test)
+
+Deliverable: the interface is gone; re-introduce it in v4/v5 when a second strategy
+actually exists, per the rule.
+
+---
+
+## M32 — Unify the duplicated agent-session staging sequence (review fix)
+
+A code review found the connect+detect+resolve+stage+upload-agent+upload-config+chmod
+sequence independently reimplemented three times — `client_list.go`'s
+`stageAgentSession` (shared by `release list`/`activate`/`rollback`), `client_deploy.go`'s
+`deployToServer`, and `testutil/deploy.go`'s `DeployOverSSH` — and the copies had already
+drifted: `deployToServer` wrote its cleanup warning to stdout instead of stderr (corrupting
+`--output json`), and `DeployOverSSH` still had the pre-M26 premature-pipe-close pattern
+that can hang draining a large/erroring event stream. The per-server flat config upload
+also round-tripped through a local temp file (`cmdutil.WriteTempFlatConfig`) instead of
+`Staging.UploadBytes`, which `testutil/deploy.go` already used directly from memory.
+
+- [ ] `internal/transport/session.go` (new) — `AgentSession` + `StageAgentSession`:
+  connect, resolve/upload the agent binary, generate and upload the flat config via
+  `config.GenerateFlatConfig` + `Staging.UploadBytes` (no local temp file), chmod; `Close`
+  warns to stderr on a cleanup failure
+- [ ] `internal/cmd/release/client_list.go` — delete `stageAgentSession`; `fetchReleaseEntries`
+  uses `transport.StageAgentSession`, classifying its error with `cmderr.Wrap(cmderr.Runtime,
+  ...)` once (every staging step gets the same classification, not just the first few)
+- [ ] `internal/cmd/release/client_activate.go`, `client_rollback.go` — use
+  `transport.StageAgentSession`/`AgentSession`
+- [ ] `internal/cmd/client_deploy.go` — `deployToServer` uses `transport.StageAgentSession`,
+  then uploads the artifact into the same session before building the agent command
+- [ ] `internal/testutil/deploy.go` — `DeployOverSSH` uses `transport.StageAgentSession`,
+  and its event-stream handling drains instead of closing early on a stream error (matching
+  `execAndForward`'s M26 fix)
+- [ ] `internal/cmd/cmdutil/config.go` — delete `WriteTempFlatConfig` once nothing calls it
+- [ ] Existing unit/integration suites pass unchanged in behavior; the hang/warning-stream
+  fixes land as natural consequences of deduplication, not separate changes to verify
+
+Deliverable: one staging implementation instead of three, no local temp file for the flat
+config, and the cleanup-warning-to-stdout and premature-pipe-close bugs can't recur in a
+fourth copy because there's only one copy.
+
+---
+
+## M33 — Efficiency cleanup batch (review fix)
+
+Independent, low-risk performance fixes identified by the code review, bundled into one
+milestone (matching the M20 pattern).
+
+- [ ] `internal/transport/sftp.go` — enable `sftp.UseConcurrentWrites` on the client so
+  uploads pipeline writes instead of waiting for each 32 KB chunk's round-trip before
+  sending the next
+- [ ] `internal/strategy/atomic/deployer.go` — throttle extraction progress emission
+  (JSON events and the human-mode progress bar) to roughly once per 1% of total bytes or
+  50 ms, whichever comes first, instead of once per ~32 KB read chunk
+- [ ] `internal/hooks/runner.go` — `runOne` now returns the rendered command string it
+  executed; `RunWithEvents` reports that string in the event instead of rendering the
+  template a second time (which also silently discarded its own render error)
+- [ ] `internal/strategy/atomic/release.go`, `deployer.go` — new `PurgeNames` removes
+  exactly a given name list with no scan/sort; the deployer passes `PurgePlan`'s
+  already-computed candidates into it directly instead of letting `Purge` re-scan and
+  re-sort the releases directory it was just computed from (falling back to `Purge`'s own
+  scan only if `PurgePlan` itself failed, preserving that resilience)
+- [ ] `internal/cmd/deploy.go` — hoisted the local `os.Stat(artifact)` existence check
+  above the client-mode branch, so a bad `--artifact` path fails immediately instead of
+  after a full SSH connect + agent stage
+- [ ] `internal/tui/stream.go` — in JSON passthrough mode, `spliceServerField` inserts the
+  `server` key into the raw NDJSON line instead of decoding into `map[string]any` and
+  re-marshaling the whole object (which would also alphabetize every other key)
+- [ ] Unit tests for each fix that doesn't require a real SSH/container round-trip,
+  including one proving the splice preserves original key order (a re-marshal wouldn't);
+  integration tests where the change is only observable end-to-end (artifact-check
+  ordering, verified via the full `deploy` command against an unreachable server)
+
+Deliverable: none of these change observable behavior — same output, same ordering,
+same errors — only less redundant work per deploy.

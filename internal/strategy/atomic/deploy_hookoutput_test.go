@@ -13,7 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/adaouat/bifrost/internal/config"
-	"github.com/adaouat/bifrost/internal/strategy"
 	"github.com/adaouat/bifrost/internal/strategy/atomic"
 )
 
@@ -31,7 +30,7 @@ func TestDeploy_JSONMode_RoutesHookOutputAsEvents(t *testing.T) {
 			PostExtract: []config.HookEntry{{Cmd: "echo running-migrations"}},
 		},
 	}
-	opts := strategy.DeployOptions{
+	opts := atomic.DeployOptions{
 		Config:      merged,
 		Artifact:    "../../../testdata/release.tar.gz",
 		ReleaseName: "20260101000000",

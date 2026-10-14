@@ -12,7 +12,6 @@ import (
 	"github.com/adaouat/bifrost/internal/cmderr"
 	"github.com/adaouat/bifrost/internal/config"
 	"github.com/adaouat/bifrost/internal/hooks"
-	"github.com/adaouat/bifrost/internal/strategy"
 	"github.com/adaouat/bifrost/internal/tui"
 	forgeexec "github.com/adaouat/forge/exec"
 	forgeui "github.com/adaouat/forge/ui"
@@ -35,7 +34,17 @@ func deployStepTotal(cfg *config.MergedConfig) int {
 	return total
 }
 
-// Deployer implements strategy.Deployer for the atomic deployment strategy.
+// DeployOptions carries the inputs for a single deployment.
+type DeployOptions struct {
+	Config      *config.MergedConfig
+	Artifact    string
+	ReleaseName string
+	Env         string
+	App         string
+}
+
+// Deployer executes an atomic deployment: extract, link shared resources,
+// flip the current symlink, run hooks, and purge old releases.
 type Deployer struct {
 	out         io.Writer
 	mode        forgeui.Mode
@@ -44,8 +53,6 @@ type Deployer struct {
 	runner      forgeexec.Runner
 	logger      *slog.Logger
 }
-
-var _ strategy.Deployer = (*Deployer)(nil)
 
 // New creates a new atomic Deployer.
 func New(out io.Writer, mode forgeui.Mode, confirmFn func(string) bool) *Deployer {
@@ -84,7 +91,7 @@ func (d *Deployer) debug(msg string, args ...any) {
 func (d *Deployer) jsonMode() bool { return d.mode == forgeui.JSON }
 
 // Deploy executes a full atomic deployment.
-func (d *Deployer) Deploy(ctx context.Context, opts strategy.DeployOptions) error {
+func (d *Deployer) Deploy(ctx context.Context, opts DeployOptions) error {
 	merged := opts.Config
 
 	releaseDir, err := CreateReleaseDir(merged.ReleasesRoot, opts.ReleaseName)

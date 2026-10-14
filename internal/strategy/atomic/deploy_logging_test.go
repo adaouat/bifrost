@@ -13,7 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/adaouat/bifrost/internal/config"
-	"github.com/adaouat/bifrost/internal/strategy"
 	"github.com/adaouat/bifrost/internal/strategy/atomic"
 )
 
@@ -37,7 +36,7 @@ func TestDeploy_LogsDiagnostics(t *testing.T) {
 				SharedRoot:   t.TempDir(),
 				Settings:     config.Settings{ReleasesToKeep: 3},
 			}
-			opts := strategy.DeployOptions{
+			opts := atomic.DeployOptions{
 				Config:      merged,
 				Artifact:    "../../../testdata/release.tar.gz",
 				ReleaseName: "20260101000000",

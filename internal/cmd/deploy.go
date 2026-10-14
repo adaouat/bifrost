@@ -11,7 +11,6 @@ import (
 
 	"github.com/adaouat/bifrost/internal/cmd/cmdutil"
 	"github.com/adaouat/bifrost/internal/config"
-	"github.com/adaouat/bifrost/internal/strategy"
 	"github.com/adaouat/bifrost/internal/strategy/atomic"
 	"github.com/adaouat/bifrost/internal/tui"
 	forgelog "github.com/adaouat/forge/log"
@@ -78,8 +77,7 @@ func newDeployCmd(version string) *cobra.Command {
 			if interactive {
 				ad = ad.WithStepConfirm(tui.StepConfirm())
 			}
-			var deployer strategy.Deployer = ad
-			return deployer.Deploy(cmd.Context(), strategy.DeployOptions{
+			return ad.Deploy(cmd.Context(), atomic.DeployOptions{
 				Config:      merged,
 				Artifact:    artifact,
 				ReleaseName: releaseName,

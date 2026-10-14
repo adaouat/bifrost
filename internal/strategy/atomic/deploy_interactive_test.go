@@ -12,7 +12,6 @@ import (
 
 	"github.com/adaouat/bifrost/internal/cmderr"
 	"github.com/adaouat/bifrost/internal/config"
-	"github.com/adaouat/bifrost/internal/strategy"
 	"github.com/adaouat/bifrost/internal/strategy/atomic"
 )
 
@@ -26,7 +25,7 @@ func TestDeploy_StepConfirm_DeclineAborts(t *testing.T) {
 		SharedRoot:   t.TempDir(),
 		Settings:     config.Settings{ReleasesToKeep: 3},
 	}
-	opts := strategy.DeployOptions{
+	opts := atomic.DeployOptions{
 		Config:      merged,
 		Artifact:    "../../../testdata/release.tar.gz",
 		ReleaseName: "20260101000000",
@@ -65,7 +64,7 @@ func TestDeploy_StepConfirm_FiresAfterHookGroupStep(t *testing.T) {
 			PreExtract: []config.HookEntry{{Cmd: "true"}},
 		},
 	}
-	opts := strategy.DeployOptions{
+	opts := atomic.DeployOptions{
 		Config:      merged,
 		Artifact:    "../../../testdata/release.tar.gz",
 		ReleaseName: "20260101000000",
