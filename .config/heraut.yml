@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/adaouat/heraut/v0.75.0/schema.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/adaouat/heraut/v0.80.0/schema.json
 version: "1"
 
 versioning:
